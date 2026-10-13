@@ -64,6 +64,48 @@ Then open **http://localhost:8787** — the same player, now AI-enabled. The ser
 Without the server the player still works perfectly — the drawer just explains how to start
 it. The tutor keeps a short in-conversation history (last 6 turns) so follow-ups work.
 
+## AI Studio — let GLM write a new video
+
+Press **AI Studio** (violet button, or `G`) and describe a topic:
+
+```text
+How do plants make food? Photosynthesis from sunlight to sugar, for curious kids.
+```
+
+GLM then runs a full production pipeline server-side and a brand-new playable pack appears
+in the pack switcher (top-right) within a few minutes:
+
+1. **Plan** — one GLM call turns the prompt into a scene-by-scene outline JSON
+   (titles, durations, accent colors, timed narration windows, visual beats);
+2. **Scene code** — one GLM call per scene writes just the creative scene body against
+   the documented engine API (`studio/scene_guide.md` + a real example scene are the
+   system prompt); every body is validated (forbidden APIs, engine-name redeclarations,
+   brace balance, `new Function` syntax parse) and retried with the error text if needed;
+3. **Assembly** — bodies are stitched into self-contained scenes with `studio/shell.html`
+   + `studio/engine.js` (the same shell that built the bundled video), plus a
+   batch-renderer-compatible `jobs.csv` and `narration_script.md` under `generated/<slug>/`;
+4. **Smoke test** — each scene boots in headless Chromium; failing scenes are regenerated
+   once with the errors, or fall back to a built-in layout;
+5. **Voice** — every caption line is narrated through keyless TTS (voice `jam`),
+   speed-fitted into its caption window, stored under `generated/<slug>/tts/`.
+
+Packs play through the same `render(t)` contract as the bundled video — chapter chips,
+scrubbing, keyboard and the AI tutor all work (the tutor reads the pack's own narration).
+
+## Export MP4
+
+The **Export MP4** button (footer, or `E`) renders the current pack to a real video file:
+
+- the bundled video delivers its pre-rendered master instantly;
+- any AI-generated pack is rendered server-side by `studio/export_pack.py`:
+  Playwright frame-steps every scene's deterministic `render(t)` (1280×720 @ 30 fps),
+  ffmpeg encodes H.264, per-line narration is mixed onto the timeline (atempo-fitted),
+  tracks are concatenated with `+faststart` — progress streams into the modal;
+- the finished MP4 downloads straight from the job (`exports/<slug>-<stamp>.mp4`).
+
+Requirements for export on your own machine: `python3` + `playwright` + `ffmpeg`
+(already present where the bundled master was rendered).
+
 ## What's in this folder
 
 ```
