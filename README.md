@@ -43,6 +43,35 @@ python3 -m pip install playwright && python3 -m playwright install chromium
 
 ---
 
+## Deploy to Vercel (serverless edition)
+
+The repo is a **Vercel-ready web app**: `vercel.json` at the root plus an `api/`
+directory of serverless functions. One command deploys it:
+
+```bash
+npm i -g vercel
+vercel deploy --prod        # from this folder (login first: vercel login)
+```
+
+What runs on the serverless deployment — no tunnels, no cookies, public URL:
+
+| feature | on Vercel | notes |
+|---|---|---|
+| Player + the 11-minute video | ✅ | static; `/` serves `PLAYER.html` |
+| AI tutor (Ask AI, `A`) | ✅ | keyless GLM inside `api/ask.mjs` |
+| Pack library + switcher | ✅ | bundled pack (`api/packs`, `api/pack/:slug`) |
+| Export MP4 (`E`, bundled) | ✅ | instant pre-rendered master, served statically |
+| AI Studio (`G`) | ❌ | multi-minute GLM + Chromium + TTS pipeline — needs the companion server |
+| Export of AI-generated packs | ❌ | same — the companion server renders them |
+
+The buttons that need the full pipeline say so in the UI and point you to
+`bun glm_server.mjs`. Both worlds share the same response contracts
+(`api/*` mirrors `glm_server.mjs`), so the player is identical everywhere.
+A stub-based QA suite for the functions lives at `scripts/qa_vercel_funcs.mjs`
+(`node scripts/qa_vercel_funcs.mjs` — includes one real GLM call).
+
+---
+
 ## Rendered MP4 + narration speech (already generated)
 
 A full local render lives in **`render/`**:
