@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" data-composition-duration="__DUR__" data-composition-fps="30"
+      data-composition-variables='{"captions": true}'>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  html, body { margin:0; padding:0; background:#0f141c; overflow:hidden; }
+  #stage { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:top left; }
+  #root  { display:block; }
+  svg text { user-select:none; }
+  #root * { transform-box: fill-box; transform-origin: center; }
+</style>
+</head>
+<body data-composition-duration="__DUR__" data-composition-fps="30">
+<div id="stage">
+  <svg id="root" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+</div>
+<script>
+window.__SCENE_DUR__ = __DUR__;
+window.__hyperframes = window.__hyperframes || {
+  getVariables: function(){ return { captions: true }; }
+};
+/*__DATA__*/
+/*__ENGINE__*/
+/*__SCENE__*/
+</script>
+</body>
+</html>

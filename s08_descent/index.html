@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en" data-composition-duration="70" data-composition-fps="30"
+      data-composition-variables='{"captions": true}'>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hyperframes · Chapter 7 — Rolling downhill</title>
+<style>
+  html, body { margin:0; padding:0; background:#0f141c; overflow:hidden; }
+  #stage { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:top left; }
+  #root  { display:block; }
+  svg text { user-select:none; }
+  #root * { transform-box: fill-box; transform-origin: center; }
+</style>
+</head>
+<body data-composition-duration="70" data-composition-fps="30">
+<div id="stage">
+  <svg id="root" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+</div>
+<script>
+window.__SCENE_DUR__ = 70;
+window.__hyperframes = window.__hyperframes || {
+  getVariables: function(){ return { captions: true }; }
+};
+const DATA = {"narr":[[1.0,4.5,"Imagine the cost as a landscape. Turn one knob, and the height changes."],[6.0,5.0,"We want the bottom. But we only feel the slope right where we stand."],[11.5,5.0,"Here the slope points down to the right, so the sensible move is: step right."],[17.0,5.5,"Steeper slope, bigger step. Near the bottom the slope flattens, so steps shrink."],[23.0,4.5,"The size of the step is our choice: the learning rate."],[28.0,5.0,"Too small, and we crawl. Ten steps barely move us."],[34.0,4.5,"Too large, and we overshoot, bouncing from wall to wall, even climbing out."],[39.5,4.0,"So we pick a learning rate that is brave, but not reckless."],[45.0,5.0,"With two knobs we can draw the landscape. Rings join points of equal cost."],[50.5,5.0,"Descent follows the steepest way down, and zigzags toward the middle."],[56.0,5.5,"A real network has 562 knobs: a landscape in 562 dimensions. Same rule."],[62.0,5.0,"Update rule: new weight equals old weight, minus learning rate times slope."],[67.0,2.5,"Repeat, thousands of times."]]};
+/* ============================================================ engine.js ==
+ * Deterministic SVG timeline engine for Hyperframes compositions.
+ * Every frame is a pure function of time t: render(t) folds all registered
+ * operations and applies element states. No accumulation, no randomness.
+ * ======================================================================== */
+'use strict';
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('root');
+const DUR = window.__SCENE_DUR__;
+
+const C = {
+  bg:'#0f141c', panel:'#161d29', panel2:'#1a2230', line:'#2a3342',
+  text:'#E8EDF4', dim:'#93A1B3', faint:'#5A6675',
+  blue:'#58C4DD', teal:'#5FD3BC', green:'#7EC96B', yellow:'#FFE45C',
+  orange:'#FF9F43', red:'#FC6255', purple:'#B57EDC', gold:'#FFC53D', grey:'#4E5A68'
+};
+const FONT_S = "'Liberation Sans','DejaVu Sans',Arial,sans-serif";
+const FONT_M = "'Liberation Mono','DejaVu Sans Mono',Menlo,Consolas,monospace";
+
+/* -------------------------------------------------- element constructors */
+function el(tag, attrs, parent){
+  const e = document.createElementNS(SVG_NS, tag);
+  if (attrs) for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  (parent || svg).appendChild(e);
+  return e;
+}
+function G(parent){ return el('g', null, parent || svg); }
+
+function T(html, x, y, o, parent){
+  o = o || {};
+  const size = o.size || 40, anchor = o.anchor || 'middle';
+  const anchorMap = { m: 'middle', l: 'start', r: 'end', start: 'start', end: 'end', middle: 'middle' };
+  const t = el('text', {
+    x, y, 'text-anchor': anchorMap[anchor] || 'middle',
+    'font-family': o.mono ? FONT_M : FONT_S,
+    'font-size': size, fill: o.color || C.text,
+    'font-weight': o.weight || '400',
+    'letter-spacing': o.ls != null ? o.ls : '0.5'
+  }, parent || o.parent || svg);
+  const lines = String(html).split(/<br\s*\/?>/);
+  lines.forEach((ln, i) => {
+    const ts = el('tspan', { x, dy: i === 0 ? 0 : size * 1.3 }, t);
+    ts.textContent = ln;
+  });
+  if (!o.show) t.style.opacity = 0;
+  return t;
+}
+function stext(html, x, y, o){ return T(html, x, y, Object.assign({ size: 30 }, o || {})); }
+
+function rect(x, y, w, h, o, parent){
+  o = o || {};
+  return el('rect', { x, y, width: w, height: h, rx: o.rx || 0,
+    fill: o.fill || 'none', stroke: o.stroke, 'stroke-width': o.w,
+    'stroke-dasharray': o.dash }, parent);
+}
+function circle(cx, cy, r, o, parent){
+  o = o || {};
+  return el('circle', { cx, cy, r, fill: o.fill || 'none', stroke: o.stroke,
+    'stroke-width': o.w }, parent);
+}
+function line(x1, y1, x2, y2, o, parent){
+  o = o || {};
+  return el('line', { x1, y1, x2, y2, stroke: o.stroke || C.grey,
+    'stroke-width': o.w || 2, 'stroke-linecap': 'round',
+    'stroke-dasharray': o.dash }, parent || svg, parent);
+}
+function path(d, o, parent){
+  o = o || {};
+  return el('path', { d, fill: o.fill || 'none', stroke: o.stroke || C.text,
+    'stroke-width': o.w || 3, 'stroke-linecap': 'round',
+    'stroke-linejoin': 'round', 'stroke-dasharray': o.dash }, parent);
+}
+
+const defs = el('defs', null);
+const markers = {};
+function arrowMarker(color){
+  if (markers[color]) return markers[color];
+  const id = 'ah' + Object.keys(markers).length;
+  const m = el('marker', { id, viewBox: '0 0 10 10', refX: 8, refY: 5,
+    markerWidth: 7.5, markerHeight: 7.5, orient: 'auto-start-reverse' }, defs);
+  el('path', { d: 'M0,0 L10,5 L0,10 z', fill: color }, m);
+  markers[color] = id;
+  return id;
+}
+function arrow(x1, y1, x2, y2, o, parent){
+  o = o || {};
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
+  const ux = dx / L, uy = dy / L, sh = o.sh != null ? o.sh : 9;
+  const col = o.stroke || C.grey;
+  return el('line', { x1, y1, x2: x2 - ux * sh, y2: y2 - uy * sh, stroke: col,
+    'stroke-width': o.w || 3, 'stroke-linecap': 'round',
+    'stroke-dasharray': o.dash, 'marker-end': 'url(#' + arrowMarker(col) + ')' }, parent);
+}
+
+/* 5x7 pixel grid of values in [0,1] */
+function grid(x, y, cell, cols, rows, data, o){
+  o = o || {};
+  const g = G(o.parent), gap = o.gap != null ? o.gap : 1, cells = [];
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
+    const v = data ? data[r * cols + c] : 0;
+    const fill = v > 0.03 ? 'rgba(232,237,244,' + Math.min(1, v).toFixed(3) + ')'
+                          : (o.empty || '#1a212d');
+    cells.push(el('rect', { x: x + c * (cell + gap), y: y + r * (cell + gap),
+      width: cell, height: cell, rx: cell * 0.16, fill }, g));
+  }
+  g.style.opacity = o.show ? 1 : 0;
+  return { g, cells, x, y, cell, cols, rows, gap };
+}
+
+/* diverging heat grid: blue positive / red negative */
+function heat(x, y, cell, cols, rows, data, o){
+  o = o || {};
+  const g = G(o.parent), gap = o.gap != null ? o.gap : 1, cells = [];
+  const max = o.max || 0.001;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
+    const v = (data && data[r * cols + c]) || 0;
+    const m = Math.min(1, Math.abs(v) / max);
+    const rgb = v >= 0 ? '88,196,221' : '252,98,85';
+    cells.push(el('rect', { x: x + c * (cell + gap), y: y + r * (cell + gap),
+      width: cell, height: cell, rx: cell * 0.16,
+      fill: m < 0.08 ? '#1a212d' : 'rgba(' + rgb + ',' + (0.18 + 0.82 * m).toFixed(3) + ')' }, g));
+  }
+  g.style.opacity = o.show ? 1 : 0;
+  return { g, cells };
+}
+
+/* probability bars for 10 digits */
+function bars(x, y, w, h, o){
+  o = o || {};
+  const g = G(o.parent);
+  g.style.opacity = o.show ? 1 : 0;
+  const n = 10, gap = o.gap != null ? o.gap : 10;
+  const bw = (w - (n - 1) * gap) / n;
+  const base = el('rect', { x, y, width: w, height: 2, fill: C.line }, g);
+  const rects = [], labs = [], vals = [];
+  for (let i = 0; i < n; i++){
+    const bx = x + i * (bw + gap);
+    el('rect', { x: bx, y: y - h, width: bw, height: h, fill: 'rgba(255,255,255,0.045)', rx: 3 }, g);
+    rects.push(el('rect', { x: bx, y, width: bw, height: 0, rx: 3, fill: o.color || C.blue }, g));
+    vals.push(T('', bx + bw / 2, y - h - 12, { size: o.vsize || 24, color: C.dim, show: true, parent: g }));
+    labs.push(T(String(i), bx + bw / 2, y + 32, { size: o.lsize || 26, color: C.dim, show: true, parent: g }));
+  }
+  const api = {
+    g, rects, vals, base,
+    set(values){
+      for (let i = 0; i < n; i++){
+        const v = Math.max(0, Math.min(1, values[i]));
+        rects[i].setAttribute('y', y - v * h);
+        rects[i].setAttribute('height', Math.max(0, v * h));
+        vals[i].textContent = Math.round(v * 100) + '%';
+        vals[i].setAttribute('fill', v > 0.005 ? C.dim : '#39424e');
+      }
+    },
+    highlight(i, color){
+      labs.forEach((L, k) => L.setAttribute('fill', k === i ? (color || C.gold) : C.dim));
+      rects.forEach((R, k) => R.setAttribute('fill', k === i ? (color || C.gold) : (o.color || C.blue)));
+    }
+  };
+  return api;
+}
+
+/* ------------------------------------------------------------- timeline -- */
+const OPS = [], SYNCS = [];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const easeIO = p => p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+const easeOutC = p => 1 - Math.pow(1 - p, 3);
+const easeBack = p => { const c = 1.70158 * 0.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+function lerpA(a, b, p){ return a.map((v, i) => lerp(v, b[i], p)); }
+
+function reg(op){ OPS.push(op); return op; }
+function sync(fn, t0, t1){ SYNCS.push({ fn, t0, t1 }); }
+/* fade in (optionally rising by o.y px) */
+function fade(e, t0, dur, o){ o = o || {}; return reg({ el: e, type: 'fade', t0, dur, rise: o.y || 0 }); }
+function pop(e, t0, dur){ return reg({ el: e, type: 'pop', t0, dur }); }
+function wipe(e, t0, dur){ e._wipe = true; return reg({ el: e, type: 'wipe', t0, dur }); }
+function out(e, t0, dur){ return reg({ el: e, type: 'out', t0, dur }); }
+function to(e, t0, dur, props){ return reg({ el: e, type: 'to', t0, dur, to: props }); }
+function draw(e, t0, dur){
+  if (e.getTotalLength){ try { e._len = e.getTotalLength() + 2; } catch (_) { e._len = null; } }
+  e._draw = true;
+  return reg({ el: e, type: 'draw', t0, dur });
+}
+
+/* interpolate numeric object keyframes for custom properties (bars, dots...) */
+function tween(obj, key, t0, t1, v0, v1, ease){
+  sync(p => { obj[key] = lerp(v0, v1, (ease || easeIO)(p)); }, t0, t1);
+}
+
+/* ------------------------------------------------------------- captions -- */
+function wrapText(s, maxChars){
+  const words = String(s).split(' '), lines = [];
+  let cur = '';
+  for (const w of words){
+    if ((cur ? cur + ' ' + w : w).length > maxChars && cur){ lines.push(cur); cur = w; }
+    else cur = cur ? cur + ' ' + w : w;
+  }
+  if (cur) lines.push(cur);
+  return lines.slice(0, 3);
+}
+
+function captions(narr, o){
+  o = o || {};
+  const SIZE = o.size || 33, LH = SIZE * 1.3, MAXC = o.maxChars || 86;
+  const groups = narr.map(entry => {
+    const t0 = entry[0], t1 = entry[0] + entry[1];
+    const lines = wrapText(entry[2], MAXC);
+    const g = G();
+    const w = Math.max.apply(null, lines.map(l => l.length)) * SIZE * 0.5 + 60;
+    const top = 1006 - (lines.length - 1) * LH - SIZE * 1.15 - 12;
+    const h = (lines.length - 1) * LH + SIZE * 1.55 + 16;
+    el('rect', { x: 960 - w / 2, y: top, width: w, height: h, rx: 12, fill: 'rgba(5,8,13,0.68)' }, g);
+    T(lines.join('<br>'), 960, 1006 - (lines.length - 1) * LH, { size: SIZE, color: '#DCE4EE', show: true, ls: '0.2' }, g);
+    g.style.opacity = 0;
+    return { g, t0, t1 };
+  });
+  sync((p, t) => {
+    let act = null;
+    for (const c of groups) if (t >= c.t0 - 0.05 && t <= c.t1) act = c;
+    for (const c of groups) c.g.style.opacity = c === act ? 1 : 0;
+  }, 0, DUR);
+}
+
+/* --------------------------------------------------------- chapter chip -- */
+function begin(o){
+  const g = G();
+  el('circle', { cx: 66, cy: 60, r: 8, fill: o.color || C.blue }, g);
+  T((o.n || '') + '  ·  ' + (o.title || ''), 90, 69, { size: 27, color: C.dim, anchor: 'start', show: true, ls: '1.5' }, g);
+  fade(g, 0.4, 0.8);
+  return g;
+}
+
+/* -------------------------------------------------------- progress bar --- */
+function progressBar(accent){
+  const pg = el('rect', { x: 0, y: 1076, width: 0, height: 4, fill: accent || C.blue, opacity: 0.5 });
+  sync((p, t) => pg.setAttribute('width', (1920 * clamp(t / DUR, 0, 1)).toFixed(1)), 0, DUR);
+}
+
+/* ---------------------------------------------------------- state fold --- */
+let STATES = [];
+function initStates(){
+  const byEl = new Map();
+  for (const op of OPS){
+    if (!op.el) continue;
+    if (!byEl.has(op.el)) byEl.set(op.el, []);
+    byEl.get(op.el).push(op);
+  }
+  STATES = [];
+  byEl.forEach((ops, elm) => {
+    ops.sort((a, b) => a.t0 - b.t0);
+    const base = {
+      o: parseFloat(getComputedStyle(elm).opacity) || 0,
+      x: 0, y: 0, s: 1,
+      clip: elm._wipe ? 0 : 1,
+      dash: (elm._draw && elm._len != null) ? 0 : 1
+    };
+    STATES.push({ el: elm, ops, st: base });
+  });
+}
+
+function foldAll(t){
+  for (const s of STATES){
+    const st = { o: s.st.o, x: 0, y: 0, s: 1, clip: s.st.clip, dash: s.st.dash };
+    for (const op of s.ops){
+      const p = op.dur > 0 ? clamp((t - op.t0) / op.dur, 0, 1) : (t >= op.t0 ? 1 : 0);
+      switch (op.type){
+        case 'fade': { const e = easeOutC(p); st.o = e; st.y += (1 - e) * op.rise; break; }
+        case 'out':  { if (p > 0){ const e = easeIO(p); st.o = 1 - e; st.y += e * 10; } break; }
+        case 'pop':  { const e = easeBack(p); st.o = Math.min(1, e * 1.6); st.s = 0.62 + 0.38 * e; break; }
+        case 'wipe': { const e = easeIO(p); st.clip = e; st.o = Math.max(st.o, e); break; }
+        case 'draw': { const e = easeIO(p); st.dash = e; st.o = e; break; }
+        case 'to': {
+          const e = easeIO(p), k = op.to || {};
+          if ('o' in k) st.o = lerp(st.o, k.o, e);
+          if ('x' in k) st.x = lerp(st.x, k.x, e);
+          if ('y' in k) st.y = lerp(st.y, k.y, e);
+          if ('s' in k) st.s = lerp(st.s, k.s, e);
+          break;
+        }
+      }
+    }
+    applyState(s.el, st);
+  }
+}
+
+function applyState(e, st){
+  e.style.opacity = st.o < 0.004 ? 0 : st.o.toFixed(3);
+  let tf = '';
+  if (st.x || st.y) tf += 'translate(' + st.x.toFixed(2) + 'px,' + st.y.toFixed(2) + 'px)';
+  if (st.s !== 1) tf += (tf ? ' ' : '') + 'scale(' + st.s.toFixed(3) + ')';
+  e.style.transform = tf || 'none';               /* always write: clears stale state on seeks */
+  e.style.clipPath = st.clip >= 1 ? 'none'
+    : 'inset(-8% ' + (100 * (1 - st.clip)).toFixed(2) + '% -8% -8%)';
+  if (e._len != null){
+    e.setAttribute('stroke-dasharray', e._len.toFixed(1));
+    e.setAttribute('stroke-dashoffset', ((1 - st.dash) * e._len).toFixed(1));
+  }
+}
+
+/* ------------------------------------------------------------- render ---- */
+let curT = -1;
+function render(t){
+  t = clamp(t, 0, DUR);
+  curT = t;
+  foldAll(t);
+  for (const s of SYNCS){
+    if (t < s.t0) continue;                    // not started: fn must not touch state
+    const p = s.t1 > s.t0 ? clamp((t - s.t0) / (s.t1 - s.t0), 0, 1) : 1;
+    s.fn(p, t);
+  }
+}
+
+/* ------------------------------------------------------------- player ---- */
+function fitStage(){
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  document.getElementById('stage').style.transform = 'scale(' + s + ')';
+}
+
+function boot(){
+  fitStage();
+  window.addEventListener('resize', fitStage);
+  initStates();
+  render(0);
+
+  /* external seek contract (renderer adapters) */
+  let manual = false;
+  function seek(t){ manual = true; render(+t || 0); }
+  window.addEventListener('message', e => {
+    const d = e.data || {};
+    if (d && typeof d.t === 'number' && (d.type === 'hf-seek' || d.type === 'seek' || d.type === 'seekto')) seek(d.t);
+  });
+  window.addEventListener('hf-seek', e => { if (e.detail != null) seek(e.detail); });
+  window.__scene = { render: seek, peek: render, duration: DUR, version: '1.0' };
+  window.__dbg = { STATES, OPS, SYNCS, easeBack, clamp };
+
+  /* realtime autoplay fallback: if a driver seeks, we stop driving.
+     '#freeze' disables autoplay (used by QA/render adapters that drive frames). */
+  let t0p = performance.now(), base = 0;
+  if (location.hash.indexOf('freeze') < 0){
+    function auto(now){
+      if (manual) return;
+      const t = base + (now - t0p) / 1000;
+      if (t >= DUR){ render(DUR); return; }
+      render(t);
+      requestAnimationFrame(auto);
+    }
+    requestAnimationFrame(auto);
+  }
+
+  /* optional preview UI: only when opened with #preview */
+  if (location.hash.indexOf('preview') >= 0) previewUI(seek);
+}
+
+function previewUI(seek){
+  const ui = G();
+  ui.style.opacity = 0.92;
+  const bw = 54, bx = 1920 - 300, by = 1030;
+  el('rect', { x: bx, y: by, width: 240, height: 36, rx: 8, fill: 'rgba(10,14,20,0.8)', stroke: C.line }, ui);
+  const playG = el('g', { transform: 'translate(' + (bx + 27) + ',' + (by + 18) + ')' }, ui);
+  const iconPlay = el('path', { d: 'M-7,-9 L9,0 L-7,9 Z', fill: C.text }, playG);
+  const iconPause = el('path', { d: 'M-7,-9 L-2,-9 L-2,9 L-7,9 Z M4,-9 L9,-9 L9,9 L4,9 Z', fill: C.text, visibility: 'hidden' }, playG);
+  const timeTxt = T('0.0 / ' + DUR.toFixed(0) + 's', bx + 145, by + 24, { size: 19, color: C.dim, show: true, mono: true }, ui);
+
+  let playing = true, base = curT, t0p = performance.now();
+  function loop(now){
+    if (playing){
+      const t = base + (now - t0p) / 1000;
+      if (t >= DUR){ render(DUR); playing = false; base = 0; }
+      else render(t);
+    }
+    timeTxt.textContent = curT.toFixed(1) + ' / ' + DUR.toFixed(0) + 's';
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  function toggle(){
+    if (playing){ base = curT; playing = false; }
+    else { t0p = performance.now(); playing = true; }
+    iconPlay.setAttribute('visibility', playing ? 'hidden' : 'visible');
+    iconPause.setAttribute('visibility', playing ? 'visible' : 'hidden');
+  }
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space'){ e.preventDefault(); toggle(); }
+    else if (e.key === 'ArrowRight'){ playing = false; render(curT + (e.shiftKey ? 5 : 1)); base = curT; }
+    else if (e.key === 'ArrowLeft'){ playing = false; render(curT - (e.shiftKey ? 5 : 1)); base = curT; }
+  });
+  playG.addEventListener('click', toggle);
+  el('rect', { x: bx, y: by, width: 240, height: 36, rx: 8, fill: 'transparent', style: 'cursor:pointer' }, ui)
+    .addEventListener('click', toggle);
+}
+
+document.readyState === 'loading'
+  ? document.addEventListener('DOMContentLoaded', boot)
+  : boot();
+
+/* s08 — Chapter 7 · Rolling downhill (70s) */
+(function(){
+begin({ n:'Chapter 7', title:'Rolling downhill', color:C.orange });
+
+const AX0 = 320, AX1 = 1640, AY0 = 230, AY1 = 810;
+const axes = path('M' + AX0 + ',' + AY0 + ' L' + AX0 + ',' + AY1 + ' L' + AX1 + ',' + AY1, { stroke: C.grey, w: 3 });
+draw(axes, 1.0, 0.9);
+const P8 = x => 760 - 0.0013 * (x - 960) * (x - 960);
+let d = '';
+for (let x = 360; x <= 1560; x += 12)
+  d += (d ? ' L' : 'M') + x + ',' + P8(x).toFixed(1);
+const bowl = path(d, { stroke: C.blue, w: 5 });
+draw(bowl, 2.2, 1.6);
+const bowlL = T('the cost, as a landscape', 960, 175, { size: 32, color: C.dim });
+fade(bowlL, 3.4, 0.7);
+
+const ball = circle(430, P8(430) - 16, 15, { fill: C.gold });
+pop(ball, 4.6, 0.5);
+function placeBall(x, t0){
+  sync(() => {
+    ball.setAttribute('cx', x);
+    ball.setAttribute('cy', P8(x) - 16);
+    ball.style.opacity = 1;
+  }, t0, t0 + 0.01);
+}
+
+/* tangent line */
+function tangent(x, col, tw){
+  const k = -0.0026 * (x - 960);                 /* screen slope dy/dx */
+  const y = P8(x) - 16;
+  return line(x - 95, y + 95 * k, x + 95, y - 95 * k, { stroke: col || C.red, w: tw || 4 });
+}
+const tang = tangent(430);
+draw(tang, 6.0, 0.6);
+const tangL = T('we can feel the slope where we stand', 430, 285, { size: 28, color: C.red });
+fade(tangL, 6.8, 0.6);
+
+/* hop helper: x1 = x - eta * dC/dx * S ;  dC/dx = 0.0026*(x-960) */
+const trails1 = [];
+function hops(x0, eta, t0, n, stepT, col, dotR){
+  let x = x0;
+  for (let i = 0; i < n; i++){
+    const g = 0.0026 * (960 - x) * 180 * eta;
+    const xa = x;
+    let x1 = x + g;
+    const off = Math.abs(x1 - 960) > 600;
+    if (off) x1 = Math.max(370, Math.min(1550, x1));
+    const tA = t0 + i * stepT;
+    sync((p) => {
+      const e = easeIO(p);
+      ball.setAttribute('cx', lerp(xa, x1, e));
+      ball.setAttribute('cy', P8(lerp(xa, x1, e)) - 16);
+    }, tA, tA + stepT * 0.62);
+    const td = circle(x1, P8(x1) - 16, dotR || 5, { fill: col });
+    pop(td, tA + stepT * 0.62, 0.25);
+    trails1.push(td);
+    x = x1;
+  }
+}
+/* run 1: eta = 1.0 — confident steps into the bottom */
+hops(430, 1.0, 11.6, 5, 1.5, C.teal);
+const r1l = T('η = 1.0', 400, 745, { size: 30, mono: true, color: C.teal });
+fade(r1l, 11.8, 0.5);
+const stepL = T('step = η × slope', 960, 630, { size: 36, mono: true, color: C.text });
+fade(stepL, 17.5, 0.7);
+
+/* run 2: eta = 0.05 — tiny cautious steps */
+placeBall(430, 26.9);
+trails1.forEach(td => out(td, 26.8, 0.3));
+out(tang, 26.7, 0.3); out(tangL, 26.7, 0.3); out(r1l, 27.1, 0.3);
+const trails2 = [];
+(function(){
+  let x = 430;
+  for (let i = 0; i < 10; i++){
+    const g = 0.0026 * (960 - x) * 180 * 0.05;
+    const xa = x; x = x + g;
+    const x1 = x, tA = 27.4 + i * 0.55;
+    sync((p) => {
+      const e = easeIO(p);
+      ball.setAttribute('cx', lerp(xa, x1, e));
+      ball.setAttribute('cy', P8(lerp(xa, x1, e)) - 16);
+    }, tA, tA + 0.34);
+    const td = circle(x1, P8(x1) - 16, 4, { fill: C.teal });
+    pop(td, tA + 0.34, 0.2); trails2.push(td);
+  }
+})();
+const r2l = T('η = 0.05 — crawling', 430, 745, { size: 30, mono: true, color: C.dim });
+fade(r2l, 27.6, 0.5);
+
+/* run 3: eta = 5.2 — overshoot, wall to wall, climbs out */
+placeBall(430, 33.9);
+trails2.forEach(td => out(td, 33.85, 0.2));
+out(stepL, 33.6, 0.3); out(r2l, 34.9, 0.3);
+const seq3 = [430, 1550, 624, 1441, 368, 1580];
+(function(){
+  for (let i = 0; i < seq3.length - 1; i++){
+    const xa = seq3[i], x1 = seq3[i + 1];
+    const tA = 34.0 + i * 1.35;
+    const fly = i === seq3.length - 2;
+    sync((p) => {
+      const e = easeIO(p);
+      const xv = lerp(xa, x1, e);
+      ball.setAttribute('cx', xv);
+      ball.setAttribute('cy', P8(xv) - 16 - (fly ? p * p * 300 : 0));
+      if (fly) ball.style.opacity = String(Math.max(0, 1 - p * 1.1));
+    }, tA, tA + (fly ? 1.0 : 0.85));
+    if (!fly){
+      const td = circle(x1, P8(x1) - 16, 4, { fill: C.red });
+      pop(td, tA + 0.85, 0.2);
+      out(td, 43.2, 0.3);
+    }
+  }
+})();
+const r3l = T('η = 5.2 — overshooting', 960, 630, { size: 30, mono: true, color: C.red });
+fade(r3l, 34.2, 0.5);
+out(r3l, 42.8, 0.4);
+
+/* --- two knobs: contour landscape --------------------------------------- */
+[axes, bowl, bowlL, ...trails1].forEach(e => out(e, 43.4, 0.5));
+const CG = G();
+const cx = 1180, cy = 540, rot = -18;
+for (let i = 1; i <= 6; i++){
+  const e = el('ellipse', { cx, cy, rx: 60 * i, ry: 40 * i, fill: 'none', stroke: '#44586e',
+    'stroke-width': 2, transform: 'rotate(' + rot + ' ' + cx + ' ' + cy + ')' }, CG);
+  draw(e, 44.0 + i * 0.35, 0.6);
+}
+CG.style.opacity = 0;
+fade(CG, 44.0, 0.5);
+const ringsL = T('two knobs: rings join points of equal cost', 960, 175, { size: 32, color: C.dim });
+fade(ringsL, 45.4, 0.7);
+const ball2 = circle(520, 330, 15, { fill: C.gold });
+pop(ball2, 47.6, 0.5);
+const dirA = arrow(520, 330, 640, 428, { stroke: C.red, w: 4.5 });
+draw(dirA, 50.5, 0.6);
+const dirL = T('the steepest way down', 700, 345, { size: 28, color: C.red, anchor: 'start' });
+fade(dirL, 51.2, 0.6);
+
+/* zigzag path */
+const zig = [[520, 330], [700, 428], [585, 520], [790, 585], [665, 665], [900, 660], [820, 738], [1040, 690], [1180, 540]];
+const zp = path('M' + zig.map(p => p[0] + ',' + p[1]).join(' L'), { stroke: C.gold, w: 4 });
+draw(zp, 54.6, 5.4);
+zig.forEach((p, i) => {
+  const td = circle(p[0], p[1], 5, { fill: C.gold });
+  pop(td, 54.6 + (i + 1) * 0.6, 0.2);
+  to(td, 61.6, 0.5, { o: 0.25 });
+});
+out(dirA, 54.4, 0.3); out(dirL, 54.4, 0.3);
+const dimL = T('a real network: 562 knobs — a landscape in 562 dimensions. Same rule.', 960, 128, { size: 30, color: C.dim });
+fade(dimL, 56.5, 0.7);
+
+/* update rule */
+to(CG, 61.6, 0.7, { o: 0.25 }); to(zp, 61.6, 0.5, { o: 0.25 }); to(ball2, 61.6, 0.5, { o: 0.25 });
+to(ringsL, 61.6, 0.5, { o: 0.1 }); to(dimL, 61.6, 0.5, { o: 0.1 });
+const rule = T('w  ←  w − η · ∂C/∂w', 960, 600, { size: 66, mono: true, weight: '700' });
+wipe(rule, 62.0, 1.4);
+const rep = T('repeat, thousands of times', 960, 715, { size: 34, color: C.dim });
+fade(rep, 67.0, 0.8);
+
+captions(DATA.narr);
+progressBar(C.orange);
+})();
+
+</script>
+</body>
+</html>

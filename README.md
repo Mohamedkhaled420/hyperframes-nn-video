@@ -1,0 +1,167 @@
+# Hyperframes batch project — "How does a machine learn to read?"
+
+A complete, render-ready project for your **Hyperframes batch renderer notebook (GPU / Google
+Drive edition)**: a 12-scene, **11-minute** educational video about neural networks, drawn
+entirely with generated HTML/JS/SVG graphics — **no external assets, no fonts to install, no
+images to upload**.
+
+---
+
+## Rendered MP4 + narration speech (already generated)
+
+A full local render lives in **`render/`**:
+
+- `how_machines_learn_to_read_720p.mp4` — the complete 11-minute video (1280×720, 30 fps,
+  H.264 + AAC narration, burned-in captions), built by frame-stepping every scene's
+  deterministic `render(t)` with headless Chromium and encoding with ffmpeg.
+- `narration_full.m4a` — the narration-only speech track (keyless TTS via
+  `z-ai-web-dev-sdk`, voice `jam`). Captions and audio share the same scripted windows;
+  where a chapter's narration runs long it is time-compressed to fit.
+- `s01_hook.mp4 … s12_outro.mp4` — the 12 per-scene clips (same encoding), if you want to
+  re-stitch or re-order chapters yourself.
+
+## Watch it now — no renderer needed
+
+Open **`PLAYER.html`** (this folder) in any browser — Chrome, Edge, Firefox, double-click, no
+server, no internet. It bundles all 12 scenes into one file with a full player:
+
+- one global 11:00 timeline with chapter markers, scrubbing and auto-advance between scenes
+- chapter chips, play/pause, prev/next chapter, fullscreen
+- keyboard: `Space` play/pause · `←`/`→` ±1 s (`Shift` ±5 s) · `↑`/`↓` chapter · `F` fullscreen
+
+The scenes inside are driven through the same deterministic `render(t)` contract the batch
+renderer uses, so what you preview is exactly what renders. Individual scenes can still be
+opened directly: `s01_hook/index.html#preview` gives the single-scene scrubber.
+
+Prefer one download? Grab `hyperframes_nn_video.zip` (one level up) — the whole project
+including PLAYER.html.
+
+---
+
+## AI tutor — keyless GLM integration
+
+The player ships with an **"Ask AI" tutor** (button in the control bar, or press `A`): a chat
+drawer that knows exactly which chapter is on screen and answers in the video's own terms and
+numbers. It is powered by **GLM through `z-ai-web-dev-sdk` — completely keyless**: no API key
+to create, manage or embed; the SDK handles authentication itself, and it runs **server-side
+only** (never in browser code).
+
+```bash
+cd hyperframes_nn_video
+bun add z-ai-web-dev-sdk        # once (already vendored if node_modules/ is present)
+bun glm_server.mjs              # starts on http://localhost:8787 (or set PORT=...)
+```
+
+Then open **http://localhost:8787** — the same player, now AI-enabled. The server:
+
+- serves the project folder statically (`/` → `PLAYER.html`);
+- exposes `POST /api/ask` with body `{ question, chapter, t, history }` and builds the GLM
+  system prompt **from this project's own docs** — `narration_script.md` (the chapter's
+  narration) + `scene_docs/` (its beats and implementation notes), so answers can't drift
+  from what's on screen;
+- exposes `GET /api/health` for a quick check.
+
+Without the server the player still works perfectly — the drawer just explains how to start
+it. The tutor keeps a short in-conversation history (last 6 turns) so follow-ups work.
+
+## What's in this folder
+
+```
+hyperframes_nn_video/
+├── README.md              ← you are here (workflow + architecture notes)
+├── PLAYER.html            ← ★ one-click preview of the whole 11-min video
+├── glm_server.mjs         ← ★ keyless GLM server for the "Ask AI" tutor
+├── VIDEO_PLAN.md          ← the full 11-minute video description, scene by scene
+├── narration_script.md    ← timed voice-over / caption script (also burned into the scenes)
+├── jobs.csv               ← 12 rows, one per scene — drop into DRIVE_ROOT
+├── concat_list.txt        ← ffmpeg stitch list for the 12 rendered mp4s
+├── scene_docs/            ← one MD per scene: visual beats + implementation notes
+│   ├── s01_hook.md … s12_outro.md
+├── s01_hook/index.html    ← scene compositions (fully self-contained, ~25-45 KB each)
+├── s02_pixels/index.html
+├── …
+└── s12_outro/index.html
+```
+
+## Upload → render → stitch (3 steps)
+
+1. **Upload** — copy `jobs.csv` and the **12 scene folders** into
+   `MyDrive/hyperframes_projects/` (the notebook's `DRIVE_ROOT`), replacing the starter
+   `jobs.csv`. The layout ends up exactly like the notebook expects:
+
+   ```
+   MyDrive/hyperframes_projects/
+   ├── jobs.csv
+   ├── s01_hook/index.html
+   ├── s02_pixels/index.html
+   ├── …
+   └── s12_outro/index.html
+   ```
+
+2. **Render** — run the notebook: setup cells 1–5 once, then cells 6–9 (dry run, then render).
+   Every row is `quality=looks, 1080p landscape, 30 fps, mp4, NVENC + browser GPU` — the
+   defaults you already use. Each scene renders to `DRIVE_ROOT/<scene>/<scene>.mp4` (written as
+   `.part` then renamed, logs saved next to it). Re-runs skip finished rows, so disconnects are
+   free to recover from.
+
+3. **Stitch** — the 12 clips are sequential chapters; concatenate them losslessly:
+
+   ```bash
+   ffmpeg -f concat -safe 0 -i concat_list.txt -c copy how_machines_learn_to_read.mp4
+   ```
+
+   `concat_list.txt` references `<scene>/<scene>.mp4` relative to `DRIVE_ROOT` — run the
+   command from Drive (or with drive/ mounted locally), or edit paths to point at wherever the
+   clips live. (Optional: add an audio track — narration_script.md is the voice-over script.)
+
+## How each scene is built (the architecture)
+
+Every `index.html` is **fully self-contained** — one file per scene, zero references:
+
+- **Shell** — declares `data-composition-duration` (40–70 s), `data-composition-fps="30"` and
+  `data-composition-variables='{"captions": true}'`; stage is a 1920×1080 SVG that scales to fit
+  any viewport.
+- **Engine (inlined, ~450 lines)** — a deterministic timeline runtime. Every frame is a pure
+  function of time: `render(t)` folds all registered ops (`fade / pop / wipe / draw / to`),
+  then runs `sync(fn, t0, t1)` interpolators (bars, dots, morphs). No CSS transitions, no rAF
+  accumulation — so **seeking to any frame always produces the exact same pixels**, which is
+  what a frame-stepping renderer needs.
+- **Data (inlined JSON)** — the trained 35→12→10 network, its 300-epoch history, 15 snapshot
+  predictions, the test digits, the static/blend test results and every derived display number.
+  One training run, computed at build time, shared by all 12 scenes → all numbers agree with
+  each other and with the narration.
+- **Scene code** — the chapter's visuals as timeline ops over that data.
+
+**Renderer contract:** scenes read variables via `window.__hyperframes.getVariables()`
+(`var_captions=true` toggles burned-in captions) and expose
+`window.__scene = { render(t), duration }`. They also accept seek messages
+`{type:'hf-seek', t}` / `{type:'seek', t}` via `postMessage` and the `hf-seek` event, and
+autoplay in real time otherwise — so any driver style (seek-stepping, realtime capture, or
+virtual-time) works. If your Hyperframes version wants the duration via CLI instead of the
+data-attribute, add `--duration 40` (per-scene value) to the row's `extra_args` — no other
+change needed.
+
+**Preview without rendering:** open any `index.html#preview` in a normal browser — you get a
+play/pause + arrow-key scrubber (space = play/pause, ←/→ = ±1 s, Shift+←/→ = ±5 s). Use
+`#freeze` to load paused at t=0 for scripted screenshots.
+
+## jobs.csv
+
+| column | value | notes |
+|---|---|---|
+| `folder` | `s01_hook` … `s12_outro` | one folder per scene, `index.html` inside |
+| `output_name` | same as folder | renders `s01_hook.mp4` into its own folder |
+| `fps` | `30` | matches `data-composition-fps` |
+| `quality` / `resolution` / `format` | `looks` / `landscape` / `mp4` | 1080p H.264 |
+| `gpu`, `browser_gpu` | `yes` / `yes` | NVENC encode + EGL Chrome capture |
+| `var_captions` | `true` | set `false` to re-render caption-free versions |
+
+Total render: 660 s of video across 12 rows. On a T4 with NVENC each scene typically renders
+faster than realtime; expect the whole batch in roughly 15–40 minutes plus Drive sync.
+
+## Rebuilding / editing
+
+The generator lives outside the upload set (in the workstation's `scripts/`):
+`nn_build.py` → `build/data.json` → `build_video.py` (merge + jobs/concat/narration).
+Edit a scene's `sNN.js`, re-run `build_video.py`, re-upload that one folder.
+All training is seeded — rebuilds are byte-identical.

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en" data-composition-duration="50" data-composition-fps="30"
+      data-composition-variables='{"captions": true}'>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hyperframes · Chapter 1 — Pictures are numbers</title>
+<style>
+  html, body { margin:0; padding:0; background:#0f141c; overflow:hidden; }
+  #stage { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:top left; }
+  #root  { display:block; }
+  svg text { user-select:none; }
+  #root * { transform-box: fill-box; transform-origin: center; }
+</style>
+</head>
+<body data-composition-duration="50" data-composition-fps="30">
+<div id="stage">
+  <svg id="root" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+</div>
+<script>
+window.__SCENE_DUR__ = 50;
+window.__hyperframes = window.__hyperframes || {
+  getVariables: function(){ return { captions: true }; }
+};
+const DATA = {"dig3":[1.0,1.0,1.0,1.0,1.0,0.35,0.35,0.35,1.0,0.35,0.0,0.35,1.0,0.35,0.0,0.0,0.0,0.35,1.0,0.35,0.35,0.0,0.0,0.35,1.0,1.0,0.35,0.35,0.35,1.0,0.35,1.0,1.0,1.0,0.35],"g28":[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.866,0.888,0.909,0.93,0.952,0.973,0.995,0.984,0.963,0.941,0.92,0.898,0.877,0.856,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.733,0.775,0.818,0.861,0.904,0.947,0.989,0.968,0.925,0.882,0.84,0.797,0.754,0.711,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.599,0.663,0.727,0.791,0.856,0.92,0.984,0.952,0.888,0.823,0.759,0.695,0.631,0.567,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.465,0.551,0.636,0.722,0.807,0.893,0.979,0.936,0.85,0.765,0.679,0.593,0.508,0.422,0.311,0.317,0.323,0.328,0.334,0.34,0.346,0.353,0.363,0.374,0.385,0.395,0.406,0.417,0.46,0.535,0.609,0.684,0.759,0.834,0.909,0.859,0.768,0.677,0.585,0.494,0.402,0.311,0.233,0.251,0.268,0.285,0.302,0.32,0.337,0.358,0.39,0.422,0.454,0.486,0.519,0.551,0.583,0.615,0.647,0.679,0.711,0.743,0.775,0.722,0.641,0.559,0.478,0.396,0.315,0.233,0.156,0.184,0.213,0.242,0.271,0.3,0.328,0.363,0.417,0.47,0.524,0.577,0.631,0.684,0.706,0.695,0.684,0.674,0.663,0.652,0.642,0.585,0.514,0.442,0.37,0.299,0.227,0.156,0.078,0.118,0.158,0.199,0.239,0.279,0.32,0.369,0.444,0.519,0.593,0.668,0.743,0.818,0.829,0.775,0.722,0.668,0.615,0.561,0.508,0.448,0.386,0.325,0.263,0.201,0.14,0.078,0.0,0.052,0.104,0.156,0.207,0.259,0.311,0.374,0.47,0.567,0.663,0.759,0.856,0.952,0.952,0.856,0.759,0.663,0.567,0.47,0.374,0.311,0.259,0.207,0.156,0.104,0.052,0.0,0.0,0.04,0.081,0.121,0.161,0.202,0.242,0.294,0.38,0.467,0.553,0.64,0.726,0.812,0.829,0.775,0.722,0.668,0.615,0.561,0.508,0.448,0.386,0.325,0.263,0.201,0.14,0.078,0.0,0.029,0.058,0.086,0.115,0.144,0.173,0.214,0.29,0.367,0.443,0.52,0.596,0.673,0.706,0.695,0.684,0.674,0.663,0.652,0.642,0.585,0.514,0.442,0.37,0.299,0.227,0.156,0.0,0.017,0.035,0.052,0.069,0.086,0.104,0.133,0.2,0.267,0.333,0.4,0.467,0.533,0.583,0.615,0.647,0.679,0.711,0.743,0.775,0.722,0.641,0.559,0.478,0.396,0.315,0.233,0.0,0.006,0.012,0.017,0.023,0.029,0.035,0.053,0.11,0.167,0.223,0.28,0.337,0.394,0.46,0.535,0.609,0.684,0.759,0.834,0.909,0.859,0.768,0.677,0.585,0.494,0.402,0.311,0.039,0.033,0.027,0.022,0.016,0.01,0.004,0.012,0.058,0.104,0.15,0.196,0.242,0.288,0.357,0.448,0.54,0.631,0.722,0.814,0.905,0.872,0.797,0.722,0.647,0.572,0.497,0.422,0.117,0.099,0.082,0.065,0.048,0.03,0.013,0.009,0.043,0.078,0.112,0.147,0.181,0.216,0.274,0.356,0.437,0.519,0.6,0.681,0.763,0.759,0.727,0.695,0.663,0.631,0.599,0.567,0.194,0.166,0.137,0.108,0.079,0.05,0.022,0.006,0.029,0.052,0.075,0.098,0.121,0.144,0.191,0.263,0.335,0.406,0.478,0.549,0.621,0.647,0.658,0.668,0.679,0.69,0.7,0.711,0.272,0.232,0.192,0.151,0.111,0.071,0.03,0.003,0.014,0.026,0.037,0.049,0.06,0.072,0.109,0.17,0.232,0.294,0.356,0.417,0.479,0.535,0.588,0.642,0.695,0.749,0.802,0.856,0.35,0.298,0.246,0.194,0.143,0.091,0.039,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.026,0.078,0.13,0.181,0.233,0.285,0.337,0.422,0.519,0.615,0.711,0.807,0.904,1.0,0.494,0.433,0.371,0.309,0.248,0.186,0.124,0.078,0.078,0.078,0.078,0.078,0.078,0.078,0.098,0.138,0.179,0.219,0.259,0.3,0.34,0.422,0.519,0.615,0.711,0.807,0.904,1.0,0.639,0.567,0.496,0.424,0.352,0.281,0.209,0.156,0.156,0.156,0.156,0.156,0.156,0.156,0.17,0.199,0.228,0.256,0.285,0.314,0.343,0.422,0.519,0.615,0.711,0.807,0.904,1.0,0.783,0.702,0.62,0.539,0.457,0.376,0.294,0.233,0.233,0.233,0.233,0.233,0.233,0.233,0.242,0.259,0.277,0.294,0.311,0.328,0.346,0.422,0.519,0.615,0.711,0.807,0.904,1.0,0.928,0.836,0.745,0.654,0.562,0.471,0.38,0.311,0.311,0.311,0.311,0.311,0.311,0.311,0.314,0.32,0.326,0.331,0.337,0.343,0.349,0.422,0.519,0.615,0.711,0.807,0.904,1.0,0.928,0.853,0.778,0.703,0.628,0.553,0.478,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.422,0.478,0.553,0.628,0.703,0.778,0.853,0.928,0.783,0.751,0.719,0.687,0.655,0.623,0.591,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.567,0.591,0.623,0.655,0.687,0.719,0.751,0.783,0.639,0.65,0.66,0.671,0.682,0.692,0.703,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.711,0.703,0.692,0.682,0.671,0.66,0.65,0.639,0.494,0.548,0.601,0.655,0.708,0.762,0.815,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.856,0.815,0.762,0.708,0.655,0.601,0.548,0.494,0.35,0.446,0.543,0.639,0.735,0.831,0.928,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.928,0.831,0.735,0.639,0.543,0.446,0.35],"narr":[[1.0,4.5,"Start small: a digit on a grid, five pixels wide and seven tall."],[5.5,5.0,"Each square holds one number: its brightness, from 0 for black to 1 for white."],[11.0,5.5,"Zoom in, and the picture is nothing but a table of numbers."],[17.0,5.5,"Unroll the table, row after row, into one long list: thirty-five numbers."],[23.5,5.0,"That list is the input. Everything the network knows is in it."],[29.0,5.5,"Real handwriting datasets use 28 by 28 pixels: 784 numbers per digit."],[35.0,5.5,"A phone photo has tens of millions. Only the length of the list changes."],[42.0,6.0,"To a computer, a picture is a list of numbers. Learning to see means learning from lists."]]};
+/* ============================================================ engine.js ==
+ * Deterministic SVG timeline engine for Hyperframes compositions.
+ * Every frame is a pure function of time t: render(t) folds all registered
+ * operations and applies element states. No accumulation, no randomness.
+ * ======================================================================== */
+'use strict';
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('root');
+const DUR = window.__SCENE_DUR__;
+
+const C = {
+  bg:'#0f141c', panel:'#161d29', panel2:'#1a2230', line:'#2a3342',
+  text:'#E8EDF4', dim:'#93A1B3', faint:'#5A6675',
+  blue:'#58C4DD', teal:'#5FD3BC', green:'#7EC96B', yellow:'#FFE45C',
+  orange:'#FF9F43', red:'#FC6255', purple:'#B57EDC', gold:'#FFC53D', grey:'#4E5A68'
+};
+const FONT_S = "'Liberation Sans','DejaVu Sans',Arial,sans-serif";
+const FONT_M = "'Liberation Mono','DejaVu Sans Mono',Menlo,Consolas,monospace";
+
+/* -------------------------------------------------- element constructors */
+function el(tag, attrs, parent){
+  const e = document.createElementNS(SVG_NS, tag);
+  if (attrs) for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  (parent || svg).appendChild(e);
+  return e;
+}
+function G(parent){ return el('g', null, parent || svg); }
+
+function T(html, x, y, o, parent){
+  o = o || {};
+  const size = o.size || 40, anchor = o.anchor || 'middle';
+  const anchorMap = { m: 'middle', l: 'start', r: 'end', start: 'start', end: 'end', middle: 'middle' };
+  const t = el('text', {
+    x, y, 'text-anchor': anchorMap[anchor] || 'middle',
+    'font-family': o.mono ? FONT_M : FONT_S,
+    'font-size': size, fill: o.color || C.text,
+    'font-weight': o.weight || '400',
+    'letter-spacing': o.ls != null ? o.ls : '0.5'
+  }, parent || o.parent || svg);
+  const lines = String(html).split(/<br\s*\/?>/);
+  lines.forEach((ln, i) => {
+    const ts = el('tspan', { x, dy: i === 0 ? 0 : size * 1.3 }, t);
+    ts.textContent = ln;
+  });
+  if (!o.show) t.style.opacity = 0;
+  return t;
+}
+function stext(html, x, y, o){ return T(html, x, y, Object.assign({ size: 30 }, o || {})); }
+
+function rect(x, y, w, h, o, parent){
+  o = o || {};
+  return el('rect', { x, y, width: w, height: h, rx: o.rx || 0,
+    fill: o.fill || 'none', stroke: o.stroke, 'stroke-width': o.w,
+    'stroke-dasharray': o.dash }, parent);
+}
+function circle(cx, cy, r, o, parent){
+  o = o || {};
+  return el('circle', { cx, cy, r, fill: o.fill || 'none', stroke: o.stroke,
+    'stroke-width': o.w }, parent);
+}
+function line(x1, y1, x2, y2, o, parent){
+  o = o || {};
+  return el('line', { x1, y1, x2, y2, stroke: o.stroke || C.grey,
+    'stroke-width': o.w || 2, 'stroke-linecap': 'round',
+    'stroke-dasharray': o.dash }, parent || svg, parent);
+}
+function path(d, o, parent){
+  o = o || {};
+  return el('path', { d, fill: o.fill || 'none', stroke: o.stroke || C.text,
+    'stroke-width': o.w || 3, 'stroke-linecap': 'round',
+    'stroke-linejoin': 'round', 'stroke-dasharray': o.dash }, parent);
+}
+
+const defs = el('defs', null);
+const markers = {};
+function arrowMarker(color){
+  if (markers[color]) return markers[color];
+  const id = 'ah' + Object.keys(markers).length;
+  const m = el('marker', { id, viewBox: '0 0 10 10', refX: 8, refY: 5,
+    markerWidth: 7.5, markerHeight: 7.5, orient: 'auto-start-reverse' }, defs);
+  el('path', { d: 'M0,0 L10,5 L0,10 z', fill: color }, m);
+  markers[color] = id;
+  return id;
+}
+function arrow(x1, y1, x2, y2, o, parent){
+  o = o || {};
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
+  const ux = dx / L, uy = dy / L, sh = o.sh != null ? o.sh : 9;
+  const col = o.stroke || C.grey;
+  return el('line', { x1, y1, x2: x2 - ux * sh, y2: y2 - uy * sh, stroke: col,
+    'stroke-width': o.w || 3, 'stroke-linecap': 'round',
+    'stroke-dasharray': o.dash, 'marker-end': 'url(#' + arrowMarker(col) + ')' }, parent);
+}
+
+/* 5x7 pixel grid of values in [0,1] */
+function grid(x, y, cell, cols, rows, data, o){
+  o = o || {};
+  const g = G(o.parent), gap = o.gap != null ? o.gap : 1, cells = [];
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
+    const v = data ? data[r * cols + c] : 0;
+    const fill = v > 0.03 ? 'rgba(232,237,244,' + Math.min(1, v).toFixed(3) + ')'
+                          : (o.empty || '#1a212d');
+    cells.push(el('rect', { x: x + c * (cell + gap), y: y + r * (cell + gap),
+      width: cell, height: cell, rx: cell * 0.16, fill }, g));
+  }
+  g.style.opacity = o.show ? 1 : 0;
+  return { g, cells, x, y, cell, cols, rows, gap };
+}
+
+/* diverging heat grid: blue positive / red negative */
+function heat(x, y, cell, cols, rows, data, o){
+  o = o || {};
+  const g = G(o.parent), gap = o.gap != null ? o.gap : 1, cells = [];
+  const max = o.max || 0.001;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
+    const v = (data && data[r * cols + c]) || 0;
+    const m = Math.min(1, Math.abs(v) / max);
+    const rgb = v >= 0 ? '88,196,221' : '252,98,85';
+    cells.push(el('rect', { x: x + c * (cell + gap), y: y + r * (cell + gap),
+      width: cell, height: cell, rx: cell * 0.16,
+      fill: m < 0.08 ? '#1a212d' : 'rgba(' + rgb + ',' + (0.18 + 0.82 * m).toFixed(3) + ')' }, g));
+  }
+  g.style.opacity = o.show ? 1 : 0;
+  return { g, cells };
+}
+
+/* probability bars for 10 digits */
+function bars(x, y, w, h, o){
+  o = o || {};
+  const g = G(o.parent);
+  g.style.opacity = o.show ? 1 : 0;
+  const n = 10, gap = o.gap != null ? o.gap : 10;
+  const bw = (w - (n - 1) * gap) / n;
+  const base = el('rect', { x, y, width: w, height: 2, fill: C.line }, g);
+  const rects = [], labs = [], vals = [];
+  for (let i = 0; i < n; i++){
+    const bx = x + i * (bw + gap);
+    el('rect', { x: bx, y: y - h, width: bw, height: h, fill: 'rgba(255,255,255,0.045)', rx: 3 }, g);
+    rects.push(el('rect', { x: bx, y, width: bw, height: 0, rx: 3, fill: o.color || C.blue }, g));
+    vals.push(T('', bx + bw / 2, y - h - 12, { size: o.vsize || 24, color: C.dim, show: true, parent: g }));
+    labs.push(T(String(i), bx + bw / 2, y + 32, { size: o.lsize || 26, color: C.dim, show: true, parent: g }));
+  }
+  const api = {
+    g, rects, vals, base,
+    set(values){
+      for (let i = 0; i < n; i++){
+        const v = Math.max(0, Math.min(1, values[i]));
+        rects[i].setAttribute('y', y - v * h);
+        rects[i].setAttribute('height', Math.max(0, v * h));
+        vals[i].textContent = Math.round(v * 100) + '%';
+        vals[i].setAttribute('fill', v > 0.005 ? C.dim : '#39424e');
+      }
+    },
+    highlight(i, color){
+      labs.forEach((L, k) => L.setAttribute('fill', k === i ? (color || C.gold) : C.dim));
+      rects.forEach((R, k) => R.setAttribute('fill', k === i ? (color || C.gold) : (o.color || C.blue)));
+    }
+  };
+  return api;
+}
+
+/* ------------------------------------------------------------- timeline -- */
+const OPS = [], SYNCS = [];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const easeIO = p => p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+const easeOutC = p => 1 - Math.pow(1 - p, 3);
+const easeBack = p => { const c = 1.70158 * 0.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+function lerpA(a, b, p){ return a.map((v, i) => lerp(v, b[i], p)); }
+
+function reg(op){ OPS.push(op); return op; }
+function sync(fn, t0, t1){ SYNCS.push({ fn, t0, t1 }); }
+/* fade in (optionally rising by o.y px) */
+function fade(e, t0, dur, o){ o = o || {}; return reg({ el: e, type: 'fade', t0, dur, rise: o.y || 0 }); }
+function pop(e, t0, dur){ return reg({ el: e, type: 'pop', t0, dur }); }
+function wipe(e, t0, dur){ e._wipe = true; return reg({ el: e, type: 'wipe', t0, dur }); }
+function out(e, t0, dur){ return reg({ el: e, type: 'out', t0, dur }); }
+function to(e, t0, dur, props){ return reg({ el: e, type: 'to', t0, dur, to: props }); }
+function draw(e, t0, dur){
+  if (e.getTotalLength){ try { e._len = e.getTotalLength() + 2; } catch (_) { e._len = null; } }
+  e._draw = true;
+  return reg({ el: e, type: 'draw', t0, dur });
+}
+
+/* interpolate numeric object keyframes for custom properties (bars, dots...) */
+function tween(obj, key, t0, t1, v0, v1, ease){
+  sync(p => { obj[key] = lerp(v0, v1, (ease || easeIO)(p)); }, t0, t1);
+}
+
+/* ------------------------------------------------------------- captions -- */
+function wrapText(s, maxChars){
+  const words = String(s).split(' '), lines = [];
+  let cur = '';
+  for (const w of words){
+    if ((cur ? cur + ' ' + w : w).length > maxChars && cur){ lines.push(cur); cur = w; }
+    else cur = cur ? cur + ' ' + w : w;
+  }
+  if (cur) lines.push(cur);
+  return lines.slice(0, 3);
+}
+
+function captions(narr, o){
+  o = o || {};
+  const SIZE = o.size || 33, LH = SIZE * 1.3, MAXC = o.maxChars || 86;
+  const groups = narr.map(entry => {
+    const t0 = entry[0], t1 = entry[0] + entry[1];
+    const lines = wrapText(entry[2], MAXC);
+    const g = G();
+    const w = Math.max.apply(null, lines.map(l => l.length)) * SIZE * 0.5 + 60;
+    const top = 1006 - (lines.length - 1) * LH - SIZE * 1.15 - 12;
+    const h = (lines.length - 1) * LH + SIZE * 1.55 + 16;
+    el('rect', { x: 960 - w / 2, y: top, width: w, height: h, rx: 12, fill: 'rgba(5,8,13,0.68)' }, g);
+    T(lines.join('<br>'), 960, 1006 - (lines.length - 1) * LH, { size: SIZE, color: '#DCE4EE', show: true, ls: '0.2' }, g);
+    g.style.opacity = 0;
+    return { g, t0, t1 };
+  });
+  sync((p, t) => {
+    let act = null;
+    for (const c of groups) if (t >= c.t0 - 0.05 && t <= c.t1) act = c;
+    for (const c of groups) c.g.style.opacity = c === act ? 1 : 0;
+  }, 0, DUR);
+}
+
+/* --------------------------------------------------------- chapter chip -- */
+function begin(o){
+  const g = G();
+  el('circle', { cx: 66, cy: 60, r: 8, fill: o.color || C.blue }, g);
+  T((o.n || '') + '  ·  ' + (o.title || ''), 90, 69, { size: 27, color: C.dim, anchor: 'start', show: true, ls: '1.5' }, g);
+  fade(g, 0.4, 0.8);
+  return g;
+}
+
+/* -------------------------------------------------------- progress bar --- */
+function progressBar(accent){
+  const pg = el('rect', { x: 0, y: 1076, width: 0, height: 4, fill: accent || C.blue, opacity: 0.5 });
+  sync((p, t) => pg.setAttribute('width', (1920 * clamp(t / DUR, 0, 1)).toFixed(1)), 0, DUR);
+}
+
+/* ---------------------------------------------------------- state fold --- */
+let STATES = [];
+function initStates(){
+  const byEl = new Map();
+  for (const op of OPS){
+    if (!op.el) continue;
+    if (!byEl.has(op.el)) byEl.set(op.el, []);
+    byEl.get(op.el).push(op);
+  }
+  STATES = [];
+  byEl.forEach((ops, elm) => {
+    ops.sort((a, b) => a.t0 - b.t0);
+    const base = {
+      o: parseFloat(getComputedStyle(elm).opacity) || 0,
+      x: 0, y: 0, s: 1,
+      clip: elm._wipe ? 0 : 1,
+      dash: (elm._draw && elm._len != null) ? 0 : 1
+    };
+    STATES.push({ el: elm, ops, st: base });
+  });
+}
+
+function foldAll(t){
+  for (const s of STATES){
+    const st = { o: s.st.o, x: 0, y: 0, s: 1, clip: s.st.clip, dash: s.st.dash };
+    for (const op of s.ops){
+      const p = op.dur > 0 ? clamp((t - op.t0) / op.dur, 0, 1) : (t >= op.t0 ? 1 : 0);
+      switch (op.type){
+        case 'fade': { const e = easeOutC(p); st.o = e; st.y += (1 - e) * op.rise; break; }
+        case 'out':  { if (p > 0){ const e = easeIO(p); st.o = 1 - e; st.y += e * 10; } break; }
+        case 'pop':  { const e = easeBack(p); st.o = Math.min(1, e * 1.6); st.s = 0.62 + 0.38 * e; break; }
+        case 'wipe': { const e = easeIO(p); st.clip = e; st.o = Math.max(st.o, e); break; }
+        case 'draw': { const e = easeIO(p); st.dash = e; st.o = e; break; }
+        case 'to': {
+          const e = easeIO(p), k = op.to || {};
+          if ('o' in k) st.o = lerp(st.o, k.o, e);
+          if ('x' in k) st.x = lerp(st.x, k.x, e);
+          if ('y' in k) st.y = lerp(st.y, k.y, e);
+          if ('s' in k) st.s = lerp(st.s, k.s, e);
+          break;
+        }
+      }
+    }
+    applyState(s.el, st);
+  }
+}
+
+function applyState(e, st){
+  e.style.opacity = st.o < 0.004 ? 0 : st.o.toFixed(3);
+  let tf = '';
+  if (st.x || st.y) tf += 'translate(' + st.x.toFixed(2) + 'px,' + st.y.toFixed(2) + 'px)';
+  if (st.s !== 1) tf += (tf ? ' ' : '') + 'scale(' + st.s.toFixed(3) + ')';
+  e.style.transform = tf || 'none';               /* always write: clears stale state on seeks */
+  e.style.clipPath = st.clip >= 1 ? 'none'
+    : 'inset(-8% ' + (100 * (1 - st.clip)).toFixed(2) + '% -8% -8%)';
+  if (e._len != null){
+    e.setAttribute('stroke-dasharray', e._len.toFixed(1));
+    e.setAttribute('stroke-dashoffset', ((1 - st.dash) * e._len).toFixed(1));
+  }
+}
+
+/* ------------------------------------------------------------- render ---- */
+let curT = -1;
+function render(t){
+  t = clamp(t, 0, DUR);
+  curT = t;
+  foldAll(t);
+  for (const s of SYNCS){
+    if (t < s.t0) continue;                    // not started: fn must not touch state
+    const p = s.t1 > s.t0 ? clamp((t - s.t0) / (s.t1 - s.t0), 0, 1) : 1;
+    s.fn(p, t);
+  }
+}
+
+/* ------------------------------------------------------------- player ---- */
+function fitStage(){
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  document.getElementById('stage').style.transform = 'scale(' + s + ')';
+}
+
+function boot(){
+  fitStage();
+  window.addEventListener('resize', fitStage);
+  initStates();
+  render(0);
+
+  /* external seek contract (renderer adapters) */
+  let manual = false;
+  function seek(t){ manual = true; render(+t || 0); }
+  window.addEventListener('message', e => {
+    const d = e.data || {};
+    if (d && typeof d.t === 'number' && (d.type === 'hf-seek' || d.type === 'seek' || d.type === 'seekto')) seek(d.t);
+  });
+  window.addEventListener('hf-seek', e => { if (e.detail != null) seek(e.detail); });
+  window.__scene = { render: seek, peek: render, duration: DUR, version: '1.0' };
+  window.__dbg = { STATES, OPS, SYNCS, easeBack, clamp };
+
+  /* realtime autoplay fallback: if a driver seeks, we stop driving.
+     '#freeze' disables autoplay (used by QA/render adapters that drive frames). */
+  let t0p = performance.now(), base = 0;
+  if (location.hash.indexOf('freeze') < 0){
+    function auto(now){
+      if (manual) return;
+      const t = base + (now - t0p) / 1000;
+      if (t >= DUR){ render(DUR); return; }
+      render(t);
+      requestAnimationFrame(auto);
+    }
+    requestAnimationFrame(auto);
+  }
+
+  /* optional preview UI: only when opened with #preview */
+  if (location.hash.indexOf('preview') >= 0) previewUI(seek);
+}
+
+function previewUI(seek){
+  const ui = G();
+  ui.style.opacity = 0.92;
+  const bw = 54, bx = 1920 - 300, by = 1030;
+  el('rect', { x: bx, y: by, width: 240, height: 36, rx: 8, fill: 'rgba(10,14,20,0.8)', stroke: C.line }, ui);
+  const playG = el('g', { transform: 'translate(' + (bx + 27) + ',' + (by + 18) + ')' }, ui);
+  const iconPlay = el('path', { d: 'M-7,-9 L9,0 L-7,9 Z', fill: C.text }, playG);
+  const iconPause = el('path', { d: 'M-7,-9 L-2,-9 L-2,9 L-7,9 Z M4,-9 L9,-9 L9,9 L4,9 Z', fill: C.text, visibility: 'hidden' }, playG);
+  const timeTxt = T('0.0 / ' + DUR.toFixed(0) + 's', bx + 145, by + 24, { size: 19, color: C.dim, show: true, mono: true }, ui);
+
+  let playing = true, base = curT, t0p = performance.now();
+  function loop(now){
+    if (playing){
+      const t = base + (now - t0p) / 1000;
+      if (t >= DUR){ render(DUR); playing = false; base = 0; }
+      else render(t);
+    }
+    timeTxt.textContent = curT.toFixed(1) + ' / ' + DUR.toFixed(0) + 's';
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  function toggle(){
+    if (playing){ base = curT; playing = false; }
+    else { t0p = performance.now(); playing = true; }
+    iconPlay.setAttribute('visibility', playing ? 'hidden' : 'visible');
+    iconPause.setAttribute('visibility', playing ? 'visible' : 'hidden');
+  }
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space'){ e.preventDefault(); toggle(); }
+    else if (e.key === 'ArrowRight'){ playing = false; render(curT + (e.shiftKey ? 5 : 1)); base = curT; }
+    else if (e.key === 'ArrowLeft'){ playing = false; render(curT - (e.shiftKey ? 5 : 1)); base = curT; }
+  });
+  playG.addEventListener('click', toggle);
+  el('rect', { x: bx, y: by, width: 240, height: 36, rx: 8, fill: 'transparent', style: 'cursor:pointer' }, ui)
+    .addEventListener('click', toggle);
+}
+
+document.readyState === 'loading'
+  ? document.addEventListener('DOMContentLoaded', boot)
+  : boot();
+
+/* s02 — Chapter 1 · Pictures are numbers (50s) */
+(function(){
+begin({ n:'Chapter 1', title:'Pictures are numbers', color:C.blue });
+
+const GX = 700, GY = 300, CELL = 34, GAP = 1;
+const g3 = grid(GX, GY, CELL, 5, 7, DATA.dig3, { gap: GAP });
+fade(g3.g, 1.2, 1.0);
+const cap = T('a digit on a grid — 5 pixels wide, 7 tall', 960, 620, { size: 36, color: C.dim });
+fade(cap, 2.2, 0.8);
+
+/* highlight one pixel */
+const pr = 1, pc = 2;
+const bx = GX + pc * (CELL + GAP) - 4, by = GY + pr * (CELL + GAP) - 4;
+const box = rect(bx, by, CELL + 8, CELL + 8, { rx: 6, stroke: C.yellow, w: 3.5 });
+draw(box, 5.5, 0.7);
+const one = T('each square holds one number: its brightness, 0 → 1', 960, 690, { size: 34, color: C.yellow });
+fade(one, 6.0, 0.8);
+
+/* cell numbers */
+const nums = [];
+g3.cells.forEach((rc, i) => {
+  const r = Math.floor(i / 5), c = i % 5;
+  const v = DATA.dig3[i];
+  const t = T(v.toFixed(1), GX + c * (CELL + GAP) + CELL / 2, GY + r * (CELL + GAP) + CELL / 2 + 6,
+    { size: 15, color: v > 0.5 ? '#0e131a' : C.faint, show: true });
+  nums.push(t);
+});
+nums.forEach((t, i) => fade(t, 10.0 + (i % 7) * 0.06 + Math.floor(i / 7) * 0.12, 0.3));
+
+/* unroll into a column vector */
+const VX = 1330, VCELL = 16, VGAP = 2, VY0 = 185;
+const colCells = [];
+const flyG = G();
+g3.cells.forEach((rc, i) => {
+  const r = Math.floor(i / 5), c = i % 5;
+  const x0 = GX + c * (CELL + GAP), y0 = GY + r * (CELL + GAP);
+  const x1 = VX, y1 = VY0 + i * (VCELL + VGAP);
+  const rc2 = el('rect', { x: x0, y: y0, width: CELL, height: CELL, rx: 5,
+    fill: rc.getAttribute('fill') }, flyG);
+  colCells.push({ rc2, x0, y0, x1, y1, d: i * 0.028 });
+});
+out(g3.g, 17.0, 0.01);   // grid replaced by flying copies
+nums.forEach((t, i) => out(t, 16.99, 0.01));
+out(cap, 16.2, 0.4); out(one, 16.2, 0.4); out(box, 16.2, 0.4);
+const unroll = T('unroll it, row after row — one long list', 960, 660, { size: 36, color: C.dim });
+fade(unroll, 17.6, 0.8);
+sync((p, t) => {
+  colCells.forEach(cc => {
+    const q = clamp((t - 17.0 - cc.d) / 0.75, 0, 1), e = easeIO(q);
+    cc.rc2.setAttribute('x', lerp(cc.x0, cc.x1, e));
+    cc.rc2.setAttribute('y', lerp(cc.y0, cc.y1, e));
+    cc.rc2.setAttribute('width', lerp(CELL, VCELL, e));
+    cc.rc2.setAttribute('height', lerp(CELL, VCELL, e));
+  });
+}, 17.0, 18.2);
+
+/* brackets + label */
+const bTop = VY0 - 12, bBot = VY0 + 35 * (VCELL + VGAP) - VGAP + 12;
+const brL = path('M' + (VX - 16) + ',' + (bTop + 14) + ' L' + (VX - 26) + ',' + bTop +
+                 ' L' + (VX - 26) + ',' + bBot + ' L' + (VX - 16) + ',' + bBot, { stroke: C.dim, w: 2.5 });
+const brR = path('M' + (VX + VCELL + 6) + ',' + (bTop + 14) + ' L' + (VX + VCELL + 16) + ',' + bTop +
+                 ' L' + (VX + VCELL + 16) + ',' + bBot + ' L' + (VX + VCELL + 6) + ',' + bBot, { stroke: C.dim, w: 2.5 });
+fade(brL, 18.4, 0.6); fade(brR, 18.4, 0.6);
+const xLab = T('x', VX + 90, VY0 + 300, { size: 46, mono: true, color: C.blue, anchor: 'start' });
+const xSub = T('the input — a list of 35 numbers', VX + 90, VY0 + 350, { size: 30, color: C.dim, anchor: 'start' });
+fade(xLab, 19.4, 0.7); fade(xSub, 20.0, 0.7);
+fade(flyG, 17.0, 0.01);
+to(unroll, 22.0, 0.8, { o: 0 });
+
+/* --- bigger pictures ----------------------------------------------------- */
+[flyG, brL, brR, xLab, xSub].forEach(e => out(e, 28.3, 0.5));
+const g28 = grid(660, 260, 8, 28, 28, DATA.g28, { gap: 1 });
+fade(g28.g, 29.0, 1.0);
+const l28 = T('28 × 28 = 784 numbers', 660 + 116, 580, { size: 40, mono: true, color: C.text });
+fade(l28, 29.8, 0.8);
+const ph = T('a phone photo:  4000 × 3000 × 3  =  36,000,000 numbers', 960, 680, { size: 36, color: C.dim });
+fade(ph, 35.2, 0.8);
+out(g28.g, 41.5, 0.5); out(l28, 41.5, 0.5); out(ph, 41.5, 0.5);
+
+const close = T('A picture is a list of numbers.', 960, 460, { size: 64, weight: '700' });
+wipe(close, 42.2, 1.4);
+
+captions(DATA.narr);
+progressBar(C.blue);
+})();
+
+</script>
+</body>
+</html>

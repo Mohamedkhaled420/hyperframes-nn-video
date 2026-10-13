@@ -1,0 +1,13 @@
+folder,html,output_name,enabled,overwrite,fps,quality,resolution,format,gpu,browser_gpu,workers,extra_args,var_captions
+s01_hook,,s01_hook,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
+s02_pixels,,s02_pixels,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
+s03_neuron,,s03_neuron,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
+s04_layers,,s04_layers,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
+s05_knobs,,s05_knobs,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
+s06_forward,,s06_forward,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
+s07_cost,,s07_cost,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
+s08_descent,,s08_descent,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
+s09_backprop,,s09_backprop,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
+s10_training,,s10_training,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
+s11_inside,,s11_inside,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
+s12_outro,,s12_outro,yes,no,30,looks,landscape,mp4,yes,yes,auto,,true
