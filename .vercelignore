@@ -1,0 +1,9 @@
+node_modules
+generated
+exports
+.git
+render/s*.mp4
+render/narration_full.m4a
+render/concat.txt
+render/concat_list.txt
+*.log
