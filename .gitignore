@@ -2,7 +2,3 @@ node_modules/
 __pycache__/
 *.log
 .DS_Store
-generated/
-exports/
-**/.export/
-**/.smoke/

@@ -7,6 +7,42 @@ images to upload**.
 
 ---
 
+## Quick start — init & run
+
+**Requirements:** [Bun](https://bun.sh) 1.1+ (or Node 18+) and any modern browser. Optional,
+only for MP4 export / re-rendering: `python3` + `playwright` + `ffmpeg`. No API keys anywhere —
+the GLM SDK is keyless.
+
+```bash
+# 1 — get the code
+git clone https://github.com/Mohamedkhaled420/hyperframes-nn-video.git
+cd hyperframes-nn-video
+# …or init a fresh repo from these files instead:
+#   git init
+#   git add .
+#   git commit -m "init"
+#   git remote add origin <your-repo-url> && git push -u origin main
+
+# 2 — install the single JS dependency (keyless GLM SDK)
+bun install                # or: npm install
+
+# 3 — start the development server
+bun glm_server.mjs         # or: node glm_server.mjs    (PORT=9000 bun glm_server.mjs to change port)
+```
+
+Then open **http://localhost:8787** — the full player with the AI tutor (`A`), AI Studio (`G`,
+generates a whole new scenes folder from a prompt) and Export MP4 (`E`). Playback also works
+with no server at all: just double-click `PLAYER.html`.
+
+For server-side MP4 export of AI-generated packs, add the render toolchain:
+
+```bash
+python3 -m pip install playwright && python3 -m playwright install chromium
+# ffmpeg must be on PATH:  apt install ffmpeg   /   brew install ffmpeg
+```
+
+---
+
 ## Rendered MP4 + narration speech (already generated)
 
 A full local render lives in **`render/`**:
