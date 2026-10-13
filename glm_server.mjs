@@ -812,5 +812,7 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`\n  Hyperframes Studio ready — keyless GLM via z-ai-web-dev-sdk`);
   console.log(`  open  http://localhost:${PORT}`);
+  console.log(`  forwarded host (Codespaces / SSH / docker)? use the port-${PORT} forwarded URL —`);
+  console.log(`  the player takes its API base from the browser origin, nothing to configure`);
   console.log(`  features: Ask AI tutor · AI Studio (generate scene packs) · Export MP4\n`);
 });

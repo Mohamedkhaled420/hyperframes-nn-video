@@ -353,7 +353,8 @@ $('aiForm').addEventListener('submit', async ev => {
     aiHistory.push({ role: 'user', content: q }, { role: 'assistant', content: j.answer });
   } catch (e) {
     aiMsg('err', 'AI tutor is offline \u2014 it talks to GLM through its keyless server. '
-      + 'From the project folder run:  bun glm_server.mjs   then open http://localhost:8787');
+      + 'From the project folder run:  bun glm_server.mjs   then open '
+      + (location.protocol.indexOf('http') === 0 ? location.origin : 'http://localhost:8787'));
   } finally {
     typ.remove(); aiBusy = false; aiIn.focus();
   }

@@ -252,6 +252,9 @@ const BUNDLED_TITLE = 'How does a machine learn to read?';
 let currentPack = 'bundled';
 let PACKS = [];
 const ONSERVER = location.protocol.indexOf('http') === 0;
+/* API base is taken from the client: whatever origin serves this page
+   (localhost, Codespaces forwarded URL, SSH tunnel…) is what we call. */
+const SERVER_URL = ONSERVER ? location.origin : 'http://localhost:8787';
 
 const $ = id => document.getElementById(id);
 const frame = $('frame'), fill = $('fill'), knob = $('knob'), bar = $('bar');
@@ -484,7 +487,7 @@ $('aiForm').addEventListener('submit', async ev => {
     aiHistory.push({ role: 'user', content: q }, { role: 'assistant', content: j.answer });
   } catch (e) {
     aiMsg('err', 'AI tutor is offline \u2014 it talks to GLM through its keyless server. '
-      + 'From the project folder run:  bun glm_server.mjs   then open http://localhost:8787');
+      + 'From the project folder run:  bun glm_server.mjs   then open ' + SERVER_URL);
   } finally {
     typ.remove(); aiBusy = false; aiIn.focus();
   }
@@ -516,7 +519,7 @@ stGo.onclick = async () => {
     stPhase.textContent = 'AI Studio needs its server';
     stMsg('This button talks to GLM through the keyless companion server.');
     stMsg('From the project folder run:  bun glm_server.mjs');
-    stMsg('Then open http://localhost:8787 and try again.');
+    stMsg('Then open ' + SERVER_URL + ' and try again.');
     return;
   }
   stBusy = true; stGo.disabled = true;
@@ -574,7 +577,7 @@ exGo.onclick = async () => {
   if (exBusy) return;
   if (!ONSERVER){
     exPhase.textContent = 'Export needs the companion server';
-    exLog.textContent = 'Run:  bun glm_server.mjs\nThen open http://localhost:8787 and export again.';
+    exLog.textContent = 'Run:  bun glm_server.mjs\nThen open ' + SERVER_URL + ' and export again.';
     return;
   }
   exBusy = true; exGo.disabled = true; $('btnExport').classList.add('busy');
