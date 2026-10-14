@@ -12,7 +12,7 @@
    the keyless z-ai SDK where its config exists (sandbox / local companion). */
 import { readJson } from '../lib/tutor.mjs';
 import {
-  PLAN_SYS, sceneSystem, extractJSON, normalizePlan, cleanCode,
+  PLAN_SYS, sceneSystemCompact, extractJSON, normalizePlan, cleanCode,
   validateBody, fallbackBody, assemble, autoplayOff, slugify, stamp,
 } from '../lib/studio_core.mjs';
 
@@ -25,19 +25,26 @@ const TTS_MODEL = process.env.LLM_TTS_MODEL || 'canopylabs/orpheus-v1-english';
 const TTS_VOICE = process.env.LLM_TTS_VOICE || 'tara';
 
 async function llmViaEnv(messages) {
-  const res = await fetch(LLM_BASE + '/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json',
-               Authorization: 'Bearer ' + LLM_KEY },
-    body: JSON.stringify({ model: LLM_MODEL, temperature: 0.5,
-      max_tokens: 4000, messages }),
-  });
-  if (!res.ok) throw new Error('LLM HTTP ' + res.status + ': ' +
-    (await res.text()).slice(0, 200));
-  const data = await res.json();
-  const text = data?.choices?.[0]?.message?.content || '';
-  if (!text.trim()) throw new Error('empty LLM response');
-  return text;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const res = await fetch(LLM_BASE + '/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json',
+                 Authorization: 'Bearer ' + LLM_KEY },
+      body: JSON.stringify({ model: LLM_MODEL, temperature: 0.5,
+        max_tokens: 2000, messages }),
+    });
+    if (res.status === 429 && attempt === 1) {
+      await new Promise(r => setTimeout(r, 6000));   // tight TPM windows reset fast
+      continue;
+    }
+    if (!res.ok) throw new Error('LLM HTTP ' + res.status + ': ' +
+      (await res.text()).slice(0, 200));
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content || '';
+    if (!text.trim()) throw new Error('empty LLM response');
+    return text;
+  }
+  throw new Error('LLM rate-limited');
 }
 
 async function llmViaSdk(messages) {
@@ -63,18 +70,27 @@ function makeLlm(log) {
 
 /* optional narration speech — only attempted when an env API is configured
    and there is time budget left inside the 60 s serverless window */
-async function ttsLine(text) {
-  const res = await fetch(LLM_BASE + '/audio/speech', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json',
-               Authorization: 'Bearer ' + LLM_KEY },
-    body: JSON.stringify({ model: TTS_MODEL, input: text,
-                           voice: TTS_VOICE, response_format: 'wav' }),
-  });
-  if (!res.ok) throw new Error('TTS HTTP ' + res.status);
-  const buf = Buffer.from(await res.arrayBuffer());
-  if (buf.length < 2000) throw new Error('TTS wav too small');
-  return buf.toString('base64');
+let ttsVoiceOk = null;   // remembered across clips within one request
+async function ttsLine(text, voices) {
+  const tried = [];
+  for (const v of (ttsVoiceOk ? [ttsVoiceOk] : voices)) {
+    const res = await fetch(LLM_BASE + '/audio/speech', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json',
+                 Authorization: 'Bearer ' + LLM_KEY },
+      body: JSON.stringify({ model: TTS_MODEL, input: text,
+                             voice: v, response_format: 'wav' }),
+    });
+    if (res.ok) {
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (buf.length >= 2000) { ttsVoiceOk = v; return buf.toString('base64'); }
+      tried.push(v + ': tiny wav ' + buf.length + 'B');
+      continue;
+    }
+    tried.push(v + ': HTTP ' + res.status + ' ' +
+      (await res.text()).slice(0, 160));
+  }
+  throw new Error('TTS failed — ' + tried.join(' | '));
 }
 
 export default async function handler(req, res) {
@@ -123,7 +139,7 @@ export default async function handler(req, res) {
       for (let attempt = 1; attempt <= 2 && !body; attempt++) {
         try {
           const code = await llm([
-            { role: 'assistant', content: sceneSystem() },
+            { role: 'assistant', content: sceneSystemCompact() },
             { role: 'user', content: attempt === 1 ? user : user +
               `\n\nYour previous attempt was rejected: ${err}. Fix it and output the full body again.` },
           ]);
@@ -168,10 +184,11 @@ export default async function handler(req, res) {
         for (const c of clipList) {
           if (Date.now() - started > 48000) { log('time budget reached — remaining lines stay caption-only'); break; }
           try {
-            const b64 = await ttsLine(c.txt.slice(0, 220));
+            const b64 = await ttsLine(c.txt.slice(0, 220),
+              [TTS_VOICE, 'tara', 'leah', 'Fritz-PlayAI'].filter(Boolean));
             pack.scenes[c.si].audio.push({ t0: c.t0, dur: c.w, b64 });
             ok++;
-          } catch (e) { log(`tts skipped one line: ${e.message}`); }
+          } catch (e) { log(`tts skipped one line: ${String(e.message).slice(0, 220)}`); }
         }
         log(`narration audio: ${ok}/${clipList.length} clips`);
       } else {
