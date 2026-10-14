@@ -2,6 +2,8 @@
 import ZAI from 'z-ai-web-dev-sdk';
 import { systemFor, readJson } from '../lib/tutor.mjs';
 
+export const maxDuration = 60;
+
 export default async function handler(req, res) {
   if (req.method !== 'POST')
     return res.status(405).json({ error: 'POST only' });
