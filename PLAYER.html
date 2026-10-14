@@ -635,13 +635,24 @@ function qaScene(sc){
     const f = document.createElement('iframe');
     f.style.cssText = 'position:fixed;left:-10000px;top:0;width:1920px;height:1080px;visibility:hidden;';
     f.setAttribute('aria-hidden', 'true');
+    const rtErrors = [];
+    /* srcdoc scripts run before 'load' — attach the error hook ASAP */
+    const hook = setInterval(() => {
+      try {
+        if (f.contentWindow){
+          clearInterval(hook);
+          f.contentWindow.addEventListener('error',
+            e => rtErrors.push(String(e.message || e).slice(0, 120)));
+        }
+      } catch (_) { clearInterval(hook); }
+    }, 5);
     const times = [0.25, 0.5, 0.8].map(p => +((sc.dur || 30) * p).toFixed(2));
     f.onload = () => {
       const t0 = Date.now();
       const wait = setInterval(() => {
         const w = f.contentWindow;
         if (w && w.__scene && w.document && w.document.body) { clearInterval(wait); run(); }
-        else if (Date.now() - t0 > 6000) { clearInterval(wait); finish(staticFindings.slice()); }
+        else if (Date.now() - t0 > 6000) { clearInterval(wait); finish(staticFindings.concat(rtErrors).map(String)); }
       }, 120);
       /* static scan: to({y}) is a RELATIVE translate — big values throw
          elements off-stage. Catches transient states DOM sampling misses. */
@@ -650,7 +661,7 @@ function qaScene(sc){
         const re = /to\(([^)]*)\)/g; let m;
         while ((m = re.exec(sc.body))){
           const yv = (m[1].match(/y:\s*(-?\d+(?:\.\d+)?)/) || [])[1];
-          if (yv != null && Math.abs(parseFloat(yv)) > 280)
+          if (yv != null && Math.abs(parseFloat(yv)) > 550)
             staticFindings.push('a to() tween uses y:' + yv +
               ' — but to({y}) is a RELATIVE move, so the element ends up ' +
               Math.abs(Math.round(+yv)) + 'px below where you drew it. Draw the ' +
@@ -682,6 +693,14 @@ function qaScene(sc){
               if (vis < 0.06) return;
               let b; try { b = e.getBBox(); } catch(_) { return; }
               if (b.width < 2 || b.height < 2) return;
+              /* skip pure-glow decoration: nearly transparent fill, no stroke */
+              const cse = w.getComputedStyle(e);
+              const fma = (cse.fill || '').match(/\)\s*$/)
+                ? (cse.fill.match(/,\s*([\d.]+)\s*\)$/) || [])[1] : null;
+              const fAlpha = fma != null && !isNaN(parseFloat(fma)) ? parseFloat(fma) : 1;
+              const strokeVisible = cse.stroke && cse.stroke !== 'none'
+                && !/^rgba\(\s*0,\s*0,\s*0,\s*0\s*\)$/.test(cse.stroke);
+              if (fAlpha < 0.15 && !strokeVisible) return;
               /* engine chrome: chapter chip (top-left) + progress bar (bottom) */
               if (b.x < 320 && b.y + b.height < 110) return;
               if (b.y > 1070) return;
@@ -709,8 +728,11 @@ function qaScene(sc){
               intruders.slice(0, 5).join(', ') +
               ' — move them up: land objects at y\u2248770, never tween anything to y>820');
           }
-          finish(findings.concat(staticFindings));
-        } catch (e) { finish(staticFindings.slice()); }
+          finish(findings.concat(staticFindings, rtErrors.map(m =>
+            'the scene threw a runtime JS error: "' + m +
+            '" — fix it (usually a variable used before it is defined, or a ' +
+            'typo in a name); the scene is missing everything after the error point')));
+        } catch (e) { finish(staticFindings.concat(rtErrors).map(String)); }
       }
     };
     f.srcdoc = sc.html || '';
