@@ -27,6 +27,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       answer: r.answer, chapter, mode: r.mode,
       elapsed_ms: r.elapsed_ms || 0,
+      // why earlier tiers failed (e.g. ["env-llm: LLM HTTP 401: Invalid API Key"])
+      errors: Array.isArray(r.errors) ? r.errors : undefined,
     });
   } catch (err) {
     return res.status(502).json({ error: 'tutor failed: ' + (err && err.message || err) });
