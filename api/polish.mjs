@@ -12,7 +12,7 @@ import {
   sceneSystemCompact, cleanCode, validateBody, assemble, autoplayOff,
 } from '../lib/studio_core.mjs';
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const LLM_KEY = process.env.LLM_API_KEY || '';
 const LLM_BASE = (process.env.LLM_BASE_URL || '').replace(/\/+$/, '');

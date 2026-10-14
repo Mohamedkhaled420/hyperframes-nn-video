@@ -17,7 +17,7 @@ import {
   validateBody, fallbackBody, assemble, autoplayOff, slugify, stamp,
 } from '../lib/studio_core.mjs';
 
-export const maxDuration = 60;
+export const maxDuration = 150;   // fluid compute allows long runs; TTS never skipped
 
 const LLM_KEY = process.env.LLM_API_KEY || '';
 const LLM_BASE = (process.env.LLM_BASE_URL || '').replace(/\/+$/, '');
@@ -227,11 +227,11 @@ export default async function handler(req, res) {
         const sc = scenes[i].sc;
         for (const [t0, w, txt] of sc.narr.slice(0, 6)) clipList.push({ si: i, t0, w, txt });
       }
-      if (Date.now() - started < 38000) {   // Deepgram ≈1 s/clip — still worth starting
+      if (Date.now() - started < 90000) {   // Deepgram ≈1 s/clip — start while there is room
         log('generating narration speech (' + clipList.length + ' clips)…');
         let ok = 0;
         for (const c of clipList) {
-          if (Date.now() - started > 55000) { log('time budget reached — remaining lines stay caption-only'); break; }
+          if (Date.now() - started > 135000) { log('time budget reached — remaining lines stay caption-only'); break; }
           try {
             const b64 = await ttsAny(c.txt.slice(0, 220));
             pack.scenes[c.si].audio.push({ t0: c.t0, dur: c.w, b64 });
