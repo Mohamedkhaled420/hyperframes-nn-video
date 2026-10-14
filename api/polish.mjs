@@ -26,7 +26,7 @@ async function llmViaEnv(messages, maxTokens) {
       headers: { 'Content-Type': 'application/json',
                  Authorization: 'Bearer ' + LLM_KEY },
       body: JSON.stringify({ model: LLM_MODEL, temperature: 0.3,
-        max_tokens: maxTokens || 2800, messages }),
+        max_tokens: maxTokens || 4200, messages }),
     });
     if (res.status === 429 && attempt <= WAITS.length) {
       await new Promise(r => setTimeout(r, WAITS[attempt - 1]));
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
           ' was also rejected by QA. Be radical: simplify the layout, keep ' +
           'every visible element inside y 150..820.' },
       ];
-      const raw = (LLM_KEY && LLM_BASE ? await llmViaEnv(msgs, 2800)
+      const raw = (LLM_KEY && LLM_BASE ? await llmViaEnv(msgs, 4200)
                                         : await llmViaSdk(msgs));
       const clean = cleanCode(raw);
       const err = validateBody(clean);
