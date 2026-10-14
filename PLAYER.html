@@ -372,30 +372,82 @@ window.addEventListener('keydown', e => {
 });
 
 /* -------- pack library (bundled + AI-generated) -------------------------- */
+/* AI-generated packs live in the visitor's browser (IndexedDB) — they work on
+   any host, including static/serverless ones where nothing is persisted. */
+const PackDB = {
+  db: null,
+  open(){
+    if (this._p) return this._p;
+    this._p = new Promise((res, rej) => {
+      const rq = indexedDB.open('hf-packs', 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore('packs', { keyPath: 'slug' });
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror = () => rej(rq.error);
+    }).catch(() => null);
+    return this._p;
+  },
+  all(){
+    return this.open().then(db => db ? new Promise((res, rej) => {
+      const t = db.transaction('packs').objectStore('packs').getAll();
+      t.onsuccess = () => res(t.result || []); t.onerror = () => rej(t.error);
+    }) : []);
+  },
+  put(p){
+    return this.open().then(db => db ? new Promise((res, rej) => {
+      const t = db.transaction('packs', 'readwrite').objectStore('packs').put(p);
+      t.onsuccess = () => res(true); t.onerror = () => rej(t.error);
+    }) : false);
+  },
+  get(slug){
+    return this.open().then(db => db ? new Promise((res, rej) => {
+      const t = db.transaction('packs').objectStore('packs').get(slug);
+      t.onsuccess = () => res(t.result || null); t.onerror = () => rej(t.error);
+    }) : null);
+  },
+};
 async function refreshPacks(selectSlug){
-  if (!ONSERVER) return;
+  let list = [];
+  if (ONSERVER){
+    try {
+      const j = await (await fetch('/api/packs')).json();
+      list = j.packs || [];
+    } catch (e) { /* offline: keep bundled + local packs */ }
+  }
   try {
-    const j = await (await fetch('/api/packs')).json();
-    PACKS = j.packs || [];
-    packSel.innerHTML = '';
-    for (const p of PACKS){
-      const o = document.createElement('option');
-      o.value = p.slug;
-      o.textContent = p.title + '  \u00b7  ' + p.chapters + ' ch \u00b7 ' + fmt(p.total);
-      packSel.appendChild(o);
-    }
-    packSel.value = (selectSlug && PACKS.some(p => p.slug === selectSlug))
-      ? selectSlug : 'bundled';
-  } catch (e) { /* offline: keep bundled only */ }
+    const mine = await PackDB.all();
+    const mineMeta = mine.map(p => ({ slug: p.slug, title: p.title,
+      tagline: p.tagline, chapters: p.scenes.length, total: p.total,
+      generated: true, local: true }));
+    PACKS = list.filter(s => !mine.some(m => m.slug === s.slug)).concat(mineMeta);
+  } catch (e) { PACKS = list; }
+  if (!PACKS.some(p => p.slug === 'bundled'))
+    PACKS.unshift({ slug: 'bundled', title: BUNDLED_TITLE,
+                    chapters: BUNDLED.length,
+                    total: BUNDLED.reduce((a, s) => a + s.dur, 0), generated: false });
+  packSel.innerHTML = '';
+  for (const p of PACKS){
+    const o = document.createElement('option');
+    o.value = p.slug;
+    o.textContent = p.title + '  \u00b7  ' + p.chapters + ' ch \u00b7 ' + fmt(p.total)
+      + (p.local ? '  \u00b7 saved in this browser' : '');
+    packSel.appendChild(o);
+  }
+  const want = (selectSlug && PACKS.some(p => p.slug === selectSlug)) ? selectSlug
+    : (PACKS.some(p => p.slug === currentPack) ? currentPack : 'bundled');
+  packSel.value = want;
 }
 async function loadPack(slug){
   let obj;
   if (slug === 'bundled'){
     obj = { slug: 'bundled', title: BUNDLED_TITLE, scenes: BUNDLED };
   } else {
-    const j = await (await fetch('/api/pack/' + slug)).json();
-    if (!j.scenes) throw new Error(j.error || 'pack failed to load');
-    obj = j;
+    const mine = await PackDB.get(slug);
+    if (mine) obj = mine;
+    else {
+      const j = await (await fetch('/api/pack/' + slug)).json();
+      if (!j.scenes) throw new Error(j.error || 'pack failed to load');
+      obj = j;
+    }
   }
   const t0 = 0;
   let acc = 0;
@@ -403,7 +455,7 @@ async function loadPack(slug){
     const start = acc; acc += s.dur;
     return { folder: s.folder, title: s.title,
              short: s.short || String(i + 1), dur: s.dur,
-             start, end: acc, html: s.html };
+             start, end: acc, html: s.html, audio: s.audio || null };
   });
   TOTAL = acc;
   currentPack = obj.slug || slug;
@@ -419,7 +471,7 @@ packSel.onchange = async () => {
   try { await loadPack(packSel.value); }
   catch (e) { console.error('pack load failed', e); packSel.value = currentPack; }
 };
-if (ONSERVER) refreshPacks();
+refreshPacks();
 
 /* -------- shared job polling --------------------------------------------- */
 function logInto(el, lines, state){
@@ -532,25 +584,171 @@ stGo.onclick = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, scenes: +stCount.value }) });
     const j = await r.json();
-    if (!j.jobId) throw new Error(j.error || 'no job id');
-    const fin = await pollJob(j.jobId, s => {
-      stPhase.textContent = s.phase + ' \u00b7 ' + s.progress + '%';
-      stFill.style.width = s.progress + '%';
-      logInto(stLog, s.log, stState);
-    }, 2000);
-    logInto(stLog, fin.log, stState);
-    if (fin.status !== 'done') throw new Error(fin.error || 'generation failed');
-    stPhase.textContent = '\u2713 ' + (fin.result.title || 'Video') + ' ready \u2014 loading\u2026';
-    stFill.style.width = '100%';
-    await refreshPacks(fin.result.slug);
-    await loadPack(fin.result.slug);
-    stPhase.textContent = '\u2713 now playing "' + (fin.result.title || 'your video') + '"';
+    if (j.jobId){                       // companion server: long-running job
+      const fin = await pollJob(j.jobId, s => {
+        stPhase.textContent = s.phase + ' \u00b7 ' + s.progress + '%';
+        stFill.style.width = s.progress + '%';
+        logInto(stLog, s.log, stState);
+      }, 2000);
+      logInto(stLog, fin.log, stState);
+      if (fin.status !== 'done') throw new Error(fin.error || 'generation failed');
+      stPhase.textContent = '\u2713 ' + (fin.result.title || 'Video') + ' ready \u2014 loading\u2026';
+      stFill.style.width = '100%';
+      await refreshPacks(fin.result.slug);
+      await loadPack(fin.result.slug);
+      stPhase.textContent = '\u2713 now playing "' + (fin.result.title || 'your video') + '"';
+    } else if (j.ok && j.pack){         // serverless: pack JSON comes back directly
+      (j.log || []).forEach(stMsg);
+      const saved = await PackDB.put(j.pack);
+      stPhase.textContent = '\u2713 "' + j.pack.title + '" generated'
+        + (saved ? ' \u2014 saved in this browser' : '') + ' \u2014 loading\u2026';
+      stFill.style.width = '100%';
+      await refreshPacks(j.pack.slug);
+      await loadPack(j.pack.slug);
+      stPhase.textContent = '\u2713 now playing "' + j.pack.title + '" \u2014 Export MP4 renders it right here';
+    } else {
+      throw new Error(j.error || 'generation failed');
+    }
   } catch (e) {
     stPhase.textContent = '\u26a0 ' + e.message;
   } finally {
     stBusy = false; stGo.disabled = false;
   }
 };
+
+/* -------- in-browser MP4 renderer — no server, no ffmpeg ------------------ */
+/* The visitor's browser IS the render farm: every frame of every scene is
+   rasterized deterministically to cached JPEGs, then recorded with
+   MediaRecorder in real time (MP4 when supported, WebM otherwise), mixing
+   any embedded narration audio through Web Audio. */
+async function exportInBrowser(opt){
+  opt = opt || {};
+  const say = opt.onLog || (() => {});
+  const from = Math.max(0, +opt.from || 0);
+  const to = Math.min(TOTAL, opt.to == null ? TOTAL : +opt.to);
+  if (to - from < 0.5) throw new Error('nothing to render');
+  if (to - from > 200 && !opt.force)
+    throw new Error('in-browser rendering suits AI-generated packs up to ~3 min. '
+      + 'For the bundled ' + Math.round(TOTAL) + 's video use the server master.');
+  const FPS = Math.min(30, Math.max(10, +opt.fps || 30));
+  const W = 1280, H = 720;
+  (opt.onPhase || (() => {}))('rasterizing frames (deterministic render \u2192 canvas)');
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d', { alpha: false });
+  ctx.fillStyle = '#0f141c'; ctx.fillRect(0, 0, W, H);
+
+  const frame = document.createElement('iframe');
+  frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:1280px;height:720px;border:0;visibility:hidden;';
+  document.body.appendChild(frame);
+
+  const spans = [];
+  SCENES.forEach(s => {
+    const a = Math.max(from, s.start), b = Math.min(to, s.end);
+    if (b - a > 0.01)
+      spans.push({ s, f0: Math.ceil((a - s.start) * FPS), f1: Math.ceil((b - s.start) * FPS) });
+  });
+  const est = spans.reduce((a, sp) => a + Math.max(0, sp.f1 - sp.f0), 0);
+  const allFrames = [];
+  let done = 0;
+  for (const sp of spans){
+    await new Promise(res => { frame.onload = res; frame.srcdoc = sp.s.html; });
+    const win = frame.contentWindow;
+    if (!win || !win.__scene)
+      throw new Error('scene failed to boot: ' + sp.s.folder);
+    for (let f = sp.f0; f < sp.f1; f++){
+      win.__scene.render(f / FPS);
+      const svg = win.document.querySelector('svg');
+      if (!svg) throw new Error('scene has no svg root: ' + sp.s.folder);
+      const clone = svg.cloneNode(true);
+      clone.setAttribute('width', W); clone.setAttribute('height', H);
+      const stEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+      stEl.textContent = Array.from(win.document.querySelectorAll('style'))
+        .map(x => x.textContent).join('\n');
+      clone.insertBefore(stEl, clone.firstChild);
+      const src = new XMLSerializer().serializeToString(clone);
+      const url = URL.createObjectURL(new Blob([src], { type: 'image/svg+xml;charset=utf-8' }));
+      const img = new Image();
+      await new Promise((res, rej) => {
+        img.onload = res;
+        img.onerror = () => rej(new Error('svg rasterize failed'));
+        img.src = url;
+      });
+      ctx.drawImage(img, 0, 0, W, H);
+      URL.revokeObjectURL(url);
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.85));
+      allFrames.push(blob);
+      done++;
+      if (done % 30 === 0 || done === est)
+        (opt.onPct || (() => {}))(2 + Math.round(58 * done / Math.max(1, est)));
+    }
+  }
+  frame.remove();
+  say(allFrames.length + ' frames rasterized at ' + FPS + ' fps \u2014 cache '
+    + Math.round(allFrames.reduce((a, b) => a + b.size, 0) / 1048576) + ' MB');
+
+  (opt.onPhase || (() => {}))('preparing narration audio');
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const ac = new AC();
+  if (ac.state === 'suspended') { try { await ac.resume(); } catch (e) {} }
+  const clips = [];
+  for (const s of SCENES){
+    for (const a of (s.audio || [])){
+      const at = s.start + (+a.t0 || 0);
+      if (at < from - 0.01 || at > to) continue;
+      try {
+        const bytes = Uint8Array.from(atob(a.b64), c => c.charCodeAt(0));
+        clips.push({ at, buf: await ac.decodeAudioData(bytes.buffer) });
+      } catch (e) { say('one narration clip was undecodable \u2014 skipped'); }
+    }
+  }
+  say(clips.length ? clips.length + ' narration clips will be mixed in'
+                   : 'no embedded audio \u2014 burned-in captions carry the narration');
+
+  (opt.onPhase || (() => {}))('recording (keep this tab visible)');
+  const mimes = ['video/mp4;codecs=avc1.424028,mp4a.40.2',
+                 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus',
+                 'video/webm', 'video/mp4'];
+  const mime = mimes.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m));
+  if (!mime) throw new Error('this browser cannot record video (MediaRecorder missing)');
+  const stream = canvas.captureStream(FPS);
+  if (clips.length){
+    const dest = ac.createMediaStreamDestination();
+    for (const c of clips){
+      const src = ac.createBufferSource();
+      src.buffer = c.buf; src.connect(dest);
+      src.start(ac.currentTime + Math.max(0, c.at - from));
+    }
+    dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+  }
+  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4200000 });
+  const chunks = [];
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const stopped = new Promise(res => { rec.onstop = res; });
+  rec.start(1000);
+  const duration = to - from;
+  const t0 = performance.now();
+  await new Promise(res => {
+    function step(){
+      const el = (performance.now() - t0) / 1000;
+      if (el >= duration){ res(); return; }
+      const fi = Math.min(allFrames.length - 1, Math.floor(el * FPS));
+      const url = URL.createObjectURL(allFrames[fi]);
+      const im = new Image();
+      im.onload = () => { ctx.drawImage(im, 0, 0); URL.revokeObjectURL(url); };
+      im.src = url;
+      (opt.onPct || (() => {}))(62 + Math.round(33 * el / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+  rec.stop(); await stopped;
+  (opt.onPct || (() => {}))(99);
+  const blob = new Blob(chunks, { type: mime });
+  return { blob, mime, duration, frames: allFrames.length,
+           ext: mime.indexOf('mp4') >= 0 ? 'mp4' : 'webm' };
+}
 
 /* -------- Export MP4 modal ------------------------------------------------ */
 const exWrap = $('exWrap'), exInfo = $('exInfo'), exGo = $('exGo');
@@ -564,47 +762,68 @@ function exToggle(open){
     const p = PACKS.find(x => x.slug === currentPack);
     const n = SCENES.length, total = TOTAL;
     exInfo.textContent = '"' + h1.textContent + '" \u2014 ' + n + ' chapters, '
-      + fmt(total) + ', 1280\u00d7720 @ 30 fps, H.264 + AAC'
+      + fmt(total) + ', 1280\u00d7720'
       + (currentPack === 'bundled'
-         ? ' \u00b7 the bundled video ships pre-rendered, so this is instant'
-         : ' \u00b7 renders every frame headlessly (a few minutes)');
+         ? ' \u00b7 the bundled video ships pre-rendered, so the server serves it instantly'
+         : ' \u00b7 your browser renders every frame and records the MP4 locally');
     exPhase.textContent = ''; exDl.classList.remove('on');
   }
 }
 $('btnExport').onclick = () => exToggle(true);
 $('exClose').onclick = () => exToggle(false);
+async function runClientExport(){
+  exPhase.textContent = 'rendering in your browser\u2026';
+  const out = await exportInBrowser({
+    onPhase: t => { exPhase.textContent = t; },
+    onPct: p => { exFill.style.width = p + '%'; },
+    onLog: m => { exLog.textContent += m + '\n'; exLog.scrollTop = exLog.scrollHeight; },
+  });
+  exFill.style.width = '100%';
+  exPhase.textContent = '\u2713 ' + (out.blob.size / 1e6).toFixed(1) + ' MB '
+    + out.ext.toUpperCase() + ' rendered in-browser (' + out.duration.toFixed(1) + 's)';
+  exDl.href = URL.createObjectURL(out.blob);
+  exDl.setAttribute('download', (currentPack || 'video') + '_browser_720p.' + out.ext);
+  exDl.textContent = 'Download ' + out.ext.toUpperCase();
+  exDl.classList.add('on');
+}
 exGo.onclick = async () => {
   if (exBusy) return;
-  if (!ONSERVER){
-    exPhase.textContent = 'Export needs the companion server';
-    exLog.textContent = 'Run:  bun glm_server.mjs\nThen open ' + SERVER_URL + ' and export again.';
-    return;
-  }
   exBusy = true; exGo.disabled = true; $('btnExport').classList.add('busy');
   exLog.textContent = ''; exState.shown = 0;
   exFill.style.width = '0%'; exDl.classList.remove('on');
   exPhase.textContent = 'starting\u2026';
   try {
-    const r = await fetch('/api/export', { method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pack: currentPack }) });
-    const j = await r.json();
-    if (!j.jobId) throw new Error(j.error || 'no job id');
-    const fin = await pollJob(j.jobId, s => {
-      exPhase.textContent = s.phase + ' \u00b7 ' + s.progress + '%';
-      exFill.style.width = s.progress + '%';
-      logInto(exLog, s.log, exState);
-    }, 2000);
-    logInto(exLog, fin.log, exState);
-    if (fin.status !== 'done') throw new Error(fin.error || 'export failed');
-    exFill.style.width = '100%';
-    exPhase.textContent = '\u2713 ' + ((fin.result.size || 0) / 1e6).toFixed(1)
-      + ' MB ready' + (fin.result.instant ? ' (pre-rendered master)' : '');
-    exDl.href = fin.result.url || ('/api/download/' + j.jobId);
-    exDl.setAttribute('download', fin.result.filename || 'video.mp4');
-    exDl.textContent = 'Download MP4';
-    exDl.classList.add('on');
-    window.open(exDl.href);
+    if (ONSERVER){
+      try {
+        const r = await fetch('/api/export', { method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pack: currentPack }) });
+        const j = await r.json();
+        if (!j.jobId) throw Object.assign(new Error(j.error || 'no job id'),
+                                         { fallback: true });
+        const fin = await pollJob(j.jobId, s => {
+          exPhase.textContent = s.phase + ' \u00b7 ' + s.progress + '%';
+          exFill.style.width = s.progress + '%';
+          logInto(exLog, s.log, exState);
+        }, 2000);
+        logInto(exLog, fin.log, exState);
+        if (fin.status !== 'done') throw new Error(fin.error || 'export failed');
+        exFill.style.width = '100%';
+        exPhase.textContent = '\u2713 ' + ((fin.result.size || 0) / 1e6).toFixed(1)
+          + ' MB ready' + (fin.result.instant ? ' (pre-rendered master)' : '');
+        exDl.href = fin.result.url || ('/api/download/' + j.jobId);
+        exDl.setAttribute('download', fin.result.filename || 'video.mp4');
+        exDl.textContent = 'Download MP4';
+        exDl.classList.add('on');
+        window.open(exDl.href);
+      } catch (e) {
+        if (!e.fallback) throw e;
+        exLog.textContent += '\nserver cannot render this pack \u2014 switching to in-browser render\n';
+        await runClientExport();
+      }
+    } else {
+      await runClientExport();
+    }
   } catch (e) {
     exPhase.textContent = '\u26a0 ' + e.message;
   } finally {
@@ -623,7 +842,10 @@ window.__player = {
   get packs(){ return PACKS; },
   get pack(){ return currentPack; },
   async loadPack(slug){ return loadPack(slug); },
-  async refreshPacks(){ return refreshPacks(); }
+  async refreshPacks(){ return refreshPacks(); },
+  async clientPacks(){ return PackDB.all(); },
+  async savePack(p){ await PackDB.put(p); await refreshPacks(p.slug); return p.slug; },
+  exportLocal(opt){ return exportInBrowser(opt); }
 };
 </script>
 </body>

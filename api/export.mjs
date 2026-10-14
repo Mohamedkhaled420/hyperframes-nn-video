@@ -11,7 +11,9 @@ export default async function handler(req, res) {
   const pack = String(body.pack || 'bundled');
   if (pack !== 'bundled')
     return res.status(503).json({ error:
-      'Export of AI-generated packs needs the long-running companion server ' +
-      '(bun glm_server.mjs) — this deployment can only serve the bundled pre-rendered master.' });
+      'This deployment has no headless renderer. The player falls back to ' +
+      'rendering the MP4 right in your browser (MediaRecorder) — just press ' +
+      'Export again. For the classic server pipeline run the companion ' +
+      'server: node glm_server.mjs' });
   return res.status(200).json({ jobId: 'static-master' });
 }

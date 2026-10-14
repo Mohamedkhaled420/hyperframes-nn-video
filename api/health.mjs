@@ -14,8 +14,9 @@ export default async function handler(req, res) {
       ask: true,            // AI tutor (env-llm, or offline fallback)
       packs: true,          // pack library (bundled)
       export_bundled: true, // instant pre-rendered master download
-      generate: false,      // needs the long-running companion server
-      export_generated: false,
+      generate: true,       // AI Studio: LLM plans + writes scenes -> pack JSON
+      export_generated: false, // server-side render impossible in serverless…
+      export_client: true,  // …but the visitor's browser renders MP4 locally
     },
     time: new Date().toISOString(),
   });

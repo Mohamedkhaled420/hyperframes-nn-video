@@ -67,8 +67,24 @@ const r6 = stubRes(); await dl({ method: 'GET', query: { id: 'static-master' } }
 check('download/static-master -> 307 to master',
   r6.statusCode === 307 && r6.body === '/render/how_machines_learn_to_read_720p.mp4');
 
-const r7 = stubRes(); await gen(stubReq('POST', { prompt: 'test prompt here' }), r7);
-check('generate -> 503 with hint', r7.statusCode === 503 && /companion server/.test(r7.body.error));
+const r7 = stubRes(); await gen(stubReq('POST', { prompt: 'hi' }), r7);
+check('generate short prompt -> 400', r7.statusCode === 400, r7.body?.error);
+
+/* real generation (SDK tier in this sandbox; env-LLM tier on Vercel):
+   plan -> write scenes -> validate -> assemble a playable pack */
+console.log('  (generate: real LLM run — takes up to ~60 s)');
+const r7g = stubRes();
+await gen(stubReq('POST', { prompt: 'Why do magnets attract and repel? A tiny lesson on fields, for curious kids.', scenes: 2 }), r7g);
+const gp = r7g.body?.pack;
+check('generate -> pack JSON (2 scenes, autoplay-off, valid html)',
+  r7g.statusCode === 200 && r7g.body.ok === true
+  && gp && gp.scenes?.length === 2 && gp.total > 0
+  && gp.scenes.every(s => s.html.includes('__scene')
+                          && s.html.includes('autoplay off')
+                          && s.html.length > 4000),
+  r7g.statusCode === 200
+    ? `"${gp.title}" ${gp.total}s · scene1 ${(gp.scenes?.[0]?.html || '').length}B · audio ${gp.scenes.reduce((a, s) => a + (s.audio?.length || 0), 0)} clips`
+    : JSON.stringify(r7g.body).slice(0, 160));
 
 const r8 = stubRes();
 await ask(stubReq('POST', { question: 'What is a knob?', chapter: 0, t: 30,
