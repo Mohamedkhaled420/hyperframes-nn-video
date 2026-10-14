@@ -224,13 +224,13 @@ export default async function handler(req, res) {
       const clipList = [];
       for (let i = 0; i < scenes.length; i++) {
         const sc = scenes[i].sc;
-        for (const [t0, w, txt] of sc.narr.slice(0, 7)) clipList.push({ si: i, t0, w, txt });
+        for (const [t0, w, txt] of sc.narr.slice(0, 6)) clipList.push({ si: i, t0, w, txt });
       }
-      if (Date.now() - started < 25000) {
+      if (Date.now() - started < 38000) {   // Deepgram ≈1 s/clip — still worth starting
         log('generating narration speech (' + clipList.length + ' clips)…');
         let ok = 0;
         for (const c of clipList) {
-          if (Date.now() - started > 48000) { log('time budget reached — remaining lines stay caption-only'); break; }
+          if (Date.now() - started > 55000) { log('time budget reached — remaining lines stay caption-only'); break; }
           try {
             const b64 = await ttsAny(c.txt.slice(0, 220));
             pack.scenes[c.si].audio.push({ t0: c.t0, dur: c.w, b64 });
