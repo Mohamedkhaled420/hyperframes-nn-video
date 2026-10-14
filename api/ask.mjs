@@ -1,13 +1,14 @@
-/* POST /api/ask — AI tutor (keyless GLM via z-ai-web-dev-sdk). */
-import ZAI from 'z-ai-web-dev-sdk';
-import { systemFor, readJson } from '../lib/tutor.mjs';
+/* POST /api/ask — AI tutor.
+   Tries, in order: LLM_API_KEY/LLM_BASE_URL env config (any OpenAI-compatible
+   API) -> keyless z-ai-web-dev-sdk (needs .z-ai-config) -> offline fallback
+   that answers from the embedded narration + scene notes. */
+import { systemFor, readJson, answer } from '../lib/tutor.mjs';
 
 export const maxDuration = 60;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST')
     return res.status(405).json({ error: 'POST only' });
-  const started = Date.now();
   const body = await readJson(req);
   const question = String(body.question || '').trim();
   if (!question) return res.status(400).json({ error: 'question is required' });
@@ -22,19 +23,12 @@ export default async function handler(req, res) {
         && (m.role === 'user' || m.role === 'assistant')).slice(-6)
     : [];
   try {
-    const client = await ZAI.create();
-    const completion = await client.chat.completions.create({
-      messages: [
-        { role: 'assistant', content: systemFor(chapter, t, pack) },
-        ...history,
-        { role: 'user', content: question },
-      ],
-      thinking: { type: 'disabled' },
+    const r = await answer({ question, chapter, t, pack, history });
+    return res.status(200).json({
+      answer: r.answer, chapter, mode: r.mode,
+      elapsed_ms: r.elapsed_ms || 0,
     });
-    const answer = completion.choices?.[0]?.message?.content || '';
-    if (!answer.trim()) throw new Error('empty response from model');
-    return res.status(200).json({ answer, chapter, elapsed_ms: Date.now() - started });
   } catch (err) {
-    return res.status(502).json({ error: 'GLM request failed: ' + (err && err.message || err) });
+    return res.status(502).json({ error: 'tutor failed: ' + (err && err.message || err) });
   }
 }

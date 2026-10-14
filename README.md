@@ -58,11 +58,23 @@ What runs on the serverless deployment — no tunnels, no cookies, public URL:
 | feature | on Vercel | notes |
 |---|---|---|
 | Player + the 11-minute video | ✅ | static; `/` serves `PLAYER.html` |
-| AI tutor (Ask AI, `A`) | ✅ | keyless GLM inside `api/ask.mjs` |
+| AI tutor (Ask AI, `A`) | ✅ | env-LLM, keyless SDK, or offline fallback (see below) |
 | Pack library + switcher | ✅ | bundled pack (`api/packs`, `api/pack/:slug`) |
 | Export MP4 (`E`, bundled) | ✅ | instant pre-rendered master, served statically |
 | AI Studio (`G`) | ❌ | multi-minute GLM + Chromium + TTS pipeline — needs the companion server |
 | Export of AI-generated packs | ❌ | same — the companion server renders them |
+
+**AI tutor on serverless — three tiers** (`api/ask.mjs` picks automatically):
+
+1. **Real AI via env vars** — set `LLM_API_KEY` + `LLM_BASE_URL` (and optionally
+   `LLM_MODEL`) in the Vercel project settings to use any OpenAI-compatible API
+   (e.g. `https://api.z.ai/v1`, OpenAI, Groq, …).
+2. **Keyless SDK** — `z-ai-web-dev-sdk` works wherever a `.z-ai-config` file
+   exists (sandboxed environments, configured machines).
+3. **Offline fallback (default)** — with no key configured, Ask AI still works:
+   it answers with the matching chapter's own narration + scene notes,
+   clearly labeled as offline mode. The player stays fully usable with zero
+   configuration. `/api/health` reports which tier is active.
 
 The buttons that need the full pipeline say so in the UI and point you to
 `bun glm_server.mjs`. Both worlds share the same response contracts

@@ -73,9 +73,21 @@ check('generate -> 503 with hint', r7.statusCode === 503 && /companion server/.t
 const r8 = stubRes();
 await ask(stubReq('POST', { question: 'What is a knob?', chapter: 0, t: 30,
                              pack: 'bundled', history: [] }), r8);
-check('ask real GLM call', r8.statusCode === 200 && typeof r8.body.answer === 'string'
-  && r8.body.answer.length > 20,
-  r8.statusCode === 200 ? `answer: ${r8.body.answer.slice(0, 90)}…` : r8.body?.error);
+check('ask (sdk/env-llm when available)',
+  r8.statusCode === 200 && typeof r8.body.answer === 'string'
+  && r8.body.answer.length > 20 && typeof r8.body.mode === 'string',
+  r8.statusCode === 200 ? `mode=${r8.body.mode}: ${r8.body.answer.slice(0, 80)}…` : r8.body?.error);
+
+/* force the offline path exactly as a bare Vercel deployment hits it */
+process.env.HF_TUTOR_FORCE_FALLBACK = '1';
+const r8f = stubRes();
+await ask(stubReq('POST', { question: 'Why does the neuron squash the sum with a sigmoid?',
+                            chapter: 2, t: 130, pack: 'bundled' }), r8f);
+check('ask forced fallback -> chapter script',
+  r8f.statusCode === 200 && r8f.body.mode === 'fallback'
+  && /Chapter 3\/12/.test(r8f.body.answer) && r8f.body.answer.length > 100,
+  `mode=${r8f.body.mode}: ${(r8f.body.answer || '').slice(0, 80)}…`);
+delete process.env.HF_TUTOR_FORCE_FALLBACK;
 
 const r9 = stubRes();
 await ask(stubReq('POST', { question: 'hi', pack: 'ghost-pack' }), r9);
