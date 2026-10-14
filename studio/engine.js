@@ -241,7 +241,9 @@ let STATES = [];
 function initStates(){
   const byEl = new Map();
   for (const op of OPS){
-    if (!op.el) continue;
+    /* only real elements are animatable — scene bodies sometimes hand an
+       api object (e.g. the return of bars()) to a helper; degrade softly */
+    if (!op.el || typeof op.el.appendChild !== 'function') continue;
     if (!byEl.has(op.el)) byEl.set(op.el, []);
     byEl.get(op.el).push(op);
   }

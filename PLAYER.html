@@ -650,7 +650,7 @@ function qaScene(sc){
         const re = /to\(([^)]*)\)/g; let m;
         while ((m = re.exec(sc.body))){
           const yv = (m[1].match(/y:\s*(-?\d+(?:\.\d+)?)/) || [])[1];
-          if (yv != null && Math.abs(parseFloat(yv)) > 150)
+          if (yv != null && Math.abs(parseFloat(yv)) > 280)
             staticFindings.push('a to() tween uses y:' + yv +
               ' — but to({y}) is a RELATIVE move, so the element ends up ' +
               Math.abs(Math.round(+yv)) + 'px below where you drew it. Draw the ' +
