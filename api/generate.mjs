@@ -25,16 +25,17 @@ const TTS_MODEL = process.env.LLM_TTS_MODEL || 'canopylabs/orpheus-v1-english';
 const TTS_VOICE = process.env.LLM_TTS_VOICE || 'tara';
 
 async function llmViaEnv(messages, maxTokens) {
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  const WAITS = [12000, 22000];   // Groq free TPM window ≈ 1 min — wait it out
+  for (let attempt = 1; attempt <= 3; attempt++) {
     const res = await fetch(LLM_BASE + '/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json',
                  Authorization: 'Bearer ' + LLM_KEY },
       body: JSON.stringify({ model: LLM_MODEL, temperature: 0.4,
-        max_tokens: maxTokens || 2200, messages }),
+        max_tokens: maxTokens || 2600, messages }),
     });
-    if (res.status === 429 && attempt === 1) {
-      await new Promise(r => setTimeout(r, 6000));   // tight TPM windows reset fast
+    if (res.status === 429 && attempt <= WAITS.length) {
+      await new Promise(r => setTimeout(r, WAITS[attempt - 1]));
       continue;
     }
     if (!res.ok) throw new Error('LLM HTTP ' + res.status + ': ' +
@@ -133,9 +134,9 @@ export default async function handler(req, res) {
     for (let i = 0; i < plan.scenes.length; i++) {
       const sc = plan.scenes[i];
       log(`writing scene ${i + 1}/${plan.scenes.length}: ${sc.title}…`);
-      const user = `Video plan (JSON):\n${JSON.stringify({ title: plan.title, scenes: plan.scenes })}\n\n` +
-        `Write the SCENE BODY for scene ${i + 1}: "${sc.chapter} — ${sc.title}" ` +
-        `(dur ${sc.dur}s, accent ${sc.accent}). Its DATA.narr is: ${JSON.stringify(sc.narr)}\n` +
+      const user = `Write the SCENE BODY for scene ${i + 1} of the video "${plan.title}"\n` +
+        `Scene spec: chapter "${sc.chapter}", title "${sc.title}", dur ${sc.dur}s, accent ${sc.accent}.\n` +
+        `Its DATA.narr is: ${JSON.stringify(sc.narr)}\n` +
         `Visual beats: ${sc.visual || '(you decide, following the narration)'}`;
       let body = null, err = null;
       for (let attempt = 1; attempt <= 2 && !body; attempt++) {
