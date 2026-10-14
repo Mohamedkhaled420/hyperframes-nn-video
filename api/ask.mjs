@@ -26,6 +26,7 @@ export default async function handler(req, res) {
     const r = await answer({ question, chapter, t, pack, history });
     return res.status(200).json({
       answer: r.answer, chapter, mode: r.mode,
+      model: r.model || undefined,
       elapsed_ms: r.elapsed_ms || 0,
       // why earlier tiers failed (e.g. ["env-llm: LLM HTTP 401: Invalid API Key"])
       errors: Array.isArray(r.errors) ? r.errors : undefined,
