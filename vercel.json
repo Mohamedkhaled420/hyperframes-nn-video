@@ -3,8 +3,6 @@
   "framework": null,
   "rewrites": [{ "source": "/", "destination": "/PLAYER.html" }],
   "functions": {
-    "api/ask.mjs": { "maxDuration": 60, "includedFiles": ["narration_script.md", "scene_docs/**"] },
-    "api/packs.mjs": { "includedFiles": ["jobs.csv", "s*/index.html"] },
-    "api/pack/*.mjs": { "includedFiles": ["jobs.csv", "s*/index.html"] }
+    "api/ask.mjs": { "maxDuration": 60 }
   }
 }
