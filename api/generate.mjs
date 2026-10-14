@@ -24,14 +24,14 @@ const LLM_MODEL = process.env.LLM_MODEL || 'glm-4.6';
 const TTS_MODEL = process.env.LLM_TTS_MODEL || 'canopylabs/orpheus-v1-english';
 const TTS_VOICE = process.env.LLM_TTS_VOICE || 'tara';
 
-async function llmViaEnv(messages) {
+async function llmViaEnv(messages, maxTokens) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     const res = await fetch(LLM_BASE + '/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json',
                  Authorization: 'Bearer ' + LLM_KEY },
-      body: JSON.stringify({ model: LLM_MODEL, temperature: 0.5,
-        max_tokens: 2000, messages }),
+      body: JSON.stringify({ model: LLM_MODEL, temperature: 0.4,
+        max_tokens: maxTokens || 2200, messages }),
     });
     if (res.status === 429 && attempt === 1) {
       await new Promise(r => setTimeout(r, 6000));   // tight TPM windows reset fast
@@ -116,8 +116,10 @@ export default async function handler(req, res) {
         const txt = await llm([
           { role: 'assistant', content: PLAN_SYS },
           { role: 'user', content:
-            `Viewer prompt: "${prompt}"\nMake a plan with exactly ${nScenes} scenes.` },
-        ]);
+            `Viewer prompt: "${prompt}"\nMake a plan with exactly ${nScenes} scenes. ` +
+            `Keep each scene's visual field under 40 words and use 5-6 narration lines. ` +
+            `Output the JSON as ONE single line (no line breaks anywhere).` },
+        ], 2800);
         plan = normalizePlan(extractJSON(txt), nScenes);
       } catch (e) { lastPlanErr = e; log(`plan attempt ${attempt} failed: ${e.message}`); }
     }
@@ -142,7 +144,7 @@ export default async function handler(req, res) {
             { role: 'assistant', content: sceneSystemCompact() },
             { role: 'user', content: attempt === 1 ? user : user +
               `\n\nYour previous attempt was rejected: ${err}. Fix it and output the full body again.` },
-          ]);
+          ], 2200);
           const clean = cleanCode(code);
           err = validateBody(clean);
           if (err) { log(`scene ${i + 1} attempt ${attempt}: ${err}`); continue; }
