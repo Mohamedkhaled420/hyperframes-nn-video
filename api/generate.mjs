@@ -190,7 +190,7 @@ export default async function handler(req, res) {
             { role: 'assistant', content: sceneSystemCompact() },
             { role: 'user', content: attempt === 1 ? user : user +
               `\n\nYour previous attempt was rejected: ${err}. Fix it and output the full body again.` },
-          ], 2200);
+          ], 2800);
           const clean = cleanCode(code);
           err = validateBody(clean);
           if (err) { log(`scene ${i + 1} attempt ${attempt}: ${err}`); continue; }
