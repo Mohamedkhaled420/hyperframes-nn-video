@@ -4,8 +4,9 @@
      2. LLM writes each scene body (deterministic Hyperframes code)
      3. Every body is validated + auto-repaired; safe fallback layout last
      4. Scenes are assembled from the embedded shell + engine (self-contained)
-     5. Optional TTS narration via the configured OpenAI-compatible speech API
-        (embedded as base64 WAV; silently skipped if unavailable)
+     5. Optional TTS narration — Deepgram (aura-2) first, then any
+        OpenAI-compatible /audio/speech; embedded as base64 audio and
+        silently skipped if unavailable
    The pack JSON is returned directly and stored in the visitor's browser
    (IndexedDB) — playback and MP4 export then happen 100% client-side.
    LLM transport: LLM_API_KEY/LLM_BASE_URL/LLM_MODEL env config first, then
@@ -23,6 +24,12 @@ const LLM_BASE = (process.env.LLM_BASE_URL || '').replace(/\/+$/, '');
 const LLM_MODEL = process.env.LLM_MODEL || 'glm-4.6';
 const TTS_MODEL = process.env.LLM_TTS_MODEL || 'canopylabs/orpheus-v1-english';
 const TTS_VOICE = process.env.LLM_TTS_VOICE || 'tara';
+/* Deepgram TTS (primary when configured): https://api.deepgram.com/v1/speak
+   aura-2 voices are fast (<1 s/clip) and need no terms acceptance.
+   Key format is provider-native (Authorization: Token), so it cannot ride the
+   OpenAI-compatible LLM_BASE path — it gets its own call below. */
+const DG_KEY = process.env.DEEPGRAM_API_KEY || '';
+const DG_MODEL = process.env.DEEPGRAM_TTS_MODEL || 'aura-2-thalia-en';
 
 async function llmViaEnv(messages, maxTokens) {
   const WAITS = [12000, 22000];   // Groq free TPM window ≈ 1 min — wait it out
@@ -69,9 +76,27 @@ function makeLlm(log) {
   return llmViaSdk;
 }
 
-/* optional narration speech — only attempted when an env API is configured
-   and there is time budget left inside the 60 s serverless window */
-let ttsVoiceOk = null;   // remembered across clips within one request
+/* optional narration speech — only attempted when a speech API is configured
+   and there is time budget left inside the 60 s serverless window.
+   Provider order: Deepgram (DEEPGRAM_API_KEY) first, then any
+   OpenAI-compatible /audio/speech (e.g. Groq playai-tts). */
+let ttsProviderOk = null;   // 'dg' | 'oai' — remembered across clips in one request
+let ttsVoiceOk = null;      // remembered across clips within one request
+
+async function ttsLineDeepgram(text) {
+  const res = await fetch('https://api.deepgram.com/v1/speak?model=' + DG_MODEL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json',
+               Authorization: 'Token ' + DG_KEY },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error('Deepgram HTTP ' + res.status + ': ' +
+    (await res.text()).slice(0, 160));
+  const buf = Buffer.from(await res.arrayBuffer());   // mp3 — decodeAudioData-safe
+  if (buf.length < 2000) throw new Error('Deepgram tiny audio ' + buf.length + 'B');
+  return buf.toString('base64');
+}
+
 async function ttsLine(text, voices) {
   const tried = [];
   for (const v of (ttsVoiceOk ? [ttsVoiceOk] : voices)) {
@@ -92,6 +117,26 @@ async function ttsLine(text, voices) {
       (await res.text()).slice(0, 160));
   }
   throw new Error('TTS failed — ' + tried.join(' | '));
+}
+
+/* try the remembered provider first, then fall over to the other one */
+async function ttsAny(text) {
+  const tried = [];
+  const order = ttsProviderOk === 'dg' ? ['dg', 'oai']
+              : ttsProviderOk === 'oai' ? ['oai', 'dg'] : ['dg', 'oai'];
+  for (const p of order) {
+    try {
+      const b64 = p === 'dg'
+        ? (DG_KEY ? await ttsLineDeepgram(text)
+                  : (() => { throw new Error('no DEEPGRAM_API_KEY'); })())
+        : (LLM_KEY && LLM_BASE ? await ttsLine(text,
+            [TTS_VOICE, 'tara', 'leah', 'Fritz-PlayAI'].filter(Boolean))
+                               : (() => { throw new Error('no LLM_BASE speech API'); })());
+      ttsProviderOk = p;
+      return b64;
+    } catch (e) { tried.push(p + ': ' + (e && e.message || e)); }
+  }
+  throw new Error(tried.join(' | '));
 }
 
 export default async function handler(req, res) {
@@ -174,8 +219,8 @@ export default async function handler(req, res) {
                          start, end: start + sc.dur, html, audio: [] });
     });
 
-    /* 4 — optional narration speech (env tier only, guarded by time budget) */
-    if (LLM_KEY && LLM_BASE) {
+    /* 4 — optional narration speech (guarded by time budget) */
+    if (DG_KEY || (LLM_KEY && LLM_BASE)) {
       const clipList = [];
       for (let i = 0; i < scenes.length; i++) {
         const sc = scenes[i].sc;
@@ -187,8 +232,7 @@ export default async function handler(req, res) {
         for (const c of clipList) {
           if (Date.now() - started > 48000) { log('time budget reached — remaining lines stay caption-only'); break; }
           try {
-            const b64 = await ttsLine(c.txt.slice(0, 220),
-              [TTS_VOICE, 'tara', 'leah', 'Fritz-PlayAI'].filter(Boolean));
+            const b64 = await ttsAny(c.txt.slice(0, 220));
             pack.scenes[c.si].audio.push({ t0: c.t0, dur: c.w, b64 });
             ok++;
           } catch (e) { log(`tts skipped one line: ${String(e.message).slice(0, 220)}`); }
