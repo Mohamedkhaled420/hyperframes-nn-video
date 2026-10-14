@@ -599,13 +599,19 @@ stGo.onclick = async () => {
       stPhase.textContent = '\u2713 now playing "' + (fin.result.title || 'your video') + '"';
     } else if (j.ok && j.pack){         // serverless: pack JSON comes back directly
       (j.log || []).forEach(stMsg);
-      const saved = await PackDB.put(j.pack);
-      stPhase.textContent = '\u2713 "' + j.pack.title + '" generated'
+      const pack = j.pack;
+      stPhase.textContent = 'checking visual quality\u2026';
+      try {
+        const rep = await qaAndPolish(pack, stMsg);
+        stMsg('visual QA: ' + rep);
+      } catch (e) { stMsg('visual QA skipped: ' + e.message); }
+      const saved = await PackDB.put(pack);
+      stPhase.textContent = '\u2713 "' + pack.title + '" generated'
         + (saved ? ' \u2014 saved in this browser' : '') + ' \u2014 loading\u2026';
       stFill.style.width = '100%';
-      await refreshPacks(j.pack.slug);
-      await loadPack(j.pack.slug);
-      stPhase.textContent = '\u2713 now playing "' + j.pack.title + '" \u2014 Export MP4 renders it right here';
+      await refreshPacks(pack.slug);
+      await loadPack(pack.slug);
+      stPhase.textContent = '\u2713 now playing "' + pack.title + '" \u2014 Export MP4 renders it right here';
     } else {
       throw new Error(j.error || 'generation failed');
     }
@@ -615,6 +621,129 @@ stGo.onclick = async () => {
     stBusy = false; stGo.disabled = false;
   }
 };
+
+/* -------- visual QA + AI repair (motionmaxxing idea: look at the render) --
+   After a serverless generation, each scene is booted in a hidden iframe and
+   inspected at 3 timestamps with pure DOM math: is the central stage too
+   empty, and do scene objects intrude into the caption band? Failing scenes
+   are rewritten by /api/polish with the findings attached, then re-checked
+   once. Everything is best-effort: any error here just skips QA. ---------- */
+function qaScene(sc){
+  return new Promise(resolve => {
+    let settled = false;
+    const finish = fs => { if (settled) return; settled = true; try { f.remove(); } catch(e){} resolve(fs || []); };
+    const f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;left:-10000px;top:0;width:1920px;height:1080px;visibility:hidden;';
+    f.setAttribute('aria-hidden', 'true');
+    const times = [0.25, 0.5, 0.8].map(p => +((sc.dur || 30) * p).toFixed(2));
+    f.onload = () => {
+      const t0 = Date.now();
+      const wait = setInterval(() => {
+        const w = f.contentWindow;
+        if (w && w.__scene && w.document && w.document.body) { clearInterval(wait); run(); }
+        else if (Date.now() - t0 > 6000) { clearInterval(wait); finish(staticFindings.slice()); }
+      }, 120);
+      /* static scan: to({y}) is a RELATIVE translate — big values throw
+         elements off-stage. Catches transient states DOM sampling misses. */
+      const staticFindings = [];
+      if (sc.body){
+        const re = /to\(([^)]*)\)/g; let m;
+        while ((m = re.exec(sc.body))){
+          const yv = (m[1].match(/y:\s*(-?\d+(?:\.\d+)?)/) || [])[1];
+          if (yv != null && Math.abs(parseFloat(yv)) > 150)
+            staticFindings.push('a to() tween uses y:' + yv +
+              ' — but to({y}) is a RELATIVE move, so the element ends up ' +
+              Math.abs(Math.round(+yv)) + 'px below where you drew it. Draw the ' +
+              'object at its final position (cy\u2248760-780 for ground objects) ' +
+              'and animate arrival with scale 1.8\u21921 or a y nudge of 60 or less');
+        }
+      }
+      function run(){
+        try {
+          const doc = f.contentDocument, w = f.contentWindow;
+          /* caption groups: engine draws them as a <g> with the dark box */
+          const capEls = new Set();
+          doc.querySelectorAll('g').forEach(g => {
+            if (g.querySelector('rect[fill="rgba(5,8,13,0.68)"]'))
+              g.querySelectorAll('*').forEach(e => capEls.add(e));
+          });
+          const findings = [];
+          for (const t of times){
+            w.__scene.render(t);
+            let central = 0; const intruders = [];
+            doc.querySelectorAll('rect,circle,line,path,text,ellipse').forEach(e => {
+              if (capEls.has(e) || e.tagName === 'marker') return;
+              let vis = 1, n = e;
+              while (n && n.tagName && n.tagName.toLowerCase() !== 'svg'){
+                const o = parseFloat(w.getComputedStyle(n).opacity);
+                if (!isNaN(o)) vis *= o;
+                n = n.parentNode;
+              }
+              if (vis < 0.06) return;
+              let b; try { b = e.getBBox(); } catch(_) { return; }
+              if (b.width < 2 || b.height < 2) return;
+              /* engine chrome: chapter chip (top-left) + progress bar (bottom) */
+              if (b.x < 320 && b.y + b.height < 110) return;
+              if (b.y > 1070) return;
+              const ox = Math.min(b.x + b.width, 1720) - Math.max(b.x, 200);
+              const oy = Math.min(b.y + b.height, 820) - Math.max(b.y, 150);
+              if (ox > 30 && oy > 30){
+                const area = b.width * b.height;
+                /* skip giant backdrops (stage panel, full-scene washes) */
+                if (ox * oy < 0.5 * 1520 * 670 && area >= 1500) central++;
+              }
+              if (b.y >= 860 && b.y < 1070 &&
+                  b.x < 1500 && b.x + b.width > 420){
+                intruders.push(e.tagName +
+                  (e.textContent && e.textContent.trim()
+                    ? ' "' + e.textContent.trim().slice(0, 18) + '"' : '') +
+                  ' y\u2248' + Math.round(b.y));
+              }
+            });
+            if (central < 3) findings.push('t=' + t + 's: stage nearly empty (only ' +
+              central + ' visible element' + (central === 1 ? '' : 's') +
+              ' in the central area) — add a ground line, glow pool and keep the ' +
+              'current beat\u2019s subject ON STAGE, labeled');
+            if (intruders.length) findings.push('t=' + t + 's: ' + intruders.length +
+              ' element(s) sit below the stage in the caption band (y>860): ' +
+              intruders.slice(0, 5).join(', ') +
+              ' — move them up: land objects at y\u2248770, never tween anything to y>820');
+          }
+          finish(findings.concat(staticFindings));
+        } catch (e) { finish(staticFindings.slice()); }
+      }
+    };
+    f.srcdoc = sc.html || '';
+    document.body.appendChild(f);
+  });
+}
+
+async function qaAndPolish(pack, stMsg){
+  let repaired = 0;
+  for (let i = 0; i < pack.scenes.length; i++){
+    const sc = pack.scenes[i];
+    const fs1 = await qaScene(sc);
+    if (!fs1.length) continue;
+    stMsg('scene ' + (i + 1) + ' failed visual QA — repairing: ' + fs1[0]);
+    if (!sc.body){ stMsg('no scene body available for repair — keeping as is'); continue; }
+    try {
+      const r = await fetch('/api/polish', { method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: sc.short || sc.title,
+          chapter: (sc.title || '').split(' \u2014 ')[0], dur: sc.dur,
+          narr: sc.narr || [], body: sc.body, findings: fs1 }) });
+      const j = await r.json();
+      (j.log || []).forEach(m => stMsg('polish: ' + m));
+      if (j.ok && j.html){
+        const fs2 = await qaScene({ html: j.html, dur: sc.dur });
+        stMsg('re-check: ' + (fs2.length ? fs2.length + ' finding(s) remain'
+                                         : 'clean \u2713'));
+        sc.html = j.html; sc.body = j.body; repaired++;
+      } else stMsg('repair declined — keeping the original scene');
+    } catch (e) { stMsg('repair skipped: ' + e.message); }
+  }
+  return repaired ? repaired + ' scene(s) repaired' : 'all scenes passed';
+}
 
 /* -------- in-browser MP4 renderer — no server, no ffmpeg ------------------ */
 /* The visitor's browser IS the render farm: every frame of every scene is

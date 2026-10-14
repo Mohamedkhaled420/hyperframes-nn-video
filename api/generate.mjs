@@ -216,7 +216,8 @@ export default async function handler(req, res) {
       const start = scenes.slice(0, i).reduce((a, s) => a + s.sc.dur, 0);
       pack.scenes.push({ folder, title: sc.chapter + ' — ' + sc.title,
                          short: sc.title, dur: sc.dur,
-                         start, end: start + sc.dur, html, audio: [] });
+                         start, end: start + sc.dur, html, body,
+                         narr: sc.narr, audio: [] });
     });
 
     /* 4 — optional narration speech (guarded by time budget) */
