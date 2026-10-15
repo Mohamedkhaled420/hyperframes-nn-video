@@ -1,0 +1,366 @@
+
+notebook.ipynb
+notebook.ipynb
+IPYNB
+i had managed to make a jupyter notebook that loaded my instant gpu to make hyperframe videos take a look at it
+
+Ran 2 commands, read a file
+I read through the whole notebook. It’s a well-built batch renderer: one Colab T4 session reads a jobs.csv and renders a Hyperframes video for each row, with both the browser and the encoder running on the GPU.
+
+How it works
+
+Cells 1–5 (setup, once per session): mounts Drive, installs Node 22 and the Chrome libraries, installs Hyperframes and chrome-headless-shell, installs the NVIDIA EGL libraries so Chrome can use the GPU, then checks that NVENC works.
+Cell 6 (config and helpers): defines your defaults and validates each CSV row (resolve_job). It collects errors per row instead of crashing.
+Cell 7 (template CSV): creates a starter jobs.csv and never overwrites an existing one.
+Cell 8 (dry run): shows a plan table with each row’s status (ready, ERROR, skip, disabled) without rendering anything.
+Cell 9 (render): for each job it does the following:
+copies the project to local disk, which is faster than rendering from Drive;
+renders on the GPU;
+writes the video to Drive as .part first and then renames it, so you never get a half-written file;
+saves a log next to the video;
+writes last_run_results.csv, including whether NVENC and EGL were actually used.
+Things I liked
+
+Rows resume cleanly after a disconnect, because existing outputs are skipped.
+A failed row doesn’t stop the batch.
+The var_* columns with automatic typing let you make many variants from one HTML file.
+The detect_gpu_use check shows whether you silently fell back to CPU encoding or SwiftShader.
+Possible issues and improvements
+
+Driver download (cell 4): it fetches the NVIDIA .run file from nvidia.com. If Colab updates the driver to a version NVIDIA hosts at a different URL, it fails. It does try two URL patterns, so you’re already covered in most cases.
+libasound2t64 (cell 2): this package name only exists on Ubuntu 24.04. If Colab goes back to 22.04, use libasound2 instead.
+extra_args can’t change the output format: -o, --format and -q are set before extra_args, so overriding them there may conflict. This is fine for flags like --browser-timeout.
+index.html gets overwritten: if a folder has both index.html and a differently-named HTML set in the html column, the copy overwrites index.html in the temp copy. Only your temp copy is affected, not Drive, but it could surprise you.
+Parallelism: jobs run one at a time. On a T4 the GPU is probably the limit, so that’s likely fine.
+parse_var quirk: a value like 007 or 1.50 is turned into a number and loses its formatting. A string you want kept as-is would need to be wrapped as JSON ("007").
+What would you like next? I can fix something specific, add a feature such as a Telegram or email notification when a batch finishes, or help debug an error you hit when running it.
+
+can you manage it to make 10+ min video about a specific viral youtube educational content to make it in a descriptive design like used in manim
+----
+your requirements now to adapt the jobs.csv that will be updated with each video section as each folder holds the content of it's entire scene .
+for the assets or any html scenes you need to describe it for me in a seperate md descriptions to generate it but i prefere if you used generated html/js graphics to not relying on external assets 
+
+also find for me a search about the viral content first
+
+Planning a viral educational video using Manim-style animations.
+Planning a viral educational video using Manim-style animations.
+I’ll start with the research on what’s viral in Manim-style educational content, then build the video plan on top of it.
+
+Ran 10 commands, searched the web, read a file
+Status: scenes 1–9 are written and I’m finishing scene 10, which plays back the real training run. After that come scenes 11–12, the build script, and a test render in Chrome.
+
+Ran 3 commands
+bash
+
+cd /home/claude/build && python3 - <<'EOF'
+s=open('scenes/s10.js').read()
+# curves collected
+s=s.replace("pth(ax1,'loss',2.6,C.red);pth(ax1,'tloss',2.6,C.orange,'10 8');pth(ax2,'acc',1.05,C.blue);pth(ax2,'tacc',1.05,C.orange,'10 8');",
+"const curves=[pth(ax1,'loss',2.6,C.red),pth(ax1,'tloss',2.6,C.orange,'10 8'),pth(ax2,'acc',1.05,C.blue),pth(ax2,'tacc',1.05,C.orange,'10 8')];")
+# strip group
+s=s.replace("const borders=xs.map((x,i)=>{const g=M.grid(SX+i*150,SY,CS,7,5,x,{gap:1,show:true});const b=M.rect(SX+i*150-6,SY-6,5*CS+12,7*CS+12,{stroke:C.grey,w:4,rx:6,show:true});return b;});\nconst sg=M.G(svg);",
+"const strip=M.G(svg),labs=[];\nconst borders=xs.map((x,i)=>{const gg=M.grid(SX+i*150,SY,CS,7,5,x,{gap:1,show:true});strip.appendChild(gg.g);return M.rect(SX+i*150-6,SY-6,5*CS+12,7*CS+12,{stroke:C.grey,w:4,rx:6,show:true},strip);});\nfade(strip,2,0.8);")
+s=s.replace("tl.set(lab,{opacity:1},times[k]);","labs.push(lab);tl.set(lab,{opacity:1},times[k]);")
+s=s.replace("const pt=M.stext(pr,SX+i*150+40,SY+112+36,{size:32,color:col});","const pt=M.stext(pr,SX+i*150+40,SY+112+36,{size:32,color:col},strip);")
+# cleanup tail
+i=s.index("[...allv].forEach(e=>out(e,48.6,0.7));")
+s=s[:i]+"[...allv,...curves,strip,...labs].forEach(e=>out(e,48.6,0.7));\n"
+open('scenes/s10.js','w').write(s)
+EOF
+cat > scenes/s11.js <<'EOF'
+M.begin({n:'Chapter 10',title:'What did it learn?',color:M.C.purple});
+const C=M.C,R=NN.trainNet({epochs:300,lr:2.0}),net=R.net;
+const rr=M.rng(1234);let best=null;
+for(let k=0;k<600;k++){const x=Array.from({length:35},()=>rr()),p=NN.forward(net,x).p,m=Math.max(...p);if(!best||m>best.m)best={x,p,m,d:p.indexOf(m)};}
+const d4=NN.DIG[4],d9=NN.DIG[9],bl=d4.map((v,i)=>(v+d9[i])/2),pb=NN.forward(net,bl).p;
+const ord=pb.map((p,i)=>[p,i]).sort((a,b)=>b[0]-a[0]);
+captions(NARR,{nd:best.d,np:Math.round(best.m*100)});
+const mx=Math.max(...net.W1.flat().map(Math.abs));
+const hm=[];
+for(let j=0;j<12;j++){const col=j%6,row=Math.floor(j/6),x=210+col*250,y=250+row*300;
+  const h=M.heat(x,y,26,7,5,net.W1[j],{max:mx});pop(h.g,1+j*0.4,0.6);const l=T('neuron '+(j+1),x+65,y+205,{size:26,color:C.greyL});fade(l,1.2+j*0.4,0.5);hm.push(h.g,l);}
+const lg=T('<span style="color:#58C4DD">■</span> pixel excites the neuron &nbsp;&nbsp; <span style="color:#FC6255">■</span> pixel inhibits it',960,880,{size:34});fade(lg,6.5,0.8);
+const mess=T('not tidy loops and strokes — blurry, overlapping templates',960,155,{size:40,color:C.orange});fade(mess,17,0.8);
+[...hm,lg,mess].forEach(e=>out(e,26,0.7));
+const ng=M.grid(420,330,34,7,5,best.x,{gap:2});fade(ng.g,28.2,0.8);
+const nt=T('random static',505,285,{size:34,color:C.greyL});fade(nt,28.2,0.6);
+const vb=vbars(1000,700,52,22,300,best.p);fade(vb.g,29,0.8);
+const vt=T('network output',1370,330,{size:34,color:C.greyL});fade(vt,29,0.6);
+const sr=T('static  →  <span style="color:#FFE45C;font-weight:600">'+best.d+'</span>, '+Math.round(best.m*100)+'% sure',1370,820,{size:44});fade(sr,34,0.8);
+/* blend test */
+out(ng.g,38.6,0.5);out(nt,38.6,0.5);out(sr,38.6,0.5);
+const g4=M.grid(150,380,26,7,5,d4,{gap:2}),g9=M.grid(380,380,26,7,5,d9,{gap:2}),gb=M.grid(610,380,26,7,5,bl,{gap:2});
+[g4,g9,gb].forEach((g,i)=>fade(g.g,39.4+i*0.5,0.6));
+const pl=T('+',330,470,{size:60}),eq=T('=',560,470,{size:60});fade(pl,39.8,0.4);fade(eq,40.4,0.4);
+const l4=T('a four',215,340,{size:30,color:C.greyL}),l9=T('a nine',445,340,{size:30,color:C.greyL}),lbd=T('blend',675,340,{size:30,color:C.greyL});[l4,l9,lbd].forEach((l,i)=>fade(l,39.4+i*0.5,0.5));
+vb.set(40,1.6,pb);
+const br=T('four + nine  →  <span style="color:#FFE45C;font-weight:600">'+ord[0][1]+'</span> '+Math.round(ord[0][0]*100)+'%,  <span style="color:#FFE45C;font-weight:600">'+ord[1][1]+'</span> '+Math.round(ord[1][0]*100)+'%',1370,820,{size:44});fade(br,41,0.8);
+const all=[g4.g,g9.g,gb.g,pl,eq,l4,l9,lbd,vb.g,vt,br];all.forEach(e=>out(e,44,0.6));
+const fin=T('A network only knows the world<br>it was trained on.',960,470,{size:72,align:'center'});wipe(fin,44.8,2);
+const fin2=T('Understanding that gap matters as much as the math.',960,680,{size:42,color:C.greyL});fade(fin2,50,0.8);
+EOF
+cat > scenes/s12.js <<'EOF'
+M.begin({n:'Recap',title:'Putting it together',color:M.C.blue});
+captions(NARR,{});
+const C=M.C,pal=[C.blue,C.teal,C.green,C.yellow,C.orange,C.red];
+const rows=[['A picture is a list of numbers','[ 0.0, 0.9, 0.8, … ]'],['A neuron: weighted sum, bias, squash','σ( Σ w·x + b )'],['Layers of neurons, joined by weights','35 → 12 → 10'],['A cost says how wrong we are','−ln p'],['Gradient descent: step downhill','w ← w − η ∂C/∂w'],['Backpropagation: blame, backwards','chain rule']];
+const times=[1.2,6.2,11.2,16.2,21.2,26.2];
+const rg=rows.map((r,i)=>{const y=200+i*105,g=M.G(svg);g.style.opacity=0;circle(250,y,30,{stroke:pal[i],w:5,fill:'#1c2230',show:true},g);stext(i+1,250,y,{size:34,color:pal[i],show:true},g);
+  const t=T(r[0],320,y,{size:44,anchor:'l'}),f=T(r[1],1500,y,{size:40,color:pal[i],mono:true,anchor:'c'});
+  pop(g,times[i],0.5);fade(t,times[i]+0.2,0.6,{y:12});fade(f,times[i]+0.5,0.6);return [g,t,f];});
+const fm=T('θ ← θ − η ∇C(θ)',960,880,{size:84});wipe(fm,31.4,1.8);
+rg.flat().forEach(e=>to(e,30.8,0.6,{opacity:0.22}));
+rg.flat().forEach(e=>out(e,35.2,0.6));
+to(fm,35.4,0.9,{y:-380,scale:0.8});
+const a=T('Change the size of the hidden layer.<br>See what breaks.',960,640,{size:62,align:'center'});wipe(a,36,1.6);
+const b=T('That is how intuition is built.',960,790,{size:42,color:C.greyL});fade(b,38,0.7);
+EOF
+echo ok
+Output
+
+ok
+bash
+
+cd /home/claude/build && python3 - <<'EOF'
+s=open('scenes/s06.js').read()
+s=s.replace("const t=41.2+idx*6;","const t=41.2+idx*4.4;").replace("if(idx<2)hideSt(st[k],t+5.6);","if(idx<2)hideSt(st[k],t+4.2);")
+s=s.replace("const rk=T('no rule about loops or strokes was written — only numbers',960,985,{size:30,color:M.C.greyL});\n","")
+open('scenes/s06.js','w').write(s)
+h=open('shell.html').read()
+h=h.replace("__SCENE__","const NARR=__NARR__;\n__SCENE__")
+open('shell.html','w').write(h)
+EOF
+cat > scenes_meta.py <<'EOF'
+# -*- coding: utf-8 -*-
+# Single source of truth: titles, durations, narration (captions + voice-over script), storyboard beats.
+SCENES = [
+dict(id='s01_hook', js='s01.js', n='Prologue', title='The problem', dur=40,
+ purpose='Hook. Show why hand-written rules fail for handwriting, then promise a machine that finds its own rules.',
+ narr=[(1.0,4.5,"Show a computer a handwritten 7 and, somehow, it knows what it is."),
+  (6.0,5.5,"Eight different sevens: different slants, crossbars and noise."),
+  (12.5,5.5,"Try writing rules by hand: a bright top row, a diagonal going down-left."),
+  (18.0,4.5,"The next example always breaks them. Hand-written rules do not scale."),
+  (23.0,5.0,"So flip the question: let the machine find its own rules, by turning knobs."),
+  (28.5,3.5,"The network we will build has 562 of them."),
+  (32.0,4.5,"Pixels, neurons, layers, error, descent, backpropagation. Six ideas."),
+  (37.0,2.5,"Let's build one.")],
+ beats=[(0.8,"Title wipes in: 'How does a machine learn to read?'"),(6.0,"Eight 5x7 pixel grids pop in, all different sevens (slanted, crossbar, noisy)."),(8.5,"Caption 'All of these are a 7'."),(12.4,"Dark code panel appears with a fake if-rule in monospace."),(15.6,"Red X's are drawn over three of the sevens: the rule fails."),(20.5,"Twelve knobs pop in; their indicators rotate through four random positions (seeded)."),(28.4,"Big '562 knobs' text."),(32.2,"Six-item roadmap fades in one line at a time."),(37.1,"'Let's build one.' wipes in; fade to black.")]),
+dict(id='s02_pixels', js='s02.js', n='Chapter 1', title='Pictures are numbers', dur=50,
+ purpose='Explain that an image is a grid of brightness values, and flatten it into one input vector.',
+ narr=[(1.0,4.5,"Start small: a digit on a grid, five pixels wide and seven tall."),
+  (5.5,5.0,"Each square holds one number: its brightness, from 0 for black to 1 for white."),
+  (11.0,5.5,"Zoom in, and the picture is nothing but a table of numbers."),
+  (17.0,5.5,"Unroll the table, row after row, into one long list: thirty-five numbers."),
+  (23.5,5.0,"That list is the input. Everything the network knows is in it."),
+  (29.0,5.5,"Real handwriting datasets use 28 by 28 pixels: 784 numbers per digit."),
+  (35.0,5.5,"A phone photo has tens of millions. Only the length of the list changes."),
+  (42.0,6.0,"To a computer, a picture is a list of numbers. Learning to see means learning from lists.")],
+ beats=[(1.2,"A 5x7 pixel grid of a '3' fades in with shaded cells."),(5.5,"Yellow box is drawn around one pixel; caption explains 'one brightness, 0 to 1'."),(10.0,"Each cell's number fades in (35 numbers, staggered)."),(17.0,"All 35 cells fly from the grid into a vertical column (the input vector) with brackets."),(22.0,"Label: 'x = a list of 35 numbers'; the grid dims."),(29.0,"Everything clears; a blurry 28x28 grid (784 cells) appears with '28 x 28 = 784 numbers'."),(35.2,"'A phone photo: 4000 x 3000 x 3 = 36,000,000 numbers'."),(42.2,"Closing line wipes in: 'a picture is a list of numbers'.")]),
+dict(id='s03_neuron', js='s03.js', n='Chapter 2', title='A single neuron', dur=60,
+ purpose='Build one neuron from scratch: weights, bias, weighted sum, sigmoid squash.',
+ narr=[(1.0,4.5,"A neuron is a small machine: numbers go in, one number comes out."),
+  (5.5,5.0,"Each input has a weight: positive means 'this helps', negative means 'this hurts'."),
+  (10.5,3.5,"The neuron adds up every input times its weight."),
+  (14.0,3.0,"First input: 0.9 times 1.5 gives 1.35."),
+  (17.0,3.0,"Second: 0.2 times minus 2 gives minus 0.4."),
+  (20.0,4.0,"Third: 0.56. The sum is 1.51; add a bias of minus 1 and we get 0.51."),
+  (25.0,5.0,"Raw sums can be anything, so we squash the result into a range between 0 and 1."),
+  (30.5,5.5,"The sigmoid: very negative gives almost 0, very positive gives almost 1."),
+  (37.0,4.0,"Our 0.51 lands here: the neuron outputs about 0.62."),
+  (41.5,4.5,"Shift the bias, and the neuron becomes harder or easier to excite."),
+  (46.5,4.5,"Scale the weights, and its reaction gets sharper."),
+  (52.0,6.0,"Weights and a bias. Every skill a network has is stored in numbers like these.")],
+ beats=[(1.0,"Three input circles with values 0.9, 0.2, 0.7."),(5.5,"Three arrows drawn to a central neuron; thickness and color show weight (+1.5 blue, -2.0 red, +0.8 blue)."),(9.5,"Neuron circle with a big sigma pops in."),(10.6,"Equation y = sigma(w1x1 + w2x2 + w3x3 + b) wipes in at the top."),(14.0,"Three products appear one by one along the bottom; then 'sum = 1.51, b = -1, z = 0.51'."),(22.8,"Output arrow and value 0.62."),(24.4,"Diagram clears; axes appear; the sigmoid curve is drawn in yellow."),(30.6,"A red dot slides along the curve from far left to far right, then returns to z = 0.51."),(38.2,"Dashed guides mark z = 0.51 and sigma = 0.62."),(41.6,"Teal curve (bias shifted) draws in, then a purple steeper curve."),(52.2,"Recap formula wipes in: output = sigma(sum w x + b).")]),
+dict(id='s04_layers', js='s04.js', n='Chapter 3', title='Layers', dur=55,
+ purpose='Show why stacking neurons in layers helps: the hoped-for story of strokes, parts, digits (and a hint that reality is messier).',
+ narr=[(1.0,4.5,"One neuron is weak. Stack them in layers and something remarkable happens."),
+  (6.0,5.0,"The first layer sees pixels. Each neuron in the next layer looks at all of them."),
+  (11.5,5.0,"Every neuron connects to every neuron before it. Each line has its own weight."),
+  (17.0,5.5,"The hope: early layers notice small strokes; later layers combine them into parts."),
+  (23.0,5.5,"A loop. A stem. A hook. Parts combine into digits more easily than raw pixels do."),
+  (29.0,5.5,"A nine is a loop on a stem. An eight is two loops. The last layer reads off the parts."),
+  (35.0,5.5,"The middle layers are called hidden, because we never tell them what to look for."),
+  (41.0,5.5,"That is the story people tell. The truth is messier, and we will check it."),
+  (47.0,6.0,"For now: a network is neurons in layers, joined by weights. Nothing more.")],
+ beats=[(2.0,"Four columns of circles (7, 6, 5, 4 nodes) pop in."),(6.0,"All connections between neighbouring columns fade in."),(10.0,"Column labels: pixels, small strokes, parts, digits."),(23.2,"Icons (loop, stem, hook, diagonal, loop) are drawn inside five 'parts' neurons."),(24.0,"Output neurons labelled 4, 7, 8, 9."),(29.6,"Four yellow connections show loop+stem -> 9 and loop+loop -> 8."),(35.0,"Bracket under the middle columns: 'hidden layers'."),(41.4,"Orange note: 'the real story is messier (Chapter 10)'."),(47.2,"Summary line: neurons + layers + weights.")]),
+dict(id='s05_knobs', js='s05.js', n='Chapter 4', title='The knobs', dur=45,
+ purpose='Introduce the real 35-12-10 network and count its 562 parameters.',
+ narr=[(1.0,5.0,"35 pixels in, 12 hidden neurons, 10 outputs: one for each digit."),
+  (6.0,4.5,"Every line is a weight, and each weight is a knob we can turn."),
+  (11.0,4.5,"Between pixels and hidden layer: 35 times 12, so 420 weights."),
+  (15.5,3.0,"Plus one bias for each of the 12 neurons."),
+  (19.0,4.5,"Hidden to output: 12 times 10, so 120 weights, and 10 more biases."),
+  (24.0,4.5,"Add it up: 420, 12, 120 and 10. A total of 562 numbers."),
+  (29.5,5.0,"That is the whole network. Not a program someone wrote, just 562 numbers."),
+  (35.0,5.0,"Modern language models have billions of them. The recipe stays the same."),
+  (40.5,3.5,"So how do we find good values for them?")],
+ beats=[(1.0,"The real network is drawn: 35 input dots, 12 hidden, 10 output. Line colour = sign of the trained weight (blue +, red -), opacity = size."),(6.0,"One weight is highlighted in gold."),(11.0,"Input-to-hidden connections glow; text '35 x 12 = 420 weights + 12 biases'."),(19.2,"Hidden-to-output connections glow; '12 x 10 = 120 weights + 10 biases'."),(24.0,"'420 + 12 + 120 + 10 = 562'."),(29.4,"Network clears; a 36x16 field of 562 dots (one per parameter) appears and shimmers through random colours."),(36.0,"Caption about billions of parameters; final question in yellow.")]),
+dict(id='s06_forward', js='s06.js', n='Chapter 5', title='Running the network', dur=60,
+ purpose='Walk a digit through a trained network: input, hidden activations, softmax probabilities.',
+ narr=[(1.0,4.5,"Let us watch a trained network work, before asking how it was trained."),
+  (6.0,5.5,"Pixels go in. Each of the 35 input neurons holds one pixel's brightness."),
+  (12.0,5.5,"Each hidden neuron takes a weighted sum, adds its bias, and squashes it."),
+  (18.0,5.5,"Some light up, some stay dark: that pattern is the network's summary of the picture."),
+  (24.0,5.0,"The output layer repeats the trick: a weighted sum for each of the ten digits."),
+  (29.5,5.0,"Softmax turns those ten scores into probabilities that add up to one."),
+  (35.0,5.5,"Here it says: a three, {p3}% confident. That is one forward pass."),
+  (41.0,4.5,"Now a seven. Same 562 numbers, different picture, different answer."),
+  (45.5,4.0,"Then a five. Same weights, new answer."),
+  (50.0,5.0,"And a noisy eight, with pixels flipped: watch the confidence."),
+  (55.5,4.0,"No rules about loops or strokes were written. Only numbers.")],
+ beats=[(1.0,"Trained network fades in (real weights)."),(5.2,"Input digit grid appears at left, with an arrow into the input layer."),(6.4,"Input neurons take the pixel brightnesses."),(12.0,"Formula h = sigma(W1 x + b1); hidden neurons light up yellow in proportion to activation."),(24.0,"Formula p = softmax(W2 h + b2); output neurons light up."),(30.2,"Probability bars grow at the right with percentages."),(35.0,"'Prediction: 3 - xx% confident'."),(41.2,"Same sequence replayed quickly for a 7, a 5 and a noisy 8; bars and activations morph between states.")]),
+dict(id='s07_cost', js='s07.js', n='Chapter 6', title='How wrong is it?', dur=50,
+ purpose='Introduce the loss: -ln(p of the correct class), using an untrained vs trained network.',
+ narr=[(1.0,4.5,"Take the untrained network, with random weights, and show it a three."),
+  (6.0,5.0,"Its ten outputs are nearly flat. It has no idea: each digit gets about a tenth."),
+  (11.5,5.0,"We know the answer, so the target is simple: all the probability on the three."),
+  (17.0,4.5,"We need one number that says how wrong the network is: a cost."),
+  (22.0,5.0,"A good choice: minus the log of the probability given to the correct digit."),
+  (27.5,5.0,"Give the right answer {q0}% and the loss is {l0}. High. The dot sits high on the curve."),
+  (33.0,5.5,"As the network improves, p climbs toward 1 and the loss slides toward zero: {l1}."),
+  (39.0,5.0,"Average that over thousands of examples and you get one score for the whole network."),
+  (45.0,4.0,"Low cost means good weights. Training is the art of lowering it.")],
+ beats=[(0.8,"Clean 3 input grid and ten vertical probability bars for the UNTRAINED network (flat)."),(11.4,"Green outlined target bar for digit 3 is drawn."),(15.5,"Red arrow marks the gap."),(22.4,"Formula loss = -ln(p_correct)."),(22.6,"Axes and the -ln(p) curve are drawn."),(27.6,"Red dot placed at the untrained network's loss."),(33.0,"Bars morph to the trained probabilities; the dot slides down the curve and turns green."),(39.0,"'cost = average loss over all training examples'; final line: training = pushing the cost down.")]),
+dict(id='s08_descent', js='s08.js', n='Chapter 7', title='Rolling downhill', dur=70,
+ purpose='Gradient descent on one knob (learning-rate effects), then a 2-knob contour map with a zigzag path.',
+ narr=[(1.0,4.5,"Imagine the cost as a landscape. Turn one knob, and the height changes."),
+  (6.0,5.0,"We want the bottom. But we only feel the slope right where we stand."),
+  (11.5,5.0,"Here the slope points down to the right, so the sensible move is: step right."),
+  (17.0,5.5,"Steeper slope, bigger step. Near the bottom the slope flattens, so steps shrink."),
+  (23.0,4.5,"The size of the step is our choice: the learning rate."),
+  (28.0,5.0,"Too small, and we crawl. Ten steps barely move us."),
+  (34.0,4.5,"Too large, and we overshoot, bouncing from wall to wall, even climbing out."),
+  (39.5,4.0,"So we pick a learning rate that is brave, but not reckless."),
+  (45.0,5.0,"With two knobs we can draw the landscape. Rings join points of equal cost."),
+  (50.5,5.0,"Descent follows the steepest way down, and zigzags toward the middle."),
+  (56.0,5.5,"A real network has 562 knobs: a landscape in 562 dimensions. Same rule."),
+  (62.0,5.0,"Update rule: new weight equals old weight, minus learning rate times slope."),
+  (67.0,2.5,"Repeat, thousands of times.")],
+ beats=[(1.0,"Axes and a blue bowl-shaped cost curve are drawn."),(5.0,"A gold ball sits on the curve; a red tangent line shows the slope."),(11.6,"Ball hops toward the minimum in 4 steps (eta = 1.0), leaving teal trail dots."),(17.0,"'step = eta x slope' text."),(27.4,"Second run, eta = 0.05: ten tiny hops, barely moves."),(34.0,"Third run, eta = 3.0: ball overshoots left and right across the bowl."),(44.0,"Curve clears; six elliptical contour rings are drawn."),(52.0,"Ball placed at the start; red arrow shows the steepest-descent direction."),(54.6,"Ball zigzags through nine steps toward the centre, drawing a gold path."),(62.0,"Update rule: w <- w - eta dC/dw.")]),
+dict(id='s09_backprop', js='s09.js', n='Chapter 8', title='Who is to blame?', dur=65,
+ purpose='Backpropagation on a two-weight chain with exact numbers, then one weight update that lowers the loss.',
+ narr=[(1.0,4.5,"Descent needs a slope for every knob. How do we find all 562 slopes?"),
+  (6.0,5.0,"Shrink the network to a chain: one input, two weights, a loss. We can do this by hand."),
+  (11.5,5.0,"Forward: 1 times 0.8 is 0.8, times minus 0.5 is minus 0.4. The target was 1."),
+  (17.0,4.5,"The squared error is 1.96. Now: who is to blame for it?"),
+  (22.0,5.0,"Start at the end. If y rose a little, the loss would change by minus 2.8 times as much."),
+  (27.5,5.0,"Weight w2 reaches y through h: blame is minus 2.8 times 0.8, so minus 2.24."),
+  (33.0,5.5,"Keep going backwards: h gets 1.4, and w1 gets 1.4 times its input of 1."),
+  (39.0,5.0,"That is the chain rule: blame flows backwards, multiplying local slopes as it goes."),
+  (45.0,5.0,"Now nudge each weight against its slope, with a learning rate of 0.1."),
+  (50.5,5.0,"The output moves from minus 0.4 to minus 0.18, and the loss falls to 1.40."),
+  (56.0,5.0,"Backpropagation does exactly this, for all 562 weights, reusing work from later layers."),
+  (61.5,3.0,"One pass forward. One pass back. One small step.")],
+ beats=[(1.0,"Question text: how do we get all the slopes?"),(5.6,"Chain x -> h -> y with weights w1 = 0.8 and w2 = -0.5 and a loss box C = (y - 1)^2."),(11.4,"Forward values appear: 1, 0.8, -0.4; loss = 1.96."),(22.0,"Red backward arrows are added one at a time; each shows its derivative (dC/dy = -2.8)."),(28.0,"Gold weight gradients: dC/dw2 = -2.24, then dC/dw1 = 1.4 (after dC/dh = 1.4)."),(40.0,"'blame flows backwards, multiplying local slopes'."),(46.0,"Updates: w2 <- -0.276, w1 <- 0.66."),(51.2,"New forward pass: y = -0.18, C = 1.40 (was 1.96)."),(56.2,"Closing line: backprop = this, for all 562 weights.")]),
+dict(id='s10_training', js='s10.js', n='Chapter 9', title='Training', dur=70,
+ purpose='Play back a REAL training run (computed in the page): loss and accuracy curves plus predictions on 10 unseen digits.',
+ narr=[(1.0,4.5,"Time to train: start from random weights, then show it noisy digits again and again."),
+  (5.5,4.5,"Each round: a forward pass, the cost, a backward pass, a small nudge to every weight."),
+  (10.5,4.5,"Watch the cost on the left, and how often it is right on the right."),
+  (15.0,5.0,"At first it guesses. Within a few rounds the cost collapses."),
+  (20.0,5.5,"The digits below turn from red to green as the weights settle."),
+  (26.0,5.5,"Then progress slows. Easy gains come first; polishing takes far longer."),
+  (32.0,5.5,"This is why training runs so long: the last few percent are the hardest."),
+  (38.0,5.0,"Final: {acc}% right on training digits, {tacc}% on digits it has never seen."),
+  (43.5,4.5,"That second number matters most: a network must work on new data."),
+  (49.0,5.0,"Strip away the details and training is one loop, repeated again and again."),
+  (54.5,5.0,"Forward, cost, backward, nudge. Real systems repeat it millions of times or more."),
+  (60.0,5.0,"Nothing in that loop knows what a seven is. The knowledge ends up in the weights."),
+  (65.5,3.5,"So what did the weights learn? Let us look inside.")],
+ beats=[(1.0,"Two plots appear: cost (left) and accuracy (right); x axis is square-root-scaled epochs so the early action is visible."),(2.0,"A strip of 10 unseen test digits appears with coloured borders."),(8.0,"Curves are revealed left to right over 40 s; at 14 snapshot epochs the counter line and the ten predicted digits update (green = right, red = wrong)."),(48.6,"Plots clear."),(49.5,"Four boxes appear one by one: Forward pass, Cost, Backward pass, Nudge weights."),(55.4,"A return arrow closes the loop: 'repeat'."),(60.6,"Closing line: the knowledge ends up in the weights.")]),
+dict(id='s11_inside', js='s11.js', n='Chapter 10', title='What did it learn?', dur=55,
+ purpose='Inspect real hidden-neuron weights (messy, not tidy), then show over-confidence on static and a blended digit.',
+ narr=[(1.0,4.5,"Here are the 12 hidden neurons. Each grid shows its weights on the 35 pixels."),
+  (6.0,5.0,"Blue pixels excite the neuron, red pixels inhibit it. Bright means a strong weight."),
+  (11.5,5.0,"If the story from Chapter 3 were true, we would see neat loops and strokes."),
+  (17.0,5.0,"Instead: blurry, overlapping templates. Each neuron is a messy vote on the whole picture."),
+  (22.5,5.0,"Together they work, but the meaning is spread across many neurons."),
+  (28.0,5.0,"Now a test. Feed it pure random static: an image of nothing at all."),
+  (33.5,5.0,"It answers {nd}, {np}% sure. It was never taught to say 'I do not know'."),
+  (39.0,5.0,"Blend a four and a nine, and its belief splits between the two it knows."),
+  (44.5,5.0,"A network only knows the world it was trained on, and it does not know its limits."),
+  (50.0,4.5,"Understanding that gap matters as much as understanding the math.")],
+ beats=[(1.0,"Twelve 5x7 heat-maps of the REAL trained input weights (blue positive, red negative), one pops in every 0.4 s."),(6.5,"Colour legend."),(17.0,"Orange note: not tidy loops and strokes."),(28.2,"Test 1: a 5x7 grid of seeded random static is shown with the network's output bars."),(34.0,"Result line: 'static -> digit, xx% sure' (computed live)."),(39.4,"Test 2: a four + a nine = a blend; bars morph to the split belief."),(44.8,"Closing statement and sub-line.")]),
+dict(id='s12_outro', js='s12.js', n='Recap', title='Putting it together', dur=40,
+ purpose='Recap in six rows, collapse to one update rule, and give viewers a challenge.',
+ narr=[(1.0,4.5,"Let us put it together. A picture is a list of numbers."),
+  (6.0,4.5,"A neuron takes a weighted sum, adds a bias and squashes the result."),
+  (11.0,4.5,"Neurons stack in layers, joined by weights. Ours had 562."),
+  (16.0,4.5,"A cost function turns 'how wrong' into a single number."),
+  (21.0,4.5,"Gradient descent says: nudge every weight downhill."),
+  (26.0,4.5,"Backpropagation finds every slope by sending blame backwards."),
+  (31.0,4.0,"In one line: new weights equal old weights, minus a step downhill."),
+  (35.5,4.0,"Change the hidden layer's size and see what breaks. That is how intuition grows.")],
+ beats=[(1.2,"Six numbered rows appear every 5 s, each with a small formula on the right."),(30.8,"Rows dim; big update rule 'theta <- theta - eta grad C(theta)' wipes in."),(35.2,"Rows clear; formula moves up."),(36.0,"Challenge text: change the hidden layer's size and see what breaks.")]),
+]
+EOF
+python3 -c "
+import scenes_meta as m
+print(sum(s['dur'] for s in m.SCENES),'s total =',sum(s['dur'] for s in m.SCENES)/60,'min')
+for s in m.SCENES:
+    mx=max(len(n[2]) for n in s['narr']); end=max(n[0]+n[1] for n in s['narr'])
+    print(s['id'],s['dur'],'longest caption',mx,'chars; last cap ends',end)
+"
+Output
+
+660 s total = 11.0 min
+s01_hook 40 longest caption 75 chars; last cap ends 39.5
+s02_pixels 50 longest caption 89 chars; last cap ends 48.0
+s03_neuron 60 longest caption 82 chars; last cap ends 58.0
+s04_layers 55 longest caption 86 chars; last cap ends 53.0
+s05_knobs 45 longest caption 73 chars; last cap ends 44.0
+s06_forward 60 longest caption 84 chars; last cap ends 59.5
+s07_cost 50 longest caption 87 chars; last cap ends 49.0
+s08_descent 70 longest caption 80 chars; last cap ends 69.5
+s09_backprop 65 longest caption 87 chars; last cap ends 64.5
+s10_training 70 longest caption 85 chars; last cap ends 69.0
+s11_inside 55 longest caption 89 chars; last cap ends 54.5
+s12_outro 40 longest caption 80 chars; last cap ends 39.5
+Checking caption lengths against timing and sizing limits.
+bash
+
+cd /home/claude/build && cat > calc.js <<'EOF'
+// Mirrors the dynamic numbers the scenes compute at render time (same seeds, same code) so the md files can quote them.
+const NN=require('./nn.js');
+const R=NN.trainNet({epochs:300,lr:2.0}),net=R.net,out={};
+const rs=[31,32,33,2024].map(NN.rng);
+const ins=[[3,0],[7,0],[5,0],[8,0.13]].map((a,i)=>NN.noisy(a[0],rs[i],a[1]));
+const o=ins.map(x=>NN.forward(net,x)),pred=o.map(q=>q.p.indexOf(Math.max(...q.p)));
+out.p3=Math.round(o[0].p[pred[0]]*100);
+out.fwd=o.map((q,i)=>({truth:[3,7,5,8][i],pred:pred[i],conf:+(q.p[pred[i]]*100).toFixed(1)}));
+const x=NN.DIG[3],p0=NN.forward(R.snaps[0].net,x).p,p1=NN.forward(net,x).p;
+out.q0=Math.round(p0[3]*100);out.l0=(-Math.log(p0[3])).toFixed(2);out.l1=(-Math.log(p1[3])).toFixed(2);out.q1=Math.round(p1[3]*100);
+const L=R.hist[300];out.acc=Math.round(L.acc*100);out.tacc=Math.round(L.tacc*100);
+out.hist0={acc:Math.round(R.hist[0].acc*100),loss:+R.hist[0].loss.toFixed(2)};
+const rr=NN.rng(1234);let best=null;
+for(let k=0;k<600;k++){const xx=Array.from({length:35},()=>rr()),p=NN.forward(net,xx).p,m=Math.max(...p);if(!best||m>best.m)best={m,d:p.indexOf(m)};}
+out.nd=best.d;out.np=Math.round(best.m*100);
+const bl=NN.DIG[4].map((v,i)=>(v+NN.DIG[9][i])/2),pb=NN.forward(net,bl).p,ord=pb.map((p,i)=>[p,i]).sort((a,b)=>b[0]-a[0]);
+out.blend=ord.slice(0,3).map(q=>[q[1],Math.round(q[0]*100)]);
+console.log(JSON.stringify(out));
+EOF
+node calc.js
+Output
+
+{"p3":99,"fwd":[{"truth":3,"pred":3,"conf":99.2},{"truth":7,"pred":7,"conf":99.4},{"truth":5,"pred":5,"conf":99.5},{"truth":8,"pred":8,"conf":93}],"q0":2,"l0":"4.10","l1":"0.01","q1":99,"acc":100,"tacc":98,"hist0":{"acc":13,"loss":2.52},"nd":4,"np":97,"blend":[[9,60],[4,36],[7,1]]}
+Continue
+
+Failed to send. A retry control is available on the message.
+
+
+You are out of free messages until 2:40 AM
+can you manage it to make 10+ min video about a specific viral youtube educational content to make it in a descriptive design like used in manim
+
+----
+
+your requirements now to adapt the ```jobs.csv``` that will be updated with each video section as each folder holds the content of it's entire scene .
+
+for the assets or any html scenes you need to describe it for me in a seperate md descriptions to generate it but i prefere if you used generated html/js graphics to not relying on external assets 
+
+
+
+also find for me a search about the viral content first
+
+
+
+
