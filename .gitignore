@@ -52,3 +52,9 @@ prompt
 server.log
 # Skills directory
 /skills/
+# local artifacts (not for deploy)
+/tool-results/
+/upload/
+/download/
+/db/
+/examples/

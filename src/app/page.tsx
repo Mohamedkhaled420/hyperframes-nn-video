@@ -299,7 +299,7 @@ export default function Home() {
 
   /* ---- prepare narration / export / generate (all via render-service) ---- */
   const callService = useCallback(async (path: string, body: any) => {
-    const r = await fetch(`/api/_relay?path=${encodeURIComponent(path)}`, {
+    const r = await fetch(`/api/relay/${path.replace(/^\/+/, '')}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
     });
     return r.json();
@@ -309,7 +309,7 @@ export default function Home() {
   const loadRef = useRef(loadVideo); useEffect(() => { loadRef.current = loadVideo; }, [loadVideo]);
   const watchJob = useCallback((jobId: string) => {
     setJob({ id: jobId, pct: 0, status: 'running', steps: [], error: null, kind: '' });
-    const es = new EventSource(`/api/_relay/stream/${jobId}`);
+    const es = new EventSource(`/api/relay/stream/${jobId}`);
     es.onmessage = ev => {
       const d = JSON.parse(ev.data);
       if (d.type === 'hello') setJob(j => j && ({ ...j, pct: d.pct, status: d.status, steps: d.steps || [], error: d.error || null, result: d.result }));
