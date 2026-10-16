@@ -1,0 +1,83 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script src="/vendor/nn.js"></script>
+<script>
+MT.scene({duration:45});
+const C=MT.C;
+MT.heading('Chapter 4 · The knobs','Count what the network is made of');
+
+/* trained weights → line color/opacity */
+const R=NN.trainNet({epochs:120,lr:0.5,seed:2039}),net=R.net;
+const ix=330,iy=330,igap=27,hx=1000,hy=330,hgap=56,ox=1660,oy=350,ogap=52;
+const rIn=7,rH=15,rO=15;
+const inp=MT.layer(ix,iy,35,igap,rIn,{});
+const hid=MT.layer(hx,hy,12,hgap,rH,{});
+const out=MT.layer(ox,oy,10,ogap,rO,{});
+[inp.g,hid.g,out.g].forEach((g,i)=>MT.pop(g,1.0+i*0.25,0.5));
+/* all connections from trained W1/W2 (6.0 onward, drawn early but revealed in waves) */
+const w1g=MT.G(),w2g=MT.G();const w1l=[],w2l=[];
+inp.ns.forEach((a,i)=>hid.ns.forEach((b,j)=>{
+  const w=net.W1[j][i];
+  const ln=MT.line(ix+rIn,parseFloat(a.getAttribute('cy')),hx-rH,parseFloat(b.getAttribute('cy')),
+    {color:w>=0?C.blue:C.red,w:1.4,parent:w1g});
+  ln.setAttribute('opacity',Math.min(0.9,0.12+Math.abs(w)*0.85));ln._baseO=parseFloat(ln.getAttribute('opacity'));
+  w1l.push(ln);
+}));
+hid.ns.forEach((a,i)=>out.ns.forEach((b,j)=>{
+  const w=net.W2[j][i];
+  const ln=MT.line(hx+rH,parseFloat(a.getAttribute('cy')),ox-rO,parseFloat(b.getAttribute('cy')),
+    {color:w>=0?C.blue:C.red,w:1.4,parent:w2g});
+  ln.setAttribute('opacity',Math.min(0.9,0.12+Math.abs(w)*0.85));ln._baseO=parseFloat(ln.getAttribute('opacity'));
+  w2l.push(ln);
+}));
+w1l.forEach((ln,i)=>MT.fade(ln,6.0+(i%60)*0.008,0.4));
+w2l.forEach((ln,i)=>MT.fade(ln,6.4+(i%40)*0.01,0.4));
+/* gold highlight on one strong weight (6.0) */
+let bi=0,bj=0,bw=0;
+net.W1.forEach((row,j)=>row.forEach((w,i)=>{if(Math.abs(w)>bw){bw=Math.abs(w);bi=i;bj=j;}}));
+const gold=MT.line(ix+rIn,iy+(17-bi)*igap,hx-rH,hy+(5.5-bj)*hgap,{color:C.amber,w:5});
+MT.fade(gold,6.2,0.4);
+const goldT=MT.T('one weight = one knob',(ix+hx)/2,120,{size:34,color:C.amber});
+MT.fade(goldT,6.8,0.4,{y:10});
+/* counting callouts */
+const c1=MT.T('35 × 12  =  420 weights  +  12 biases',960,960,{size:44,mono:true,color:C.ink});
+MT.fade(c1,11.2,0.5,{y:12});
+const c2=MT.T('+ 12 × 10  =  120 weights  +  10 biases',960,960,{size:44,mono:true,color:C.ink});
+const c3=MT.T('420 + 12 + 120 + 10  =  562',960,960,{size:46,mono:true,color:C.amber,w:600});
+const swap=(prev,next,t)=>{MT.exit(prev,t,0.3,{y:-14});MT.fade(next,t+0.25,0.5,{y:12});};
+swap(c1,c2,19.2);swap(c2,c3,24.0);
+MT.out([inp.g,hid.g,out.g,w1g,w2g,gold,goldT],28.8,0.6);
+
+/* ---- 562-dot field (29.4) ---- */
+const field=MT.G();const dots=[];const fr=MT.rng(562);
+const fcols=[C.sky,C.blue,C.teal,C.purple,C.orange,C.amber];
+for(let i=0;i<562;i++){
+  const col=i%41,row=(i/41)|0;
+  const d=MT.circ(410+col*27,180+row*27,6,{fill:C.faint,parent:field});
+  d._ci=(fr()*fcols.length)|0;d._ph=fr()*6.28;dots.push(d);
+}
+dots.forEach(d=>MT.fade(d,29.4,0.0));
+MT.stag(dots,29.4,0.004,(el)=>MT.pop(el,0,0.3,{from:0.5}));
+MT.frame(30.2,5.6,p=>{
+  dots.forEach((d,i)=>{
+    const s=0.5+0.5*Math.sin(d._ph+p*6.283*2);
+    d.setAttribute('fill',fcols[(d._ci+((p*6)|0))%fcols.length]);
+    d.setAttribute('opacity',(0.35+0.65*s).toFixed(2));
+  });
+});
+const fl=MT.T('the whole network — not a program, just 562 numbers',960,960,{size:42,color:C.ink});
+MT.fade(fl,29.8,0.6,{y:12});
+MT.out([field,fl],34.8,0.5);
+
+/* ---- scale up (35.0) ---- */
+const big=MT.T('modern language models:  billions of these',960,380,{size:52,w:600});
+MT.fade(big,35.4,0.7,{y:14});
+const big2=MT.T('the recipe stays exactly the same',960,470,{size:38,color:C.dim});
+MT.fade(big2,36.6,0.6,{y:10});
+MT.out([big,big2],40.0,0.45);
+const q=MT.T('so how do we find good values for them?',960,450,{size:58,color:C.amber,w:600});
+MT.fade(q,40.7,0.7,{y:12});
+MT.ready();
+</script></body></html>

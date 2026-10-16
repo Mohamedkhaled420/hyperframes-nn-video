@@ -1,0 +1,82 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script>
+MT.scene({duration:65});
+const C=MT.C;
+MT.heading('Chapter 8 · Who is to blame?','Backprop by hand');
+
+/* chain diagram: x --w1--> h --w2--> y --> C=(y-1)^2 */
+const g=MT.G();
+const xN=560,yN=340,hN=960,yY=1360;
+function nodeBox(x,label,val,lx,ly){
+  const bg=MT.rect(x-70,300,140,110,{rx:14,fill:C.panel,stroke:C.line,w:2.5,parent:g});
+  const l=MT.T(label,x,335,{size:30,color:C.dim,parent:g});
+  const v=MT.T(val,x,375,{size:44,w:600,color:C.ink,parent:g});
+  return {bg,l,v};
+}
+const bx=nodeBox(xN,'x','1');
+const bh=nodeBox(hN,'h','0.8');
+const by=nodeBox(yN,'y','−0.4');
+MT.stag([bx.bg,bh.bg,by.bg],6.0,0.3,(el)=>MT.pop(el,0,0.45));
+MT.stag([bx.l,bh.l,by.l],6.1,0.3,(el)=>MT.fade(el,0,0.35));
+MT.stag([bx.v,bh.v,by.v],6.2,0.3,(el)=>MT.fade(el,0,0.35));
+/* weight arrows */
+const a1=MT.arrow(xN+74,355,hN-74,355,{color:C.blue,w:6,parent:g});
+const a2=MT.arrow(hN+74,355,yN-74,355,{color:C.red,w:6,parent:g});
+MT.draw(a1.ln,6.6,0.5);MT.draw(a2.ln,6.8,0.5);
+const w1t=MT.T('w₁ = 0.8',(xN+hN)/2,305,{size:36,mono:true,color:C.blue,parent:g});
+const w2t=MT.T('w₂ = −0.5',(hN+yN)/2,305,{size:36,mono:true,color:C.red,parent:g});
+MT.fade(w1t,6.9,0.4,{y:-8});MT.fade(w2t,7.0,0.4,{y:-8});
+/* loss box */
+const cbg=MT.rect(yN-120,470,240,90,{rx:12,fill:C.panel2,stroke:C.bad,w:2.5,parent:g});
+const cbl=MT.T('C = (y − 1)²',yN,515,{size:38,mono:true,color:C.ink,parent:g});
+MT.pop(cbg,11.4,0.45);MT.fade(cbl,11.6,0.4);
+const arrY=MT.arrow(yN,412,yN,466,{color:C.dim,w:3.5,parent:g});
+MT.fade(arrY.g,11.5,0.3);
+/* forward values narration (11.5) */
+const fw=MT.T('1 × 0.8 = 0.8   →   0.8 × −0.5 = −0.4',960,700,{size:36,mono:true,color:C.dim});
+MT.fade(fw,11.8,0.5,{y:10});
+const lossT=MT.T('loss = (−0.4 − 1)² = 1.96',960,790,{size:42,mono:true,color:C.bad});
+MT.fade(lossT,17.2,0.5,{y:10});
+MT.out([fw],21.4,0.3);
+/* backward arrows (22.0) */
+function backArrow(from,to,label,color,t){
+  const a=MT.arrow(from,395,to,395,{color:C.bad,w:5,parent:g,dash:null});
+  MT.draw(a.ln,t,0.5);
+  const l=MT.T(label,(from+to)/2,440,{size:30,mono:true,color:color});
+  MT.fade(l,t+0.2,0.4,{y:-8});
+  return [a.g,l];
+}
+const b1=backArrow(yN-20,hN+80,'dC/dy = −2.8',C.bad,22.0);
+const b2=backArrow(hN,xN+90,'dC/dw₂ = −2.24',C.amber,27.5);
+const b3=backArrow(hN-30,xN+80,'dC/dh = 1.4',C.bad,33.0);
+const b4=MT.arrow(hN,395,xN,395,{color:C.amber,w:5,parent:g});
+MT.draw(b4.ln,35.4,0.5);
+const b4l=MT.T('dC/dw₁ = 1.4',(xN+hN)/2-40,430,{size:30,mono:true,color:C.amber});
+MT.fade(b4l,35.7,0.4,{y:-8});
+const chain=MT.T('chain rule: blame flows backwards, multiplying local slopes',960,860,{size:36,color:C.ink});
+MT.fade(chain,39.2,0.6,{y:10});
+MT.out([...b1,...b2,...b3,b4.g,b4l],44.4,0.35);
+/* updates (45.0) */
+const up=MT.T('w₂ ← −0.5 − 0.1×(−2.24) = −0.276      w₁ ← 0.8 − 0.1×1.4 = 0.66',960,700,{size:32,mono:true,color:C.dim});
+MT.fade(up,45.2,0.6,{y:10});
+/* new forward (50.5) */
+MT.frame(50.5,1.0,p=>{
+  const e=MT.EASE.inOut(p);
+  by.v.textContent='−'+(0.4-0.22*e).toFixed(2);
+  cbl.textContent='C = '+(1.96-0.56*e).toFixed(2);
+});
+cbl.textContent='C = 1.96';by.v.textContent='−0.4';
+const newT=MT.T('y: −0.4 → −0.18      C: 1.96 → 1.40',960,800,{size:38,mono:true,color:C.ok});
+MT.fade(newT,50.8,0.5,{y:10});
+MT.out([chain,up],55.6,0.35);
+MT.out([newT],61.0,0.3);
+/* closing (56.0) */
+const cl=MT.T('backprop = exactly this, for all 562 weights',960,930,{size:38,color:C.dim});
+MT.fade(cl,56.2,0.5,{y:10});
+const fin=MT.T('one pass forward · one pass back · one small step',960,470,{size:46,w:600});
+MT.wipe(fin,61.5,0.7);
+MT.ready();
+</script></body></html>

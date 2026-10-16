@@ -1,0 +1,301 @@
+       █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Failed: [FrameCapture] Composition has zero duration.
+     [INFO] [Render] Failure summary {"renderJobId":"cbf64aae-ea85-4089-85ea-2f01fc6e06e9","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → No GSAP timeli
+     ✗  Render failed
+   !! hyperframes exited with code 1
+     |   Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |   → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usuall
+     |   → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |   → The runtime finished initializing but reported zero duration. This is permanent.
+     | [INFO] [Render] Failure summary {"renderJobId":"cbf64aae-ea85-4089-85ea-2f01fc6e06e9","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline:
+     | ✗  Render failed
+     |    [FrameCapture] Composition has zero duration.
+     |      Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |      → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usu
+     |      → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |      → The runtime finished initializing but reported zero duration. This is permanent.
+     |    Try --docker for containerized rendering
+   FAILED in 0m15s  |  encoder: unknown  |  browser: hardware (EGL)
+
+[4/12] s04_layers  ->  s04_layers.mp4
+   copying project to local disk ...
+   composition 1080x1920 (portrait) | resolution check: MISMATCH: 'landscape' -> 'portrait'
+   $ /usr/bin/hyperframes render -o /content/renders/s04_layers_5.mp4 -q looks --format mp4 -w auto -f 30 --resolution portrait --gpu --browser-gpu --variables-file /content/work/s04_layers_5/_variables.json
+       Lint: 6 error(s), 1 warning(s) — run with --lint-verbose for full output.
+       Continuing render despite lint issues. Use --strict to block errors.
+     [INFO] [Render] Pipeline started {"renderJobId":"e08d184e-59c3-4080-88ce-9b9ecaecec66","platform":"linux","arch":"x64","nodeVersion":"v22.23.3","fps":{"num":30,"den":1},"format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeout":300000,"browserTimeout":1
+     [INFO] [Render:trace] {"renderJobId":"e08d184e-59c3-4080-88ce-9b9ecaecec66","phase":"pipeline","status":"checkpoint","elapsedMs":4,"message":"started","format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeoutMs":300000,"pageNavigationTimeoutMs":60000,"p
+     [WARN] Auto-selected screenshot capture mode for render compatibility {"renderJobId":"e08d184e-59c3-4080-88ce-9b9ecaecec66","reasonCodes":["requestAnimationFrame"],"reasons":["Detected raw requestAnimationFrame() in an inline script. This render is routed through screenshot capture mode with virtual
+     yperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA Corporation)" renderer="ANGLE (NVIDIA Corporation, Tesla T4/PCIe/SSE2, OpenGL ES 3.2)")
+     [BrowserManager] Browser launched (HeadlessChrome/155.0.8059.39, screenshot, gl=--use-gl=angle --use-angle=gl-egl, headlessShell=true, platform=linux)
+     [WARN] Browser probe attempt failed {"renderJobId":"e08d184e-59c3-4080-88ce-9b9ecaecec66","attempt":1,"maxAttempts":2,"isTransient":false,"error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → 
+     [INFO] [Render:trace] {"renderJobId":"e08d184e-59c3-4080-88ce-9b9ecaecec66","phase":"browser_probe","status":"error","elapsedMs":11360,"durationMs":11240,"message":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-durat
+       █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Failed: [FrameCapture] Composition has zero duration.
+     [INFO] [Render] Failure summary {"renderJobId":"e08d184e-59c3-4080-88ce-9b9ecaecec66","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → No GSAP timeli
+     ✗  Render failed
+   !! hyperframes exited with code 1
+     |   Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |   → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usuall
+     |   → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |   → The runtime finished initializing but reported zero duration. This is permanent.
+     | [INFO] [Render] Failure summary {"renderJobId":"e08d184e-59c3-4080-88ce-9b9ecaecec66","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline:
+     | ✗  Render failed
+     |    [FrameCapture] Composition has zero duration.
+     |      Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |      → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usu
+     |      → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |      → The runtime finished initializing but reported zero duration. This is permanent.
+     |    Try --docker for containerized rendering
+   FAILED in 0m15s  |  encoder: unknown  |  browser: hardware (EGL)
+
+[5/12] s05_knobs  ->  s05_knobs.mp4
+   copying project to local disk ...
+   composition 1080x1920 (portrait) | resolution check: MISMATCH: 'landscape' -> 'portrait'
+   $ /usr/bin/hyperframes render -o /content/renders/s05_knobs_6.mp4 -q looks --format mp4 -w auto -f 30 --resolution portrait --gpu --browser-gpu --variables-file /content/work/s05_knobs_6/_variables.json
+       Lint: 6 error(s), 1 warning(s) — run with --lint-verbose for full output.
+       Continuing render despite lint issues. Use --strict to block errors.
+     [INFO] [Render] Pipeline started {"renderJobId":"200eb8e9-999d-448f-8fa2-9f6e3e1c1efa","platform":"linux","arch":"x64","nodeVersion":"v22.23.3","fps":{"num":30,"den":1},"format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeout":300000,"browserTimeout":1
+     [INFO] [Render:trace] {"renderJobId":"200eb8e9-999d-448f-8fa2-9f6e3e1c1efa","phase":"pipeline","status":"checkpoint","elapsedMs":5,"message":"started","format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeoutMs":300000,"pageNavigationTimeoutMs":60000,"p
+     [WARN] Auto-selected screenshot capture mode for render compatibility {"renderJobId":"200eb8e9-999d-448f-8fa2-9f6e3e1c1efa","reasonCodes":["requestAnimationFrame"],"reasons":["Detected raw requestAnimationFrame() in an inline script. This render is routed through screenshot capture mode with virtual
+     yperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA Corporation)" renderer="ANGLE (NVIDIA Corporation, Tesla T4/PCIe/SSE2, OpenGL ES 3.2)")
+     [BrowserManager] Browser launched (HeadlessChrome/155.0.8059.39, screenshot, gl=--use-gl=angle --use-angle=gl-egl, headlessShell=true, platform=linux)
+     [WARN] Browser probe attempt failed {"renderJobId":"200eb8e9-999d-448f-8fa2-9f6e3e1c1efa","attempt":1,"maxAttempts":2,"isTransient":false,"error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → 
+     [INFO] [Render:trace] {"renderJobId":"200eb8e9-999d-448f-8fa2-9f6e3e1c1efa","phase":"browser_probe","status":"error","elapsedMs":11385,"durationMs":11278,"message":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-durat
+       █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Failed: [FrameCapture] Composition has zero duration.
+     [INFO] [Render] Failure summary {"renderJobId":"200eb8e9-999d-448f-8fa2-9f6e3e1c1efa","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → No GSAP timeli
+     ✗  Render failed
+   !! hyperframes exited with code 1
+     |   Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |   → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usuall
+     |   → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |   → The runtime finished initializing but reported zero duration. This is permanent.
+     | [INFO] [Render] Failure summary {"renderJobId":"200eb8e9-999d-448f-8fa2-9f6e3e1c1efa","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline:
+     | ✗  Render failed
+     |    [FrameCapture] Composition has zero duration.
+     |      Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |      → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usu
+     |      → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |      → The runtime finished initializing but reported zero duration. This is permanent.
+     |    Try --docker for containerized rendering
+   FAILED in 0m15s  |  encoder: unknown  |  browser: hardware (EGL)
+
+[6/12] s06_forward  ->  s06_forward.mp4
+   copying project to local disk ...
+   composition 1080x1920 (portrait) | resolution check: MISMATCH: 'landscape' -> 'portrait'
+   $ /usr/bin/hyperframes render -o /content/renders/s06_forward_7.mp4 -q looks --format mp4 -w auto -f 30 --resolution portrait --gpu --browser-gpu --variables-file /content/work/s06_forward_7/_variables.json
+       Lint: 6 error(s), 1 warning(s) — run with --lint-verbose for full output.
+       Continuing render despite lint issues. Use --strict to block errors.
+     [INFO] [Render] Pipeline started {"renderJobId":"0015ffb6-9f46-4444-a63f-e3a51d7a7b77","platform":"linux","arch":"x64","nodeVersion":"v22.23.3","fps":{"num":30,"den":1},"format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeout":300000,"browserTimeout":1
+     [INFO] [Render:trace] {"renderJobId":"0015ffb6-9f46-4444-a63f-e3a51d7a7b77","phase":"pipeline","status":"checkpoint","elapsedMs":4,"message":"started","format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeoutMs":300000,"pageNavigationTimeoutMs":60000,"p
+     [WARN] Auto-selected screenshot capture mode for render compatibility {"renderJobId":"0015ffb6-9f46-4444-a63f-e3a51d7a7b77","reasonCodes":["requestAnimationFrame"],"reasons":["Detected raw requestAnimationFrame() in an inline script. This render is routed through screenshot capture mode with virtual
+     yperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA Corporation)" renderer="ANGLE (NVIDIA Corporation, Tesla T4/PCIe/SSE2, OpenGL ES 3.2)")
+     [BrowserManager] Browser launched (HeadlessChrome/155.0.8059.39, screenshot, gl=--use-gl=angle --use-angle=gl-egl, headlessShell=true, platform=linux)
+     [WARN] Browser probe attempt failed {"renderJobId":"0015ffb6-9f46-4444-a63f-e3a51d7a7b77","attempt":1,"maxAttempts":2,"isTransient":false,"error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → 
+     [INFO] [Render:trace] {"renderJobId":"0015ffb6-9f46-4444-a63f-e3a51d7a7b77","phase":"browser_probe","status":"error","elapsedMs":11354,"durationMs":11244,"message":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-durat
+       █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Failed: [FrameCapture] Composition has zero duration.
+     [INFO] [Render] Failure summary {"renderJobId":"0015ffb6-9f46-4444-a63f-e3a51d7a7b77","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → No GSAP timeli
+     ✗  Render failed
+   !! hyperframes exited with code 1
+     |   Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |   → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usuall
+     |   → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |   → The runtime finished initializing but reported zero duration. This is permanent.
+     | [INFO] [Render] Failure summary {"renderJobId":"0015ffb6-9f46-4444-a63f-e3a51d7a7b77","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline:
+     | ✗  Render failed
+     |    [FrameCapture] Composition has zero duration.
+     |      Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |      → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usu
+     |      → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |      → The runtime finished initializing but reported zero duration. This is permanent.
+     |    Try --docker for containerized rendering
+   FAILED in 0m15s  |  encoder: unknown  |  browser: hardware (EGL)
+
+[7/12] s07_cost  ->  s07_cost.mp4
+   copying project to local disk ...
+   composition 1080x1920 (portrait) | resolution check: MISMATCH: 'landscape' -> 'portrait'
+   $ /usr/bin/hyperframes render -o /content/renders/s07_cost_8.mp4 -q looks --format mp4 -w auto -f 30 --resolution portrait --gpu --browser-gpu --variables-file /content/work/s07_cost_8/_variables.json
+       Lint: 6 error(s), 1 warning(s) — run with --lint-verbose for full output.
+       Continuing render despite lint issues. Use --strict to block errors.
+     [INFO] [Render] Pipeline started {"renderJobId":"0ab54016-f46b-4793-8e8a-f5fe196810bd","platform":"linux","arch":"x64","nodeVersion":"v22.23.3","fps":{"num":30,"den":1},"format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeout":300000,"browserTimeout":1
+     [INFO] [Render:trace] {"renderJobId":"0ab54016-f46b-4793-8e8a-f5fe196810bd","phase":"pipeline","status":"checkpoint","elapsedMs":4,"message":"started","format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeoutMs":300000,"pageNavigationTimeoutMs":60000,"p
+     [WARN] Auto-selected screenshot capture mode for render compatibility {"renderJobId":"0ab54016-f46b-4793-8e8a-f5fe196810bd","reasonCodes":["requestAnimationFrame"],"reasons":["Detected raw requestAnimationFrame() in an inline script. This render is routed through screenshot capture mode with virtual
+     yperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA Corporation)" renderer="ANGLE (NVIDIA Corporation, Tesla T4/PCIe/SSE2, OpenGL ES 3.2)")
+     [BrowserManager] Browser launched (HeadlessChrome/155.0.8059.39, screenshot, gl=--use-gl=angle --use-angle=gl-egl, headlessShell=true, platform=linux)
+     [WARN] Browser probe attempt failed {"renderJobId":"0ab54016-f46b-4793-8e8a-f5fe196810bd","attempt":1,"maxAttempts":2,"isTransient":false,"error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → 
+     [INFO] [Render:trace] {"renderJobId":"0ab54016-f46b-4793-8e8a-f5fe196810bd","phase":"browser_probe","status":"error","elapsedMs":11282,"durationMs":11162,"message":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-durat
+       █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Failed: [FrameCapture] Composition has zero duration.
+     [INFO] [Render] Failure summary {"renderJobId":"0ab54016-f46b-4793-8e8a-f5fe196810bd","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → No GSAP timeli
+     ✗  Render failed
+   !! hyperframes exited with code 1
+     |   Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |   → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usuall
+     |   → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |   → The runtime finished initializing but reported zero duration. This is permanent.
+     | [INFO] [Render] Failure summary {"renderJobId":"0ab54016-f46b-4793-8e8a-f5fe196810bd","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline:
+     | ✗  Render failed
+     |    [FrameCapture] Composition has zero duration.
+     |      Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |      → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usu
+     |      → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |      → The runtime finished initializing but reported zero duration. This is permanent.
+     |    Try --docker for containerized rendering
+   FAILED in 0m15s  |  encoder: unknown  |  browser: hardware (EGL)
+
+[8/12] s08_descent  ->  s08_descent.mp4
+   copying project to local disk ...
+   composition 1080x1920 (portrait) | resolution check: MISMATCH: 'landscape' -> 'portrait'
+   $ /usr/bin/hyperframes render -o /content/renders/s08_descent_9.mp4 -q looks --format mp4 -w auto -f 30 --resolution portrait --gpu --browser-gpu --variables-file /content/work/s08_descent_9/_variables.json
+       Lint: 6 error(s), 1 warning(s) — run with --lint-verbose for full output.
+       Continuing render despite lint issues. Use --strict to block errors.
+     [INFO] [Render] Pipeline started {"renderJobId":"45321f21-59d7-4dbc-821a-329084761646","platform":"linux","arch":"x64","nodeVersion":"v22.23.3","fps":{"num":30,"den":1},"format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeout":300000,"browserTimeout":1
+     [INFO] [Render:trace] {"renderJobId":"45321f21-59d7-4dbc-821a-329084761646","phase":"pipeline","status":"checkpoint","elapsedMs":3,"message":"started","format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeoutMs":300000,"pageNavigationTimeoutMs":60000,"p
+     [WARN] Auto-selected screenshot capture mode for render compatibility {"renderJobId":"45321f21-59d7-4dbc-821a-329084761646","reasonCodes":["requestAnimationFrame"],"reasons":["Detected raw requestAnimationFrame() in an inline script. This render is routed through screenshot capture mode with virtual
+     yperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA Corporation)" renderer="ANGLE (NVIDIA Corporation, Tesla T4/PCIe/SSE2, OpenGL ES 3.2)")
+     [BrowserManager] Browser launched (HeadlessChrome/155.0.8059.39, screenshot, gl=--use-gl=angle --use-angle=gl-egl, headlessShell=true, platform=linux)
+     [WARN] Browser probe attempt failed {"renderJobId":"45321f21-59d7-4dbc-821a-329084761646","attempt":1,"maxAttempts":2,"isTransient":false,"error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → 
+     [INFO] [Render:trace] {"renderJobId":"45321f21-59d7-4dbc-821a-329084761646","phase":"browser_probe","status":"error","elapsedMs":11384,"durationMs":11279,"message":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-durat
+       █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Failed: [FrameCapture] Composition has zero duration.
+     [INFO] [Render] Failure summary {"renderJobId":"45321f21-59d7-4dbc-821a-329084761646","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → No GSAP timeli
+     ✗  Render failed
+   !! hyperframes exited with code 1
+     |   Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |   → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usuall
+     |   → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |   → The runtime finished initializing but reported zero duration. This is permanent.
+     | [INFO] [Render] Failure summary {"renderJobId":"45321f21-59d7-4dbc-821a-329084761646","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline:
+     | ✗  Render failed
+     |    [FrameCapture] Composition has zero duration.
+     |      Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |      → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usu
+     |      → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |      → The runtime finished initializing but reported zero duration. This is permanent.
+     |    Try --docker for containerized rendering
+   FAILED in 0m15s  |  encoder: unknown  |  browser: hardware (EGL)
+
+[9/12] s09_backprop  ->  s09_backprop.mp4
+   copying project to local disk ...
+   composition 1080x1920 (portrait) | resolution check: MISMATCH: 'landscape' -> 'portrait'
+   $ /usr/bin/hyperframes render -o /content/renders/s09_backprop_10.mp4 -q looks --format mp4 -w auto -f 30 --resolution portrait --gpu --browser-gpu --variables-file /content/work/s09_backprop_10/_variables.json
+       Lint: 6 error(s), 1 warning(s) — run with --lint-verbose for full output.
+       Continuing render despite lint issues. Use --strict to block errors.
+     [INFO] [Render] Pipeline started {"renderJobId":"20c98850-3485-4d57-b49f-73cf90c3f208","platform":"linux","arch":"x64","nodeVersion":"v22.23.3","fps":{"num":30,"den":1},"format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeout":300000,"browserTimeout":1
+     [INFO] [Render:trace] {"renderJobId":"20c98850-3485-4d57-b49f-73cf90c3f208","phase":"pipeline","status":"checkpoint","elapsedMs":4,"message":"started","format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeoutMs":300000,"pageNavigationTimeoutMs":60000,"p
+     [WARN] Auto-selected screenshot capture mode for render compatibility {"renderJobId":"20c98850-3485-4d57-b49f-73cf90c3f208","reasonCodes":["requestAnimationFrame"],"reasons":["Detected raw requestAnimationFrame() in an inline script. This render is routed through screenshot capture mode with virtual
+     yperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA Corporation)" renderer="ANGLE (NVIDIA Corporation, Tesla T4/PCIe/SSE2, OpenGL ES 3.2)")
+     [BrowserManager] Browser launched (HeadlessChrome/155.0.8059.39, screenshot, gl=--use-gl=angle --use-angle=gl-egl, headlessShell=true, platform=linux)
+     [WARN] Browser probe attempt failed {"renderJobId":"20c98850-3485-4d57-b49f-73cf90c3f208","attempt":1,"maxAttempts":2,"isTransient":false,"error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → 
+     [INFO] [Render:trace] {"renderJobId":"20c98850-3485-4d57-b49f-73cf90c3f208","phase":"browser_probe","status":"error","elapsedMs":11278,"durationMs":11175,"message":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-durat
+       █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Failed: [FrameCapture] Composition has zero duration.
+     [INFO] [Render] Failure summary {"renderJobId":"20c98850-3485-4d57-b49f-73cf90c3f208","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → No GSAP timeli
+     ✗  Render failed
+   !! hyperframes exited with code 1
+     |   Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |   → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usuall
+     |   → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |   → The runtime finished initializing but reported zero duration. This is permanent.
+     | [INFO] [Render] Failure summary {"renderJobId":"20c98850-3485-4d57-b49f-73cf90c3f208","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline:
+     | ✗  Render failed
+     |    [FrameCapture] Composition has zero duration.
+     |      Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |      → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usu
+     |      → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |      → The runtime finished initializing but reported zero duration. This is permanent.
+     |    Try --docker for containerized rendering
+   FAILED in 0m15s  |  encoder: unknown  |  browser: hardware (EGL)
+
+[10/12] s10_training  ->  s10_training.mp4
+   copying project to local disk ...
+   composition 1080x1920 (portrait) | resolution check: MISMATCH: 'landscape' -> 'portrait'
+   $ /usr/bin/hyperframes render -o /content/renders/s10_training_11.mp4 -q looks --format mp4 -w auto -f 30 --resolution portrait --gpu --browser-gpu --variables-file /content/work/s10_training_11/_variables.json
+       Lint: 6 error(s), 1 warning(s) — run with --lint-verbose for full output.
+       Continuing render despite lint issues. Use --strict to block errors.
+     [INFO] [Render] Pipeline started {"renderJobId":"9dff6263-e239-42a4-b4a8-95fd676653d5","platform":"linux","arch":"x64","nodeVersion":"v22.23.3","fps":{"num":30,"den":1},"format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeout":300000,"browserTimeout":1
+     [INFO] [Render:trace] {"renderJobId":"9dff6263-e239-42a4-b4a8-95fd676653d5","phase":"pipeline","status":"checkpoint","elapsedMs":4,"message":"started","format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeoutMs":300000,"pageNavigationTimeoutMs":60000,"p
+     [WARN] Auto-selected screenshot capture mode for render compatibility {"renderJobId":"9dff6263-e239-42a4-b4a8-95fd676653d5","reasonCodes":["requestAnimationFrame"],"reasons":["Detected raw requestAnimationFrame() in an inline script. This render is routed through screenshot capture mode with virtual
+     yperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA Corporation)" renderer="ANGLE (NVIDIA Corporation, Tesla T4/PCIe/SSE2, OpenGL ES 3.2)")
+     [BrowserManager] Browser launched (HeadlessChrome/155.0.8059.39, screenshot, gl=--use-gl=angle --use-angle=gl-egl, headlessShell=true, platform=linux)
+     [WARN] Browser probe attempt failed {"renderJobId":"9dff6263-e239-42a4-b4a8-95fd676653d5","attempt":1,"maxAttempts":2,"isTransient":false,"error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → 
+     [INFO] [Render:trace] {"renderJobId":"9dff6263-e239-42a4-b4a8-95fd676653d5","phase":"browser_probe","status":"error","elapsedMs":11398,"durationMs":11270,"message":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-durat
+       █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Failed: [FrameCapture] Composition has zero duration.
+     [INFO] [Render] Failure summary {"renderJobId":"9dff6263-e239-42a4-b4a8-95fd676653d5","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → No GSAP timeli
+     ✗  Render failed
+   !! hyperframes exited with code 1
+     |   Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |   → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usuall
+     |   → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |   → The runtime finished initializing but reported zero duration. This is permanent.
+     | [INFO] [Render] Failure summary {"renderJobId":"9dff6263-e239-42a4-b4a8-95fd676653d5","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline:
+     | ✗  Render failed
+     |    [FrameCapture] Composition has zero duration.
+     |      Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |      → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usu
+     |      → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |      → The runtime finished initializing but reported zero duration. This is permanent.
+     |    Try --docker for containerized rendering
+   FAILED in 0m15s  |  encoder: unknown  |  browser: hardware (EGL)
+
+[11/12] s11_inside  ->  s11_inside.mp4
+   copying project to local disk ...
+   composition 1080x1920 (portrait) | resolution check: MISMATCH: 'landscape' -> 'portrait'
+   $ /usr/bin/hyperframes render -o /content/renders/s11_inside_12.mp4 -q looks --format mp4 -w auto -f 30 --resolution portrait --gpu --browser-gpu --variables-file /content/work/s11_inside_12/_variables.json
+       Lint: 6 error(s), 1 warning(s) — run with --lint-verbose for full output.
+       Continuing render despite lint issues. Use --strict to block errors.
+     [INFO] [Render] Pipeline started {"renderJobId":"46e6f5ef-795e-48b9-84b2-b1ed1c25309e","platform":"linux","arch":"x64","nodeVersion":"v22.23.3","fps":{"num":30,"den":1},"format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeout":300000,"browserTimeout":1
+     [INFO] [Render:trace] {"renderJobId":"46e6f5ef-795e-48b9-84b2-b1ed1c25309e","phase":"pipeline","status":"checkpoint","elapsedMs":4,"message":"started","format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeoutMs":300000,"pageNavigationTimeoutMs":60000,"p
+     [WARN] Auto-selected screenshot capture mode for render compatibility {"renderJobId":"46e6f5ef-795e-48b9-84b2-b1ed1c25309e","reasonCodes":["requestAnimationFrame"],"reasons":["Detected raw requestAnimationFrame() in an inline script. This render is routed through screenshot capture mode with virtual
+     yperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA Corporation)" renderer="ANGLE (NVIDIA Corporation, Tesla T4/PCIe/SSE2, OpenGL ES 3.2)")
+     [BrowserManager] Browser launched (HeadlessChrome/155.0.8059.39, screenshot, gl=--use-gl=angle --use-angle=gl-egl, headlessShell=true, platform=linux)
+     [WARN] Browser probe attempt failed {"renderJobId":"46e6f5ef-795e-48b9-84b2-b1ed1c25309e","attempt":1,"maxAttempts":2,"isTransient":false,"error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → 
+     [INFO] [Render:trace] {"renderJobId":"46e6f5ef-795e-48b9-84b2-b1ed1c25309e","phase":"browser_probe","status":"error","elapsedMs":11270,"durationMs":11169,"message":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-durat
+       █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Failed: [FrameCapture] Composition has zero duration.
+     [INFO] [Render] Failure summary {"renderJobId":"46e6f5ef-795e-48b9-84b2-b1ed1c25309e","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → No GSAP timeli
+     ✗  Render failed
+   !! hyperframes exited with code 1
+     |   Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |   → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usuall
+     |   → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |   → The runtime finished initializing but reported zero duration. This is permanent.
+     | [INFO] [Render] Failure summary {"renderJobId":"46e6f5ef-795e-48b9-84b2-b1ed1c25309e","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline:
+     | ✗  Render failed
+     |    [FrameCapture] Composition has zero duration.
+     |      Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |      → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usu
+     |      → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |      → The runtime finished initializing but reported zero duration. This is permanent.
+     |    Try --docker for containerized rendering
+   FAILED in 0m15s  |  encoder: unknown  |  browser: hardware (EGL)
+
+[12/12] s12_outro  ->  s12_outro.mp4
+   copying project to local disk ...
+   composition 1080x1920 (portrait) | resolution check: MISMATCH: 'landscape' -> 'portrait'
+   $ /usr/bin/hyperframes render -o /content/renders/s12_outro_13.mp4 -q looks --format mp4 -w auto -f 30 --resolution portrait --gpu --browser-gpu --variables-file /content/work/s12_outro_13/_variables.json
+       Lint: 6 error(s), 1 warning(s) — run with --lint-verbose for full output.
+       Continuing render despite lint issues. Use --strict to block errors.
+     [INFO] [Render] Pipeline started {"renderJobId":"45240109-9dd5-4267-b19d-06da1d6474d5","platform":"linux","arch":"x64","nodeVersion":"v22.23.3","fps":{"num":30,"den":1},"format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeout":300000,"browserTimeout":1
+     [INFO] [Render:trace] {"renderJobId":"45240109-9dd5-4267-b19d-06da1d6474d5","phase":"pipeline","status":"checkpoint","elapsedMs":4,"message":"started","format":"mp4","quality":"standard","browserGpuMode":"hardware","forceScreenshot":false,"protocolTimeoutMs":300000,"pageNavigationTimeoutMs":60000,"p
+     [WARN] Auto-selected screenshot capture mode for render compatibility {"renderJobId":"45240109-9dd5-4267-b19d-06da1d6474d5","reasonCodes":["requestAnimationFrame"],"reasons":["Detected raw requestAnimationFrame() in an inline script. This render is routed through screenshot capture mode with virtual
+     yperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA Corporation)" renderer="ANGLE (NVIDIA Corporation, Tesla T4/PCIe/SSE2, OpenGL ES 3.2)")
+     [BrowserManager] Browser launched (HeadlessChrome/155.0.8059.39, screenshot, gl=--use-gl=angle --use-angle=gl-egl, headlessShell=true, platform=linux)
+     [WARN] Browser probe attempt failed {"renderJobId":"45240109-9dd5-4267-b19d-06da1d6474d5","attempt":1,"maxAttempts":2,"isTransient":false,"error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → 
+     [INFO] [Render:trace] {"renderJobId":"45240109-9dd5-4267-b19d-06da1d6474d5","phase":"browser_probe","status":"error","elapsedMs":11286,"durationMs":11184,"message":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-durat
+       █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Failed: [FrameCapture] Composition has zero duration.
+     [INFO] [Render] Failure summary {"renderJobId":"45240109-9dd5-4267-b19d-06da1d6474d5","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set\n  → No GSAP timeli
+     ✗  Render failed
+   !! hyperframes exited with code 1
+     |   Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |   → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usuall
+     |   → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |   → The runtime finished initializing but reported zero duration. This is permanent.
+     | [INFO] [Render] Failure summary {"renderJobId":"45240109-9dd5-4267-b19d-06da1d6474d5","failedStage":"Compiling composition","error":"[FrameCapture] Composition has zero duration.\n  Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline:
+     | ✗  Render failed
+     |    [FrameCapture] Composition has zero duration.
+     |      Runtime ready: true, __player: true, __hf.seek: true, GSAP timeline: false, data-duration: not set
+     |      → No GSAP timeline registered (window.__timelines is empty). CSS/WAAPI/Lottie animations are usually auto-detected (the runtime infers duration from the longest running animation), but this composition's duration could not be inferred, which usu
+     |      → Fix: add data-duration="<seconds>" to your root <div data-composition-id="..."> element.
+     |      → The runtime finished initializing but reported zero duration. This is permanent.
+     |    Try --docker for containerized rendering
+   FAILED in 0m15s  |  encoder: unknown  |  browser: hardware (EGL)
+
+Batch finished in 3m09s
+
+  
+    

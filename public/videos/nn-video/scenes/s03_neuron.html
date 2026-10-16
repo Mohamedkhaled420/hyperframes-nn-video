@@ -1,0 +1,90 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script>
+MT.scene({duration:60});
+const C=MT.C;
+MT.heading('Chapter 2 · A single neuron','Numbers in, one number out');
+
+/* ---- stage 1: neuron diagram (1.0 → 24.0) ---- */
+const dg=MT.G();
+const ix=480,iy=330,igap=190;
+const iv=[0.9,0.2,0.7],wv=[1.5,-2.0,0.8],wc=[C.blue,C.red,C.blue];
+const ins=iv.map((v,i)=>MT.circ(ix,iy+i*igap,44,{fill:C.panel2,stroke:C.line,w:3,parent:dg}));
+const ivt=iv.map((v,i)=>MT.T(v.toFixed(1),ix,iy+i*igap,{size:40,w:600,parent:dg}));
+MT.stag(ins,1.0,0.28,(el)=>MT.pop(el,0,0.45));
+MT.stag(ivt,1.2,0.28,(el)=>MT.fade(el,0,0.4));
+/* arrows with weight labels (5.5) */
+const nx=1050,ny=520;
+const arrows=wv.map((w,i)=>MT.arrow(ix+52,iy+i*igap,nx-62,ny,{color:wc[i],w:7+Math.abs(w)*3.2,color2:wc[i],parent:dg}));
+MT.stag(arrows,5.5,0.3,(a)=>MT.draw(a.ln,0,0.6,MT.EASE.inOut));
+const wlab=wv.map((w,i)=>MT.T((w>0?'+':'')+w.toFixed(1),(ix+nx)/2,iy+i*igap+(i-1)*44+16,{size:30,color:wc[i],mono:true,w:600,parent:dg}));
+MT.stag(wlab,5.9,0.3,(el)=>MT.fade(el,0,0.35,{y:-8}));
+/* neuron body (9.5) */
+const body=MT.circ(nx,ny,66,{fill:C.panel,stroke:C.sky,w:4,parent:dg});
+const sig=MT.T('σ',nx,ny+2,{size:56,color:C.sky,w:600,parent:dg});
+MT.pop(body,9.5,0.5);MT.fade(sig,9.8,0.4);
+/* equation (10.6) */
+const eq=MT.T('y  =  σ( w₁x₁ + w₂x₂ + w₃x₃ + b )',960,150,{size:40,mono:true,color:C.ink});
+MT.fade(eq,10.6,0.5,{y:10});
+/* products row (14.0) */
+const prods=['0.9 × 1.5 = 1.35','0.2 × −2.0 = −0.40','0.7 × 0.8 = 0.56'];
+const pl=prods.map((s,i)=>MT.T(s,480,iy+i*igap,{size:30,mono:true,color:C.dim,anchor:'start',parent:dg,x:0}));
+pl.forEach((el,i)=>{el.setAttribute('x',ix-330);el.setAttribute('y',iy+i*igap);});
+MT.stag(pl,14.0,1.6,(el)=>MT.fade(el,0,0.4,{x:-12}));
+const suml=MT.T('sum = 1.51    b = −1    z = 0.51',nx+180,ny+150,{size:36,mono:true,color:C.amber});
+MT.fade(suml,20.2,0.5,{y:10});
+/* output arrow (22.8) */
+const oa=MT.arrow(nx+70,ny,nx+240,ny,{color:C.ok,w:8,parent:dg});
+MT.draw(oa.ln,22.8,0.5);
+const ot=MT.T('0.62',nx+320,ny,{size:56,w:650,color:C.ok});
+MT.fade(ot,23.1,0.4);
+MT.out([dg,eq,pl[0],pl[1],pl[2],suml,ot],24.4,0.55,{y:-16});
+
+/* ---- stage 2: sigmoid curve (24.4 → 40.8) ---- */
+const ax=330,ay=250,aw=1260,ah=560;
+MT.axes(ax,ay,aw,ah,{xlabel:'z  (raw sum)',ylabel:'σ(z)',parent:undefined});
+const axg=MT.S.layer.childNodes; // axes drawn into layer
+const sigFn=z=>1/(1+Math.exp(-z));
+const curveP=MT.curve(ax,ay,aw,ah,sigFn,-6,6,{color:C.yellow,w:5});
+MT.draw(curveP,25.0,1.4);
+/* dot slides along (30.6): x from -5.6 to 5.6 then settle at 0.51 */
+const dotG=MT.G();const dot=MT.circ(0,0,13,{fill:C.bad,stroke:'#fff',w:2.5,parent:dotG});
+const zx0=ax+aw*(( -5.6)+6)/12;
+function zx(z){return ax+aw*(z+6)/12;}
+function zy(z){return ay+ah-ah*sigFn(z);}
+MT.frame(30.6,6.0,p=>{
+  const q=p<0.72?(p/0.72)*5.6:5.6-((p-0.72)/0.28)*(5.6-0.51);
+  const e=MT.EASE.glide(Math.min(1,p));
+  const z=p<0.72?MT.EASE.inOut(p/0.72)*5.6:5.6-MT.EASE.inOut((p-0.72)/0.28)*(5.6-0.51);
+  dot.setAttribute('cx',zx(z));dot.setAttribute('cy',zy(z));
+});
+MT.fade(dotG,30.4,0.3);
+/* dashed guides (38.2) */
+const g1=MT.line(zx(0.51),zy(0.51),zx(0.51),ay+ah,{color:C.faint,w:2.5,dash:'7 7'});
+const g2=MT.line(zx(0.51),zy(0.51),ax,zy(0.51),{color:C.faint,w:2.5,dash:'7 7'});
+MT.draw(g1,38.2,0.35);MT.draw(g2,38.35,0.35);
+const gl=MT.T('z = 0.51',zx(0.51),ay+ah-20,{size:30,mono:true,color:C.dim});
+const gl2=MT.T('σ = 0.62',ax-90,zy(0.51),{size:30,mono:true,color:C.dim,anchor:'start',x:0});
+gl2.setAttribute('x',ax+8);gl2.setAttribute('text-anchor','start');
+MT.fade(gl,38.6,0.4);MT.fade(gl2,38.7,0.4);
+/* shifted variants (41.6) */
+const c2=MT.curve(ax,ay,aw,ah,z=>sigFn(z+2),-6,6,{color:C.teal,w:4,dash:'10 8'});
+MT.draw(c2,41.6,1.0);
+const l2=MT.T('bias shifted → easier to excite',ax+aw-20,ay+80,{size:28,color:C.teal,anchor:'end'});
+MT.fade(l2,42.2,0.4,{x:10});
+const c3=MT.curve(ax,ay,aw,ah,z=>sigFn(3*z),-6,6,{color:C.purple,w:4,dash:'10 8'});
+MT.draw(c3,46.7,1.0);
+const l3=MT.T('weights scaled → sharper reaction',ax+aw-20,ay+130,{size:28,color:C.purple,anchor:'end'});
+MT.fade(l3,47.3,0.4,{x:10});
+MT.out([dotG,g1,g2,gl,gl2,c2,l2],51.4,0.45);
+
+/* ---- stage 3: recap (52.2) ---- */
+const rec=MT.T('output  =  σ( Σ wᵢxᵢ + b )',960,430,{size:64,mono:true,w:600});
+MT.wipe(rec,52.2,0.8);
+const rec2=MT.T('every skill a network has is stored in numbers like these',960,540,{size:36,color:C.dim});
+MT.fade(rec2,53.8,0.6,{y:10});
+
+MT.ready();
+</script></body></html>

@@ -1,0 +1,83 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script>
+MT.scene({duration:50});
+const C = MT.C;
+MT.heading('Chapter 2 · Light','Bouncing Blue Light');
+const g = MT.G();
+
+// Earth and atmosphere
+const earth = MT.circ(960, 800, 120, { fill: C.dim });
+MT.fade(earth, 0.5, 0.5);
+const atmosphere = MT.circ(960, 800, 300, { fill: 'none', stroke: C.sky, w: 2, opacity: 0.5 });
+MT.fade(atmosphere, 0.8, 0.5);
+
+// White light ray entering atmosphere
+const lightRay = MT.line(960, 200, 960, 500, { color: C.white, w: 4 });
+MT.draw(lightRay, 1.0, 1.5);
+
+// Air molecules in atmosphere
+const molecules = [];
+for (let i = 0; i < 30; i++) {
+  const x = 800 + Math.random() * 320;
+  const y = 600 + Math.random() * 200;
+  const mol = MT.circ(x, y, 8, { fill: C.blue, opacity: 0 });
+  molecules.push(mol);
+  MT.fade(mol, 5.0 + i * 0.1, 0.3);
+}
+
+// Blue light scattering
+const blueScatter = [];
+for (let i = 0; i < 12; i++) {
+  const angle = (i / 12) * Math.PI * 2;
+  const x1 = 960;
+  const y1 = 500;
+  const x2 = x1 + Math.cos(angle) * 200;
+  const y2 = y1 + Math.sin(angle) * 200;
+  const ray = MT.line(x1, y1, x2, y2, { color: C.blue, w: 2, opacity: 0 });
+  blueScatter.push(ray);
+  MT.draw(ray, 10.0 + i * 0.2, 0.8);
+}
+
+// Other colors passing through
+const otherColors = [];
+const redRay = MT.line(960, 200, 960, 500, { color: C.red, w: 4, opacity: 0 });
+MT.draw(redRay, 15.0, 0.8);
+otherColors.push(redRay);
+
+const greenRay = MT.line(960, 200, 960, 500, { color: C.green, w: 4, opacity: 0 });
+MT.draw(greenRay, 15.2, 0.8);
+otherColors.push(greenRay);
+
+const yellowRay = MT.line(960, 200, 960, 500, { color: C.yellow, w: 4, opacity: 0 });
+MT.draw(yellowRay, 15.4, 0.8);
+otherColors.push(yellowRay);
+
+// View from Earth showing blue light
+const earthView = MT.rect(600, 700, 720, 180, { fill: C.dim });
+MT.fade(earthView, 20.0, 0.5);
+
+const blueRaysFromSky = [];
+for (let i = 0; i < 20; i++) {
+  const x = 600 + Math.random() * 720;
+  const y = 700;
+  const ray = MT.line(x, y, x, 680, { color: C.blue, w: 2, opacity: 0 });
+  blueRaysFromSky.push(ray);
+  MT.fade(ray, 21.0 + i * 0.1, 0.3);
+}
+
+// Blue sky image placeholder
+const skyBox = MT.rect(600, 300, 720, 360, { fill: C.sky });
+MT.fade(skyBox, 25.0, 0.5);
+
+const skyText = MT.T('Blue light everywhere!', 960, 480, { size: 48, color: C.white });
+MT.fade(skyText, 25.5, 0.5);
+
+// Clean up before next scene
+MT.out([lightRay, ...molecules, ...blueScatter, ...otherColors, 
+        earthView, ...blueRaysFromSky, skyBox, skyText], 40.0, 0.5, { y: -16 });
+
+MT.ready();
+</script></body></html>

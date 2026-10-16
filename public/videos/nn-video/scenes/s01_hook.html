@@ -1,0 +1,85 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script src="/vendor/nn.js"></script>
+<script>
+MT.scene({duration:40});
+const C=MT.C;
+
+/* ---- stage 1: hero title (0.8 → 5.6) ---- */
+const k1=MT.T('A HANDS-ON EXPLAINER',960,430,{size:28,color:C.sky,w:600,ls:'0.16em'});
+const t1=MT.T('How does a machine learn to read?',960,510,{size:76,w:650,ls:'-0.025em'});
+MT.fade(k1,0.8,0.35,{y:12}); MT.wipe(t1,1.05,0.8);
+const line1=MT.line(760,575,1160,575,{color:C.line,w:3}); MT.draw(line1,1.6,0.7);
+MT.out([k1,t1,line1],5.4,0.5,{y:-26});
+
+/* ---- stage 2: eight sevens (6.0 → 12.2) ---- */
+const seeds=[11,29,47,73,101,131,163,199],amts=[0.05,0.3,0.05,0.45,0.2,0.5,0.1,0.4];
+const cells=[];const gg=[];const gAll=MT.G();
+seeds.forEach((sd,i)=>{
+  const col=i%4,row=(i/4)|0,x=452+col*270,y=210+row*300;
+  const v=NN.noisy(7,sd,amts[i]);
+  const g=MT.grid(x,y,26,5,7,v,{gap:3,parent:gAll});
+  cells.push(g);MT.pop(g.g,6.0+i*0.16,0.45);
+});
+const cap7=MT.T('All of these are a 7',960,870,{size:44,color:C.dim});
+MT.fade(cap7,8.6,0.5,{y:10});
+/* rule failure: red X over three grids (15.6) */
+const xs=[];
+[2,4,7].forEach((idx,i)=>{
+  const g=cells[idx],bb=g.g.getBBox(),cx=bb.x+bb.width/2,cy=bb.y+bb.height/2,r=95;
+  const x1=MT.pth(`M${cx-r} ${cy-r}L${cx+r} ${cy+r}`,{color:C.bad,w:9,parent:gAll});
+  const x2=MT.pth(`M${cx+r} ${cy-r}L${cx-r} ${cy+r}`,{color:C.bad,w:9,parent:gAll});
+  MT.draw(x1,15.6+i*0.22,0.3);MT.draw(x2,15.72+i*0.22,0.3);
+  xs.push(x1,x2);
+});
+const fail=MT.T('the next example always breaks the rule',960,940,{size:34,color:C.bad});
+MT.fade(fail,18.2,0.5,{y:10});
+MT.out([...gg,gAll,cap7,fail],22.4,0.6);
+
+/* ---- stage 3: knobs (23.0 → 27.8) ---- */
+const knobG=MT.G();const knobs=[];
+for(let i=0;i<12;i++){
+  const col=i%6,row=(i/6)|0,kx=560+col*160,ky=330+row*200;
+  const kg=MT.G(knobG);
+  MT.circ(kx,ky,52,{fill:C.panel2,stroke:C.line,w:3,parent:kg});
+  const ind=MT.line(kx,ky,kx,ky-40,{color:C.sky,w:5,parent:kg});
+  const seedR=MT.rng(i*97+3);const a0=seedR()*360,a1=seedR()*360,a2=seedR()*360;
+  ind.setAttribute('transform',`rotate(${a0} ${kx} ${ky})`);
+  MT.frame(23.6,3.4,p=>{const seg=p<0.5?a0+(a1-a0)*(p*2):a1+(a2-a1)*((p-0.5)*2);ind.setAttribute('transform',`rotate(${seg} ${kx} ${ky})`);});
+  MT.pop(kg,23.2+i*0.09,0.4);knobs.push(kg);
+}
+const flip=MT.T('flip the question — let it find its own rules',960,830,{size:42,color:C.ink,w:500});
+MT.fade(flip,23.6,0.6,{y:12});
+MT.out([knobG,flip],28.0,0.5);
+
+/* ---- stage 4: 562 hero (28.4 → 31.8) ---- */
+const hero=MT.T('562',960,480,{size:230,w:700,color:C.amber,ls:'-0.04em'});
+const heroSub=MT.T('knobs to turn',960,640,{size:44,color:C.dim});
+MT.land(hero,28.4,0.6);MT.fade(heroSub,28.9,0.5,{y:10});
+MT.out([hero,heroSub],31.6,0.45,{s:0.92});
+
+/* ---- stage 5: roadmap (32.2 → 36.8) ---- */
+const items=['Pixels','Neurons','Layers','Error','Descent','Backprop'];
+const cols=[C.sky,C.blue,C.teal,C.yellow,C.orange,C.purple];
+const chips=[];
+items.forEach((it,i)=>{
+  const col=i%3,row=(i/3)|0,cx=660+col*300,cy=400+row*180;
+  const g=MT.G();
+  MT.rect(cx-120,cy-52,240,104,{rx:16,fill:C.panel,stroke:cols[i],w:2.5,parent:g});
+  MT.T((i+1)+'',cx-86,cy,{size:30,color:cols[i],w:600,parent:g});
+  MT.T(it,cx+18,cy,{size:38,w:550,parent:g});
+  MT.pop(g,32.4+i*0.22,0.45);chips.push(g);
+});
+MT.out(chips,36.6,0.45,{y:-18});
+
+/* ---- stage 6: closing (37.1) ---- */
+const fin=MT.T("Let's build one.",960,510,{size:84,w:650});
+MT.wipe(fin,37.1,0.7);
+const black=MT.rect(0,0,1920,1080,{fill:'#000'});
+black.setAttribute('opacity',0);
+MT.frame(38.9,1.1,p=>black.setAttribute('opacity',p.toFixed(3)),()=>black.setAttribute('opacity',0));
+
+MT.ready();
+</script></body></html>

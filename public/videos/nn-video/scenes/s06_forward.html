@@ -1,0 +1,96 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script src="/vendor/nn.js"></script>
+<script>
+MT.scene({duration:60});
+const C=MT.C;
+MT.heading('Chapter 5 · Running the network','One forward pass, start to finish');
+
+const R=NN.trainNet({epochs:120,lr:0.5,seed:2039}),net=R.net;
+const ix=250,iy=430,igap=13,rIn=6,hx=760,hy=430,hgap=52,rH=15,ox=1450,oy=420,ogap=54,rO=16;
+const inp=MT.layer(ix,iy,35,igap,rIn,{}),hid=MT.layer(hx,hy,12,hgap,rH,{}),out=MT.layer(ox,oy,10,ogap,rO,{});
+[inp.g,hid.g,out.g].forEach((g,i)=>MT.fade(g,1.0+i*0.2,0.5));
+const w1g=MT.G(),w2g=MT.G();
+inp.ns.forEach((a,i)=>hid.ns.forEach((b,j)=>{
+  const w=net.W1[j][i];
+  const ln=MT.line(ix+rIn,parseFloat(a.getAttribute('cy')),hx-rH,parseFloat(b.getAttribute('cy')),{color:w>=0?C.blue:C.red,w:1.2,parent:w1g});
+  ln.setAttribute('opacity',Math.min(0.85,0.10+Math.abs(w)*0.8));
+}));
+hid.ns.forEach((a,i)=>out.ns.forEach((b,j)=>{
+  const w=net.W2[j][i];
+  const ln=MT.line(hx+rH,parseFloat(a.getAttribute('cy')),ox-rO,parseFloat(b.getAttribute('cy')),{color:w>=0?C.blue:C.red,w:1.2,parent:w2g});
+  ln.setAttribute('opacity',Math.min(0.85,0.10+Math.abs(w)*0.8));
+}));
+MT.fade(w1g,1.4,0.6);MT.fade(w2g,1.5,0.6);
+const eqH=MT.T('h = σ( W₁x + b₁ )',620,140,{size:34,mono:true,color:C.dim});
+const eqO=MT.T('p = softmax( W₂h + b₂ )',1250,140,{size:34,mono:true,color:C.dim});
+MT.fade(eqH,12.2,0.5,{y:10});MT.fade(eqO,24.2,0.5,{y:10});
+
+/* digit input + prediction machinery */
+const gx=105,gy=560;let curGrid=null,curBars=null,curPred=null;
+function showDigit(x,dseed,amt,at){
+  const vals=NN.noisy(x,dseed,amt);
+  const g=MT.grid(gx,gy,10.5,5,7,vals,{gap:2});
+  MT.fade(g.g,at,0.5);
+  const L=MT.T('"'+x+'"',gx+27,gy-40,{size:34,color:C.ink,w:600});
+  MT.fade(L,at,0.4);
+  return {g:g.g,L,vals};
+}
+function lightUp(at){
+  /* input neurons take pixel brightnesses */
+  inp.ns.forEach((n,i)=>MT.frame(at,0.5,p=>{const v=curD.vals[i];n.setAttribute('fill',`rgba(125,211,252,${(0.15+0.85*v).toFixed(2)})`);}));
+}
+const barsX=1600,barsW=64,barsH=270,barsY=560;
+function makeBars(at){
+  const b=MT.vbars(barsX,barsY,barsW,22,barsH,new Array(10).fill(0.01),{colorFn:(i,v)=>i===curPred?C.ok:C.sky});
+  MT.fade(b.g,at,0.5);
+  const bt=MT.T('network output',barsX+3.5*86,barsY-40,{size:30,color:C.dim});
+  MT.fade(bt,at,0.4,{y:8});
+  return {b,bt};
+}
+function setPred(pr,conf,at){
+  const t=MT.T('prediction: '+pr+'  ·  '+conf+'% sure',960,1005,{size:44,color:C.ok,w:600});
+  MT.fade(t,at,0.5,{y:10});
+  return t;
+}
+/* 3 at 5.2 */
+let curD=showDigit(3,31,0.05,5.2);
+lightUp(5.6);
+let d3=null;
+/* hidden activations light (12.0) */
+const R3=NN.forward(net,curD.vals);
+hid.ns.forEach((n,j)=>MT.frame(12.2,0.8,p=>{const v=R3.h[j];n.setAttribute('fill',`rgba(253,224,71,${(0.12+0.88*v).toFixed(2)})`);}));
+/* outputs (24.0) */
+out.ns.forEach((n,i)=>MT.frame(24.2,0.8,p=>{const v=R3.p[i];n.setAttribute('fill',`rgba(125,211,252,${(0.15+0.85*v).toFixed(2)})`);}));
+/* bars grow (30.2) */
+curPred=R3.p.indexOf(Math.max(...R3.p));
+let B=makeBars(30.2);
+B.b.set(R3.p,30.4,0.8,MT.EASE.outQuint);
+let P=setPred(curPred,99,31.4);
+MT.out([curD.g,curD.L],40.2,0.4,{x:-30});
+/* 7 at 41.2 */
+function replay(d,seed,amt,at){
+  const nd=showDigit(d,seed,amt,at);
+  const R2=NN.forward(net,nd.vals);
+  inp.ns.forEach((n,i)=>MT.frame(at+0.3,0.5,p=>{const v=nd.vals[i];n.setAttribute('fill',`rgba(125,211,252,${(0.15+0.85*v).toFixed(2)})`);}));
+  hid.ns.forEach((n,j)=>MT.frame(at+0.5,0.6,p=>{const v=R2.h[j];n.setAttribute('fill',`rgba(253,224,71,${(0.12+0.88*v).toFixed(2)})`);}));
+  out.ns.forEach((n,i)=>MT.frame(at+0.7,0.6,p=>{const v=R2.p[i];n.setAttribute('fill',`rgba(125,211,252,${(0.15+0.85*v).toFixed(2)})`);}));
+  curPred=R2.p.indexOf(Math.max(...R2.p));
+  B.b.set(R2.p,at+0.8,0.7,MT.EASE.inOut);
+  const np=MT.T('prediction: '+curPred+'  ·  '+Math.round(R2.p[curPred]*100)+'% sure',960,1005,{size:44,color:C.ok,w:600});
+  MT.fade(np,at+1.4,0.5,{y:10});
+  return [nd.g,nd.L,np];
+}
+const r1=replay(7,77,0.10,41.2);
+MT.out(r1,45.0,0.35,{x:-30});
+const r2=replay(5,55,0.08,45.5);
+MT.out(r2,49.4,0.35,{x:-30});
+const r3=replay(8,88,0.35,50.0);
+MT.out(r3,55.0,0.35,{x:-30});
+/* closing */
+const cl=MT.T('no rules were written — only numbers',960,430,{size:48,color:C.ink,w:550});
+MT.fade(cl,55.5,0.7,{y:12});
+MT.ready();
+</script></body></html>

@@ -1,0 +1,103 @@
+{
+ "id": "pack_mvab4bij",
+ "title": "Why is the Sky Blue?",
+ "subtitle": "A colorful adventure for curious kids",
+ "width": 1920,
+ "height": 1080,
+ "fps": 30,
+ "audio": {
+  "voice": "jam",
+  "provider": "z-ai",
+  "prepared": true
+ },
+ "chapters": [
+  {
+   "id": "ch_1",
+   "title": "Sunlight and Our Sky",
+   "kicker": "The colorful mystery above our heads",
+   "duration": 45,
+   "scene": "scenes/ch_1.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 2.8,
+     "text": "Have you ever wondered why our sky is blue?",
+     "audio": "audio/ch_1_cap00.mp3",
+     "audioDur": 3.1
+    },
+    {
+     "t": 4,
+     "dur": 2.8,
+     "text": "The sun sends us light, but is it really white?",
+     "audio": "audio/ch_1_cap01.mp3",
+     "audioDur": 3.19
+    },
+    {
+     "t": 7,
+     "dur": 2.8,
+     "text": "Sunlight actually has all colors of the rainbow!",
+     "audio": "audio/ch_1_cap02.mp3",
+     "audioDur": 2.81
+    },
+    {
+     "t": 10,
+     "dur": 2.8,
+     "text": "So why doesn't our sky look rainbow colored?",
+     "audio": "audio/ch_1_cap03.mp3",
+     "audioDur": 3.02
+    }
+   ]
+  },
+  {
+   "id": "ch_2",
+   "title": "Bouncing Blue Light",
+   "kicker": "The secret of blue sky revealed",
+   "duration": 50,
+   "scene": "scenes/ch_2.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 2.8,
+     "text": "When sunlight hits our atmosphere, something amazing happens!",
+     "audio": "audio/ch_2_cap00.mp3",
+     "audioDur": 3.41
+    },
+    {
+     "t": 6,
+     "dur": 2.8,
+     "text": "Tiny air molecules scatter the sunlight like bouncing balls",
+     "audio": "audio/ch_2_cap01.mp3",
+     "audioDur": 3.19
+    },
+    {
+     "t": 11,
+     "dur": 2.8,
+     "text": "Blue light bounces around the most in all directions!",
+     "audio": "audio/ch_2_cap02.mp3",
+     "audioDur": 3.19
+    },
+    {
+     "t": 16,
+     "dur": 2.8,
+     "text": "Other colors mostly pass straight through",
+     "audio": "audio/ch_2_cap03.mp3",
+     "audioDur": 3.08
+    },
+    {
+     "t": 21,
+     "dur": 2.8,
+     "text": "So we see blue light coming from everywhere in the sky!",
+     "audio": "audio/ch_2_cap04.mp3",
+     "audioDur": 3.22
+    },
+    {
+     "t": 26,
+     "dur": 2.8,
+     "text": "That's why our daytime sky is blue!",
+     "audio": "audio/ch_2_cap05.mp3",
+     "audioDur": 3.19
+    }
+   ]
+  }
+ ]
+}

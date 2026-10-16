@@ -1,0 +1,103 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script>
+MT.scene({duration:70});
+const C=MT.C;
+MT.heading('Chapter 7 · Rolling downhill','Follow the slope');
+
+/* bowl cost curve C(w) = 0.16(w-2)^2 */
+const ax=460,ay=210,aw=1000,ah=560;
+const axg=MT.axes(ax,ay,aw,ah,{xlabel:'knob value  w',ylabel:'cost'});
+MT.fade(axg,1.0,0.5);
+const f=w=>0.16*(w-2)*(w-2);
+const cp=MT.curve(ax,ay,aw,ah,f,-4,8,{color:C.blue,w:5,y0:0,y1:1.6});
+MT.draw(cp,1.4,1.2);
+function px(w){return ax+aw*(w+4)/12;}
+function py(c){return ay+ah-ah*c/1.6;}
+/* ball + tangent (5.0) */
+const ballG=MT.G();const ball=MT.circ(0,0,15,{fill:C.amber,stroke:'#fff',w:2.5,parent:ballG});
+function putBall(w){ball.setAttribute('cx',px(w));ball.setAttribute('cy',py(f(w))+ -16);}
+putBall(-3.2);
+MT.fade(ballG,5.0,0.35);
+function tangent(w,t,dur){
+  const s=0.32*(w-2);
+  const dx=180,dy=-s*dx/ (1);
+  const ln=MT.line(px(w)-dx,py(f(w))+s*dx+16*0,px(w)+dx,py(f(w))-s*dx,{color:C.bad,w:4});
+  ln.setAttribute('opacity',0);MT.fade(ln,t,dur);
+  return ln;
+}
+const tan1=tangent(-3.2,5.4,0.5);
+const sl=MT.T('slope < 0  →  step right',px(-3.2)+30,py(f(-3.2))-70,{size:32,color:C.bad,anchor:'start'});
+MT.fade(sl,11.8,0.4,{x:-10});
+/* hops η=1.0 (11.6): w' = w - η·f'(w) */
+let w=-3.2;const hops1=[];
+for(let i=0;i<4;i++){
+  const g=0.32*(w-2);w=w-1.0*g;
+  const c=MT.circ(px(w),py(f(w)),7,{fill:C.teal});
+  c.setAttribute('opacity',0);MT.fade(c,11.6+i*0.55,0.2);hops1.push(c);
+}
+const step=MT.T('step  =  η × slope',ax+aw-30,ay+70,{size:34,mono:true,color:C.dim,anchor:'end'});
+MT.fade(step,17.2,0.4,{y:8});
+MT.out([tan1,sl],21.0,0.35);
+/* η small (27.4) */
+const ball2=MT.circ(px(-3.2),py(f(-3.2))-16,15,{fill:C.amber,stroke:'#fff',w:2.5});
+MT.fade(ball2,26.0,0.3);
+let w2=-3.2;const hops2c=[];
+for(let i=0;i<10;i++){const g=0.32*(w2-2);w2=w2-0.05*g;
+  const c=MT.circ(px(w2),py(f(w2))-14,5,{fill:C.teal});c.setAttribute('opacity',0);MT.fade(c,27.4+i*0.28,0.15);hops2c.push(c);}
+const et2=MT.T('η = 0.05 — crawls',ax+aw-30,ay+70,{size:34,color:C.teal,anchor:'end'});
+MT.fade(et2,27.6,0.4,{y:8});
+MT.out([ball2,...hops2c,et2,ball],32.6,0.3);
+/* η big (34.0) — ball bounces across, deterministic zigzag */
+const ball3=MT.circ(px(-3.2),py(f(-3.2))-16,15,{fill:C.amber,stroke:'#fff',w:2.5});
+MT.fade(ball3,33.4,0.3);
+const seq=[-3.2,5.6,-2.6,4.4,-1.6,3.4,-0.8,2.2,0.2,1.6,2.4];
+MT.frame(34.0,4.6,p=>{
+  const t=p*10,i=Math.min(9,Math.floor(t)),fr2=t-i;
+  const a=seq[i],b=seq[i+1];
+  const wv=a+(b-a)*MT.EASE.inOut(fr2);
+  ball3.setAttribute('cx',px(wv));ball3.setAttribute('cy',py(f(wv))-16);
+});
+const et3=MT.T('η = 3.0 — overshoots',ax+aw-30,ay+70,{size:34,color:C.bad,anchor:'end'});
+MT.fade(et3,34.2,0.4,{y:8});
+MT.out([...hops1,step,et3,ball3],39.0,0.4);
+/* brave choice (39.5) */
+const brave=MT.T('brave, but not reckless',960,880,{size:40,color:C.ink});
+MT.fade(brave,39.8,0.5,{y:10});
+MT.out([axg,cp,brave],43.6,0.5);
+
+/* contours (44.0) */
+const cg=MT.G();const rings=[];
+for(let i=1;i<=6;i++){
+  const e=MT.E('ellipse',{cx:960,cy:520,rx:60+i*95,ry:38+i*58,fill:'none',stroke:C.line,'stroke-width':2.5},cg);
+  rings.push(e);
+}
+MT.stag(rings,44.2,0.12,(el)=>MT.fade(el,0,0.4));
+const bl2=MT.circ(560,760,15,{fill:C.amber,stroke:'#fff',w:2.5});
+MT.fade(bl2,45.2,0.35);
+const arrD=MT.arrow(575,745,640,690,{color:C.bad,w:5});
+MT.fade(arrD.g,45.6,0.35);MT.draw(arrD.ln,45.6,0.35);
+const c2=MT.T('equal-cost rings',960,940,{size:32,color:C.dim});
+MT.fade(c2,44.8,0.4,{y:8});
+/* zigzag path (50.5) */
+const zig=[[560,760],[640,690],[700,740],[760,660],[830,700],[900,640],[970,660],[1050,610],[1130,600],[1240,560],[1360,540]];
+const zp=MT.pth(zig.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(''),{color:C.amber,w:5});
+MT.draw(zp,50.5,3.4,MT.EASE.inOut);
+const zz=MT.T('steepest descent zigzags',960,1000,{size:32,color:C.dim});
+MT.fade(zz,51.0,0.4,{y:8});
+MT.out([cg,bl2,arrD.g,c2,zp,zz],55.4,0.45);
+/* 562 dims (56.0) */
+const dims=MT.T('a real network: a landscape in 562 dimensions',960,400,{size:48,w:550});
+MT.fade(dims,56.2,0.6,{y:12});
+const same=MT.T('same rule, in every dimension',960,480,{size:36,color:C.dim});
+MT.fade(same,57.4,0.5,{y:8});
+MT.out([dims,same],61.2,0.4);
+/* update rule (62.0) */
+const ur=MT.T('w  ←  w  −  η · ∂C/∂w',960,460,{size:72,mono:true,w:600,color:C.ink});
+MT.wipe(ur,62.2,0.9);
+const rp=MT.T('repeat, thousands of times',960,580,{size:38,color:C.amber});
+MT.fade(rp,66.8,0.6,{y:10});
+MT.ready();
+</script></body></html>

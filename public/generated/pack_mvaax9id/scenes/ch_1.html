@@ -1,0 +1,133 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script>
+MT.scene({duration:45});
+MT.heading('Sunlight and Our Sky','The Science of Colors');
+
+// Main diagram container
+const diagram = MT.G();
+
+// Sun representation
+const sun = MT.circ(200,200,80,{fill:MT.C.yellow});
+diagram.appendChild(sun);
+
+// Earth representation
+const earth = MT.circ(1000,600,120,{fill:MT.C.blue});
+diagram.appendChild(earth);
+
+// Atmosphere layer
+const atmosphere = MT.rect(800,400,400,300,{fill:MT.C.sky,opacity:0.3});
+diagram.appendChild(atmosphere);
+
+// Initial state - child looking up at sky
+const child = MT.rect(150,800,60,120,{fill:MT.C.ink});
+const sky = MT.rect(100,200,800,600,{fill:MT.C.sky});
+diagram.appendChild(sky);
+diagram.appendChild(child);
+
+// Sun rays (will be animated)
+const rays = [];
+for(let i=0;i<7;i++) {
+  const angle = (i/7)*Math.PI*2;
+  const ray = MT.line(200,200,400,400,{
+    color: `hsl(${i*51},100%,50%)`,
+    w:4,
+    opacity:0
+  });
+  ray.setAttribute('data-angle',angle);
+  rays.push(ray);
+  diagram.appendChild(ray);
+}
+
+// Sunlight beam
+const sunlight = MT.rect(300,300,600,400,{fill:MT.C.yellow,opacity:0});
+diagram.appendChild(sunlight);
+
+// Blue light particles
+const blueParticles = [];
+for(let i=0;i<20;i++) {
+  const particle = MT.circ(0,0,5,{fill:MT.C.blue,opacity:0});
+  blueParticles.push(particle);
+  diagram.appendChild(particle);
+}
+
+// Labels
+const sunLabel = MT.T('Sun',200,120,{size:32,color:MT.C.amber});
+const earthLabel = MT.T('Earth',1000,750,{size:32,color:MT.C.ink});
+const atmosphereLabel = MT.T('Atmosphere',900,350,{size:28,color:MT.C.dim});
+const blueLabel = MT.T('Blue Light Scattering',700,250,{size:32,color:MT.C.blue,anchor:'middle'});
+
+// Scene beats
+MT.fade(diagram,0,0.5);
+
+// t=0s: Close-up of child looking up at a bright blue sky with wonder
+MT.move(child,0,0.5,{x:150,y:800});
+MT.move(sky,0,0.5,{x:100,y:200});
+
+// t=3s: Animation of sun with rainbow rays shooting toward Earth
+MT.fade(sun,3,0.5);
+MT.fade(earth,3,0.5);
+MT.fade(sunLabel,3,0.5);
+MT.fade(earthLabel,3,0.5);
+
+// Animate rainbow rays
+rays.forEach((ray,i) => {
+  const angle = parseFloat(ray.getAttribute('data-angle'));
+  const endX = 200 + Math.cos(angle)*600;
+  const endY = 200 + Math.sin(angle)*600;
+  
+  ray.setAttribute('x2',endX);
+  ray.setAttribute('y2',endY);
+  
+  MT.fade(ray,3,0.5);
+  MT.draw(ray,3,1);
+});
+
+// t=6s: Split screen showing white sunlight entering atmosphere and colors separating
+MT.fade(sunlight,6,0.5);
+MT.fade(atmosphere,6,0.5);
+MT.fade(atmosphereLabel,6,0.5);
+
+// Animate sunlight entering atmosphere
+MT.move(sunlight,6,1,{x:300,y:300});
+MT.fade(sunlight,6,1,{opacity:0.7});
+
+// t=9s: Arrow pointing to blue light being scattered in all directions
+MT.fade(blueLabel,9,0.5);
+
+// Add arrow pointing to blue light
+const arrow = MT.arrow(750,300,850,350,{color:MT.C.blue,w:3});
+diagram.appendChild(arrow);
+MT.fade(arrow,9,0.5);
+
+// t=12s: Animation of blue light particles bouncing around in the atmosphere
+blueParticles.forEach((particle,i) => {
+  const x = 800 + Math.random()*400;
+  const y = 400 + Math.random()*300;
+  
+  particle.setAttribute('cx',x);
+  particle.setAttribute('cy',y);
+  
+  MT.fade(particle,12,0.5);
+  
+  // Animate bouncing
+  MT.frame(12,5,(p,t) => {
+    const time = (t-12)/5;
+    const bounceX = x + Math.sin(time*10+i)*50;
+    const bounceY = y + Math.cos(time*8+i)*30;
+    
+    particle.setAttribute('cx',bounceX);
+    particle.setAttribute('cy',bounceY);
+  });
+});
+
+// Hold final state
+MT.frame(35,10,() => {});
+
+// Clean exit
+MT.out([diagram],45,0.5,{y:-16});
+
+MT.ready();
+</script></body></html>

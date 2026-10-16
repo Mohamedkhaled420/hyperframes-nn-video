@@ -1,0 +1,72 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script src="/vendor/nn.js"></script>
+<script>
+MT.scene({duration:50});
+const C=MT.C;
+MT.heading('Chapter 6 · How wrong is it?','One number for the mistake');
+
+const R=NN.trainNet({epochs:120,lr:0.5,seed:2039}),net=R.net;
+const snet=NN.makeNet(4); /* untrained init */
+const x3=NN.noisy(3,31,0.05);
+const pUn=NN.forward(snet,x3).p,pTr=NN.forward(net,x3).p;
+
+/* left: digit + bars */
+const gx=185,gy=280;
+const dg=MT.grid(gx,gy,15,5,7,x3,{gap:2});
+MT.fade(dg.g,0.8,0.5);
+const dl=MT.T('show it a "3"',gx+30,gy-36,{size:30,color:C.dim});
+MT.fade(dl,1.2,0.4);
+const bars=MT.vbars(500,240,46,17,260,pUn,{colorFn:i=>i===3?C.ok:C.sky});
+MT.fade(bars.g,1.0,0.5);
+const bl=MT.T('untrained output',750,180,{size:30,color:C.dim});
+MT.fade(bl,1.4,0.4,{y:8});
+/* target outline (11.4) */
+const tgt=MT.rect(500+3*63,240,46,260,{stroke:C.ok,w:4,rx:3,fill:'none'});
+MT.fade(tgt,11.4,0.5);
+const tl=MT.T('target: everything on 3',640,905,{size:32,color:C.ok});
+MT.fade(tl,12.0,0.4,{y:8});
+/* red gap arrow (15.5) */
+const gapA=MT.arrow(500+3*63+23,248,500+3*63+23,240+260-Math.max(6,pUn[3]*260),{color:C.bad,w:5});
+MT.fade(gapA.g,15.5,0.4);
+MT.draw(gapA.ln,15.5,0.4);
+/* loss formula (22.4) */
+const eq=MT.T('loss  =  − ln( p_correct )',960,1010,{size:46,mono:true,color:C.ink});
+MT.fade(eq,22.4,0.5,{y:12});
+MT.out([gapA.g],17.5,0.3);
+
+/* right: −ln curve (22.6) */
+const ax=1150,ay=220,aw=620,ah=520;
+const axg=MT.axes(ax,ay,aw,ah,{xlabel:'p',ylabel:'loss'});
+MT.fade(axg,22.6,0.5);
+const lf=p=>-Math.log(Math.max(1e-4,p));
+const cp=MT.curve(ax,ay,aw,ah,lf,0.02,1,{color:C.yellow,w:5,y0:0,y1:4.6});
+MT.draw(cp,23.0,1.2);
+/* dot at untrained (27.6) */
+function px(p){return ax+aw*(p-0.02)/0.98;}
+function py(l){return ay+ah-ah*l/4.6;}
+const dot=MT.circ(px(pUn[3]),py(lf(pUn[3])),13,{fill:C.bad,stroke:'#fff',w:2.5});
+MT.pop(dot,27.6,0.4);
+const dl2=MT.T('p = 2% → loss 4.10',px(pUn[3])+30,py(lf(pUn[3]))-40,{size:30,mono:true,color:C.bad,anchor:'start'});
+MT.fade(dl2,28.0,0.4,{x:-10});
+/* slide down as bars morph to trained (33.0) */
+bars.set(pTr,33.0,0.9,MT.EASE.inOut);
+MT.frame(33.0,1.1,p=>{
+  const e=MT.EASE.inOut(p);
+  const pv=pUn[3]+(pTr[3]-pUn[3])*e;
+  dot.setAttribute('cx',px(pv));dot.setAttribute('cy',py(lf(pv)));
+});
+MT.frame(34.2,0.3,p=>dot.setAttribute('fill',p>0.5?C.ok:C.bad));
+const dl3=MT.T('p = 99% → loss 0.001',ax+aw-16,ay+ah-40,{size:30,mono:true,color:C.ok,anchor:'end'});
+MT.fade(dl3,34.6,0.4,{y:8});
+const dl1exit=[dl2];MT.out(dl1exit,33.0,0.3);
+/* average note (39.0) */
+const av=MT.T('cost  =  average loss over every training example',960,860,{size:40,color:C.ink});
+MT.fade(av,39.2,0.5,{y:10});
+const fin=MT.T('training is the art of pushing the cost down',960,950,{size:42,color:C.amber,w:600});
+MT.fade(fin,45.2,0.6,{y:10});
+MT.exit(tl,38.8,0.4);
+MT.ready();
+</script></body></html>

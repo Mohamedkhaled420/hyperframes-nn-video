@@ -1,0 +1,896 @@
+{
+ "id": "nn-video",
+ "title": "How does a machine learn to read?",
+ "subtitle": "Pixels, neurons, layers, cost, descent, backprop — a neural net built from scratch",
+ "width": 1920,
+ "height": 1080,
+ "fps": 30,
+ "aspect": "16:9",
+ "audio": {
+  "voice": "jam",
+  "provider": "z-ai",
+  "prepared": false
+ },
+ "chapters": [
+  {
+   "id": "s01_hook",
+   "title": "The problem",
+   "kicker": "Prologue",
+   "duration": 40,
+   "scene": "scenes/s01_hook.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 4.5,
+     "text": "Show a computer a handwritten 7 and, somehow, it knows what it is.",
+     "audio": "audio/s01_hook_cap00.mp3",
+     "audioDur": 5.28
+    },
+    {
+     "t": 6,
+     "dur": 5.5,
+     "text": "Eight different sevens: different slants, crossbars and noise.",
+     "audio": "audio/s01_hook_cap01.mp3",
+     "audioDur": 5.71
+    },
+    {
+     "t": 12.5,
+     "dur": 5.5,
+     "text": "Try writing rules by hand: a bright top row, a diagonal going down-left.",
+     "audio": "audio/s01_hook_cap02.mp3",
+     "audioDur": 5.88
+    },
+    {
+     "t": 18,
+     "dur": 4.5,
+     "text": "The next example always breaks them. Hand-written rules do not scale.",
+     "audio": "audio/s01_hook_cap03.mp3",
+     "audioDur": 4.3
+    },
+    {
+     "t": 23,
+     "dur": 5,
+     "text": "So flip the question: let the machine find its own rules, by turning knobs.",
+     "audio": "audio/s01_hook_cap04.mp3",
+     "audioDur": 5.4
+    },
+    {
+     "t": 28.5,
+     "dur": 3.5,
+     "text": "The network we will build has 562 of them.",
+     "audio": "audio/s01_hook_cap05.mp3",
+     "audioDur": 3.91
+    },
+    {
+     "t": 32,
+     "dur": 4.5,
+     "text": "Pixels, neurons, layers, error, descent, backpropagation. Six ideas.",
+     "audio": "audio/s01_hook_cap06.mp3",
+     "audioDur": 6.58
+    },
+    {
+     "t": 37,
+     "dur": 2.5,
+     "text": "Let's build one.",
+     "audio": "audio/s01_hook_cap07.mp3",
+     "audioDur": 1.54
+    }
+   ]
+  },
+  {
+   "id": "s02_pixels",
+   "title": "Pictures are numbers",
+   "kicker": "Chapter 1",
+   "duration": 50,
+   "scene": "scenes/s02_pixels.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 4.5,
+     "text": "Start small: a digit on a grid, five pixels wide and seven tall.",
+     "audio": "audio/s02_pixels_cap00.mp3",
+     "audioDur": 4.92
+    },
+    {
+     "t": 5.5,
+     "dur": 5,
+     "text": "Each square holds one number: its brightness, from 0 for black to 1 for white.",
+     "audio": "audio/s02_pixels_cap01.mp3",
+     "audioDur": 5.42
+    },
+    {
+     "t": 11,
+     "dur": 5.5,
+     "text": "Zoom in, and the picture is nothing but a table of numbers.",
+     "audio": "audio/s02_pixels_cap02.mp3",
+     "audioDur": 5.7
+    },
+    {
+     "t": 17,
+     "dur": 5.5,
+     "text": "Unroll the table, row after row, into one long list: thirty-five numbers.",
+     "audio": "audio/s02_pixels_cap03.mp3",
+     "audioDur": 5.88
+    },
+    {
+     "t": 23.5,
+     "dur": 5,
+     "text": "That list is the input. Everything the network knows is in it.",
+     "audio": "audio/s02_pixels_cap04.mp3",
+     "audioDur": 5.58
+    },
+    {
+     "t": 29,
+     "dur": 5.5,
+     "text": "Real handwriting datasets use 28 by 28 pixels: 784 numbers per digit.",
+     "audio": "audio/s02_pixels_cap05.mp3",
+     "audioDur": 5.9
+    },
+    {
+     "t": 35,
+     "dur": 5.5,
+     "text": "A phone photo has tens of millions. Only the length of the list changes.",
+     "audio": "audio/s02_pixels_cap06.mp3",
+     "audioDur": 5.46
+    },
+    {
+     "t": 42,
+     "dur": 6,
+     "text": "To a computer, a picture is a list of numbers. Learning to see means learning from lists.",
+     "audio": "audio/s02_pixels_cap07.mp3"
+    }
+   ]
+  },
+  {
+   "id": "s03_neuron",
+   "title": "A single neuron",
+   "kicker": "Chapter 2",
+   "duration": 60,
+   "scene": "scenes/s03_neuron.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 4.5,
+     "text": "A neuron is a small machine: numbers go in, one number comes out.",
+     "audio": "audio/s03_neuron_cap00.mp3"
+    },
+    {
+     "t": 5.5,
+     "dur": 5,
+     "text": "Each input has a weight: positive means 'this helps', negative means 'this hurts'.",
+     "audio": "audio/s03_neuron_cap01.mp3",
+     "audioDur": 5.25
+    },
+    {
+     "t": 10.5,
+     "dur": 3.5,
+     "text": "The neuron adds up every input times its weight.",
+     "audio": "audio/s03_neuron_cap02.mp3",
+     "audioDur": 3.29
+    },
+    {
+     "t": 14,
+     "dur": 3,
+     "text": "First input: 0.9 times 1.5 gives 1.35.",
+     "audio": "audio/s03_neuron_cap03.mp3",
+     "audioDur": 4.42
+    },
+    {
+     "t": 17,
+     "dur": 3,
+     "text": "Second: 0.2 times minus 2 gives minus 0.4.",
+     "audio": "audio/s03_neuron_cap04.mp3",
+     "audioDur": 4.61
+    },
+    {
+     "t": 20,
+     "dur": 4,
+     "text": "Third: 0.56. The sum is 1.51; add a bias of minus 1 and we get 0.51.",
+     "audio": "audio/s03_neuron_cap05.mp3",
+     "audioDur": 6.46
+    },
+    {
+     "t": 25,
+     "dur": 5,
+     "text": "Raw sums can be anything, so we squash the result into a range between 0 and 1.",
+     "audio": "audio/s03_neuron_cap06.mp3",
+     "audioDur": 5.42
+    },
+    {
+     "t": 30.5,
+     "dur": 5.5,
+     "text": "The sigmoid: very negative gives almost 0, very positive gives almost 1.",
+     "audio": "audio/s03_neuron_cap07.mp3",
+     "audioDur": 5.88
+    },
+    {
+     "t": 37,
+     "dur": 4,
+     "text": "Our 0.51 lands here: the neuron outputs about 0.62.",
+     "audio": "audio/s03_neuron_cap08.mp3",
+     "audioDur": 4.39
+    },
+    {
+     "t": 41.5,
+     "dur": 4.5,
+     "text": "Shift the bias, and the neuron becomes harder or easier to excite.",
+     "audio": "audio/s03_neuron_cap09.mp3",
+     "audioDur": 4.92
+    },
+    {
+     "t": 46.5,
+     "dur": 4.5,
+     "text": "Scale the weights, and its reaction gets sharper.",
+     "audio": "audio/s03_neuron_cap10.mp3",
+     "audioDur": 4.1
+    },
+    {
+     "t": 52,
+     "dur": 6,
+     "text": "Weights and a bias. Every skill a network has is stored in numbers like these.",
+     "audio": "audio/s03_neuron_cap11.mp3",
+     "audioDur": 6.82
+    }
+   ]
+  },
+  {
+   "id": "s04_layers",
+   "title": "Layers",
+   "kicker": "Chapter 3",
+   "duration": 55,
+   "scene": "scenes/s04_layers.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 4.5,
+     "text": "One neuron is weak. Stack them in layers and something remarkable happens.",
+     "audio": "audio/s04_layers_cap00.mp3",
+     "audioDur": 4.87
+    },
+    {
+     "t": 6,
+     "dur": 5,
+     "text": "The first layer sees pixels. Each neuron in the next layer looks at all of them.",
+     "audio": "audio/s04_layers_cap01.mp3",
+     "audioDur": 5.1
+    },
+    {
+     "t": 11.5,
+     "dur": 5,
+     "text": "Every neuron connects to every neuron before it. Each line has its own weight.",
+     "audio": "audio/s04_layers_cap02.mp3"
+    },
+    {
+     "t": 17,
+     "dur": 5.5,
+     "text": "The hope: early layers notice small strokes; later layers combine them into parts.",
+     "audio": "audio/s04_layers_cap03.mp3"
+    },
+    {
+     "t": 23,
+     "dur": 5.5,
+     "text": "A loop. A stem. A hook. Parts combine into digits more easily than raw pixels do.",
+     "audio": "audio/s04_layers_cap04.mp3"
+    },
+    {
+     "t": 29,
+     "dur": 5.5,
+     "text": "A nine is a loop on a stem. An eight is two loops. The last layer reads off the parts.",
+     "audio": "audio/s04_layers_cap05.mp3",
+     "audioDur": 5.88
+    },
+    {
+     "t": 35,
+     "dur": 5.5,
+     "text": "The middle layers are called hidden, because we never tell them what to look for.",
+     "audio": "audio/s04_layers_cap06.mp3",
+     "audioDur": 4.97
+    },
+    {
+     "t": 41,
+     "dur": 5.5,
+     "text": "That is the story people tell. The truth is messier, and we will check it.",
+     "audio": "audio/s04_layers_cap07.mp3",
+     "audioDur": 4.78
+    },
+    {
+     "t": 47,
+     "dur": 6,
+     "text": "For now: a network is neurons in layers, joined by weights. Nothing more.",
+     "audio": "audio/s04_layers_cap08.mp3",
+     "audioDur": 5.75
+    }
+   ]
+  },
+  {
+   "id": "s05_knobs",
+   "title": "The knobs",
+   "kicker": "Chapter 4",
+   "duration": 45,
+   "scene": "scenes/s05_knobs.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 5,
+     "text": "35 pixels in, 12 hidden neurons, 10 outputs: one for each digit.",
+     "audio": "audio/s05_knobs_cap00.mp3",
+     "audioDur": 5.4
+    },
+    {
+     "t": 6,
+     "dur": 4.5,
+     "text": "Every line is a weight, and each weight is a knob we can turn.",
+     "audio": "audio/s05_knobs_cap01.mp3",
+     "audioDur": 5.02
+    },
+    {
+     "t": 11,
+     "dur": 4.5,
+     "text": "Between pixels and hidden layer: 35 times 12, so 420 weights.",
+     "audio": "audio/s05_knobs_cap02.mp3",
+     "audioDur": 4.87
+    },
+    {
+     "t": 15.5,
+     "dur": 3,
+     "text": "Plus one bias for each of the 12 neurons.",
+     "audio": "audio/s05_knobs_cap03.mp3"
+    },
+    {
+     "t": 19,
+     "dur": 4.5,
+     "text": "Hidden to output: 12 times 10, so 120 weights, and 10 more biases.",
+     "audio": "audio/s05_knobs_cap04.mp3"
+    },
+    {
+     "t": 24,
+     "dur": 4.5,
+     "text": "Add it up: 420, 12, 120 and 10. A total of 562 numbers.",
+     "audio": "audio/s05_knobs_cap05.mp3"
+    },
+    {
+     "t": 29.5,
+     "dur": 5,
+     "text": "That is the whole network. Not a program someone wrote, just 562 numbers.",
+     "audio": "audio/s05_knobs_cap06.mp3",
+     "audioDur": 5.4
+    },
+    {
+     "t": 35,
+     "dur": 5,
+     "text": "Modern language models have billions of them. The recipe stays the same.",
+     "audio": "audio/s05_knobs_cap07.mp3",
+     "audioDur": 5.35
+    },
+    {
+     "t": 40.5,
+     "dur": 3.5,
+     "text": "So how do we find good values for them?",
+     "audio": "audio/s05_knobs_cap08.mp3",
+     "audioDur": 3.42
+    }
+   ]
+  },
+  {
+   "id": "s06_forward",
+   "title": "Running the network",
+   "kicker": "Chapter 5",
+   "duration": 60,
+   "scene": "scenes/s06_forward.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 4.5,
+     "text": "Let us watch a trained network work, before asking how it was trained.",
+     "audio": "audio/s06_forward_cap00.mp3",
+     "audioDur": 4.68
+    },
+    {
+     "t": 6,
+     "dur": 5.5,
+     "text": "Pixels go in. Each of the 35 input neurons holds one pixel's brightness.",
+     "audio": "audio/s06_forward_cap01.mp3",
+     "audioDur": 5.93
+    },
+    {
+     "t": 12,
+     "dur": 5.5,
+     "text": "Each hidden neuron takes a weighted sum, adds its bias, and squashes it.",
+     "audio": "audio/s06_forward_cap02.mp3"
+    },
+    {
+     "t": 18,
+     "dur": 5.5,
+     "text": "Some light up, some stay dark: that pattern is the network's summary of the picture.",
+     "audio": "audio/s06_forward_cap03.mp3"
+    },
+    {
+     "t": 24,
+     "dur": 5,
+     "text": "The output layer repeats the trick: a weighted sum for each of the ten digits.",
+     "audio": "audio/s06_forward_cap04.mp3"
+    },
+    {
+     "t": 29.5,
+     "dur": 5,
+     "text": "Softmax turns those ten scores into probabilities that add up to one.",
+     "audio": "audio/s06_forward_cap05.mp3"
+    },
+    {
+     "t": 35,
+     "dur": 5.5,
+     "text": "Here it says: a three, 99% confident. That is one forward pass.",
+     "audio": "audio/s06_forward_cap06.mp3"
+    },
+    {
+     "t": 41,
+     "dur": 4.5,
+     "text": "Now a seven. Same 562 numbers, different picture, different answer.",
+     "audio": "audio/s06_forward_cap07.mp3"
+    },
+    {
+     "t": 45.5,
+     "dur": 4,
+     "text": "Then a five. Same weights, new answer.",
+     "audio": "audio/s06_forward_cap08.mp3"
+    },
+    {
+     "t": 50,
+     "dur": 5,
+     "text": "And a noisy eight, with pixels flipped: watch the confidence.",
+     "audio": "audio/s06_forward_cap09.mp3"
+    },
+    {
+     "t": 55.5,
+     "dur": 4,
+     "text": "No rules about loops or strokes were written. Only numbers.",
+     "audio": "audio/s06_forward_cap10.mp3"
+    }
+   ]
+  },
+  {
+   "id": "s07_cost",
+   "title": "How wrong is it?",
+   "kicker": "Chapter 6",
+   "duration": 50,
+   "scene": "scenes/s07_cost.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 4.5,
+     "text": "Take the untrained network, with random weights, and show it a three.",
+     "audio": "audio/s07_cost_cap00.mp3"
+    },
+    {
+     "t": 6,
+     "dur": 5,
+     "text": "Its ten outputs are a near-random guess. It has no idea which digit it is.",
+     "audio": "audio/s07_cost_cap01.mp3"
+    },
+    {
+     "t": 11.5,
+     "dur": 5,
+     "text": "We know the answer, so the target is simple: all the probability on the three.",
+     "audio": "audio/s07_cost_cap02.mp3"
+    },
+    {
+     "t": 17,
+     "dur": 4.5,
+     "text": "We need one number that says how wrong the network is: a cost.",
+     "audio": "audio/s07_cost_cap03.mp3"
+    },
+    {
+     "t": 22,
+     "dur": 5,
+     "text": "A good choice: minus the log of the probability given to the correct digit.",
+     "audio": "audio/s07_cost_cap04.mp3"
+    },
+    {
+     "t": 27.5,
+     "dur": 5,
+     "text": "Give the right answer 3% and the loss is 3.56. High. The dot sits high on the curve.",
+     "audio": "audio/s07_cost_cap05.mp3"
+    },
+    {
+     "t": 33,
+     "dur": 5.5,
+     "text": "As the network improves, p climbs toward 1 and the loss slides toward zero: 0.001.",
+     "audio": "audio/s07_cost_cap06.mp3"
+    },
+    {
+     "t": 39,
+     "dur": 5,
+     "text": "Average that over thousands of examples and you get one score for the whole network.",
+     "audio": "audio/s07_cost_cap07.mp3"
+    },
+    {
+     "t": 45,
+     "dur": 4,
+     "text": "Low cost means good weights. Training is the art of lowering it.",
+     "audio": "audio/s07_cost_cap08.mp3"
+    }
+   ]
+  },
+  {
+   "id": "s08_descent",
+   "title": "Rolling downhill",
+   "kicker": "Chapter 7",
+   "duration": 70,
+   "scene": "scenes/s08_descent.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 4.5,
+     "text": "Imagine the cost as a landscape. Turn one knob, and the height changes.",
+     "audio": "audio/s08_descent_cap00.mp3"
+    },
+    {
+     "t": 6,
+     "dur": 5,
+     "text": "We want the bottom. But we only feel the slope right where we stand.",
+     "audio": "audio/s08_descent_cap01.mp3"
+    },
+    {
+     "t": 11.5,
+     "dur": 5,
+     "text": "Here the slope points down to the right, so the sensible move is: step right.",
+     "audio": "audio/s08_descent_cap02.mp3"
+    },
+    {
+     "t": 17,
+     "dur": 5.5,
+     "text": "Steeper slope, bigger step. Near the bottom the slope flattens, so steps shrink.",
+     "audio": "audio/s08_descent_cap03.mp3"
+    },
+    {
+     "t": 23,
+     "dur": 4.5,
+     "text": "The size of the step is our choice: the learning rate.",
+     "audio": "audio/s08_descent_cap04.mp3"
+    },
+    {
+     "t": 28,
+     "dur": 5,
+     "text": "Too small, and we crawl. Ten steps barely move us.",
+     "audio": "audio/s08_descent_cap05.mp3"
+    },
+    {
+     "t": 34,
+     "dur": 4.5,
+     "text": "Too large, and we overshoot, bouncing from wall to wall, even climbing out.",
+     "audio": "audio/s08_descent_cap06.mp3"
+    },
+    {
+     "t": 39.5,
+     "dur": 4,
+     "text": "So we pick a learning rate that is brave, but not reckless.",
+     "audio": "audio/s08_descent_cap07.mp3"
+    },
+    {
+     "t": 45,
+     "dur": 5,
+     "text": "With two knobs we can draw the landscape. Rings join points of equal cost.",
+     "audio": "audio/s08_descent_cap08.mp3"
+    },
+    {
+     "t": 50.5,
+     "dur": 5,
+     "text": "Descent follows the steepest way down, and zigzags toward the middle.",
+     "audio": "audio/s08_descent_cap09.mp3"
+    },
+    {
+     "t": 56,
+     "dur": 5.5,
+     "text": "A real network has 562 knobs: a landscape in 562 dimensions. Same rule.",
+     "audio": "audio/s08_descent_cap10.mp3"
+    },
+    {
+     "t": 62,
+     "dur": 5,
+     "text": "Update rule: new weight equals old weight, minus learning rate times slope.",
+     "audio": "audio/s08_descent_cap11.mp3"
+    },
+    {
+     "t": 67,
+     "dur": 2.5,
+     "text": "Repeat, thousands of times.",
+     "audio": "audio/s08_descent_cap12.mp3"
+    }
+   ]
+  },
+  {
+   "id": "s09_backprop",
+   "title": "Who is to blame?",
+   "kicker": "Chapter 8",
+   "duration": 65,
+   "scene": "scenes/s09_backprop.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 4.5,
+     "text": "Descent needs a slope for every knob. How do we find all 562 slopes?",
+     "audio": "audio/s09_backprop_cap00.mp3"
+    },
+    {
+     "t": 6,
+     "dur": 5,
+     "text": "Shrink the network to a chain: one input, two weights, a loss. We can do this by hand.",
+     "audio": "audio/s09_backprop_cap01.mp3"
+    },
+    {
+     "t": 11.5,
+     "dur": 5,
+     "text": "Forward: 1 times 0.8 is 0.8, times minus 0.5 is minus 0.4. The target was 1.",
+     "audio": "audio/s09_backprop_cap02.mp3"
+    },
+    {
+     "t": 17,
+     "dur": 4.5,
+     "text": "The squared error is 1.96. Now: who is to blame for it?",
+     "audio": "audio/s09_backprop_cap03.mp3"
+    },
+    {
+     "t": 22,
+     "dur": 5,
+     "text": "Start at the end. If y rose a little, the loss would change by minus 2.8 times as much.",
+     "audio": "audio/s09_backprop_cap04.mp3"
+    },
+    {
+     "t": 27.5,
+     "dur": 5,
+     "text": "Weight w2 reaches y through h: blame is minus 2.8 times 0.8, so minus 2.24.",
+     "audio": "audio/s09_backprop_cap05.mp3"
+    },
+    {
+     "t": 33,
+     "dur": 5.5,
+     "text": "Keep going backwards: h gets 1.4, and w1 gets 1.4 times its input of 1.",
+     "audio": "audio/s09_backprop_cap06.mp3"
+    },
+    {
+     "t": 39,
+     "dur": 5,
+     "text": "That is the chain rule: blame flows backwards, multiplying local slopes as it goes.",
+     "audio": "audio/s09_backprop_cap07.mp3"
+    },
+    {
+     "t": 45,
+     "dur": 5,
+     "text": "Now nudge each weight against its slope, with a learning rate of 0.1.",
+     "audio": "audio/s09_backprop_cap08.mp3"
+    },
+    {
+     "t": 50.5,
+     "dur": 5,
+     "text": "The output moves from minus 0.4 to minus 0.18, and the loss falls to 1.40.",
+     "audio": "audio/s09_backprop_cap09.mp3"
+    },
+    {
+     "t": 56,
+     "dur": 5,
+     "text": "Backpropagation does exactly this, for all 562 weights, reusing work from later layers.",
+     "audio": "audio/s09_backprop_cap10.mp3"
+    },
+    {
+     "t": 61.5,
+     "dur": 3,
+     "text": "One pass forward. One pass back. One small step.",
+     "audio": "audio/s09_backprop_cap11.mp3"
+    }
+   ]
+  },
+  {
+   "id": "s10_training",
+   "title": "Training",
+   "kicker": "Chapter 9",
+   "duration": 70,
+   "scene": "scenes/s10_training.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 4.5,
+     "text": "Time to train: start from random weights, then show it noisy digits again and again.",
+     "audio": "audio/s10_training_cap00.mp3"
+    },
+    {
+     "t": 5.5,
+     "dur": 4.5,
+     "text": "Each round: a forward pass, the cost, a backward pass, a small nudge to every weight.",
+     "audio": "audio/s10_training_cap01.mp3"
+    },
+    {
+     "t": 10.5,
+     "dur": 4.5,
+     "text": "Watch the cost on the left, and how often it is right on the right.",
+     "audio": "audio/s10_training_cap02.mp3"
+    },
+    {
+     "t": 15,
+     "dur": 5,
+     "text": "At first it guesses. Within a few rounds the cost collapses.",
+     "audio": "audio/s10_training_cap03.mp3"
+    },
+    {
+     "t": 20,
+     "dur": 5.5,
+     "text": "The digits below turn from red to green as the weights settle.",
+     "audio": "audio/s10_training_cap04.mp3"
+    },
+    {
+     "t": 26,
+     "dur": 5.5,
+     "text": "Then progress slows. Easy gains come first; polishing takes far longer.",
+     "audio": "audio/s10_training_cap05.mp3"
+    },
+    {
+     "t": 32,
+     "dur": 5.5,
+     "text": "This is why training runs so long: the last few percent are the hardest.",
+     "audio": "audio/s10_training_cap06.mp3"
+    },
+    {
+     "t": 38,
+     "dur": 5,
+     "text": "Final: 100% right on training digits, and 100% on noisy digits it has never seen.",
+     "audio": "audio/s10_training_cap07.mp3"
+    },
+    {
+     "t": 43.5,
+     "dur": 4.5,
+     "text": "That second number matters most: a network must work on new data.",
+     "audio": "audio/s10_training_cap08.mp3"
+    },
+    {
+     "t": 49,
+     "dur": 5,
+     "text": "Strip away the details and training is one loop, repeated again and again.",
+     "audio": "audio/s10_training_cap09.mp3"
+    },
+    {
+     "t": 54.5,
+     "dur": 5,
+     "text": "Forward, cost, backward, nudge. Real systems repeat it millions of times or more.",
+     "audio": "audio/s10_training_cap10.mp3"
+    },
+    {
+     "t": 60,
+     "dur": 5,
+     "text": "Nothing in that loop knows what a seven is. The knowledge ends up in the weights.",
+     "audio": "audio/s10_training_cap11.mp3"
+    },
+    {
+     "t": 65.5,
+     "dur": 3.5,
+     "text": "So what did the weights learn? Let us look inside.",
+     "audio": "audio/s10_training_cap12.mp3"
+    }
+   ]
+  },
+  {
+   "id": "s11_inside",
+   "title": "What did it learn?",
+   "kicker": "Chapter 10",
+   "duration": 55,
+   "scene": "scenes/s11_inside.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 4.5,
+     "text": "Here are the 12 hidden neurons. Each grid shows its weights on the 35 pixels.",
+     "audio": "audio/s11_inside_cap00.mp3"
+    },
+    {
+     "t": 6,
+     "dur": 5,
+     "text": "Blue pixels excite the neuron, red pixels inhibit it. Bright means a strong weight.",
+     "audio": "audio/s11_inside_cap01.mp3"
+    },
+    {
+     "t": 11.5,
+     "dur": 5,
+     "text": "If the story from Chapter 3 were true, we would see neat loops and strokes.",
+     "audio": "audio/s11_inside_cap02.mp3"
+    },
+    {
+     "t": 17,
+     "dur": 5,
+     "text": "Instead: blurry, overlapping templates. Each neuron is a messy vote on the whole picture.",
+     "audio": "audio/s11_inside_cap03.mp3"
+    },
+    {
+     "t": 22.5,
+     "dur": 5,
+     "text": "Together they work, but the meaning is spread across many neurons.",
+     "audio": "audio/s11_inside_cap04.mp3"
+    },
+    {
+     "t": 28,
+     "dur": 5,
+     "text": "Now a test. Feed it pure random static: an image of nothing at all.",
+     "audio": "audio/s11_inside_cap05.mp3"
+    },
+    {
+     "t": 33.5,
+     "dur": 5,
+     "text": "It answers 2, 95% sure. It was never taught to say 'I do not know'.",
+     "audio": "audio/s11_inside_cap06.mp3"
+    },
+    {
+     "t": 39,
+     "dur": 5,
+     "text": "Blend a four and a nine, and its belief splits between the two it knows.",
+     "audio": "audio/s11_inside_cap07.mp3"
+    },
+    {
+     "t": 44.5,
+     "dur": 5,
+     "text": "A network only knows the world it was trained on, and it does not know its limits.",
+     "audio": "audio/s11_inside_cap08.mp3"
+    },
+    {
+     "t": 50,
+     "dur": 4.5,
+     "text": "Understanding that gap matters as much as understanding the math.",
+     "audio": "audio/s11_inside_cap09.mp3"
+    }
+   ]
+  },
+  {
+   "id": "s12_outro",
+   "title": "Putting it together",
+   "kicker": "Recap",
+   "duration": 40,
+   "scene": "scenes/s12_outro.html",
+   "captions": [
+    {
+     "t": 1,
+     "dur": 4.5,
+     "text": "Let us put it together. A picture is a list of numbers.",
+     "audio": "audio/s12_outro_cap00.mp3"
+    },
+    {
+     "t": 6,
+     "dur": 4.5,
+     "text": "A neuron takes a weighted sum, adds a bias and squashes the result.",
+     "audio": "audio/s12_outro_cap01.mp3"
+    },
+    {
+     "t": 11,
+     "dur": 4.5,
+     "text": "Neurons stack in layers, joined by weights. Ours had 562.",
+     "audio": "audio/s12_outro_cap02.mp3"
+    },
+    {
+     "t": 16,
+     "dur": 4.5,
+     "text": "A cost function turns 'how wrong' into a single number.",
+     "audio": "audio/s12_outro_cap03.mp3"
+    },
+    {
+     "t": 21,
+     "dur": 4.5,
+     "text": "Gradient descent says: nudge every weight downhill.",
+     "audio": "audio/s12_outro_cap04.mp3"
+    },
+    {
+     "t": 26,
+     "dur": 4.5,
+     "text": "Backpropagation finds every slope by sending blame backwards.",
+     "audio": "audio/s12_outro_cap05.mp3"
+    },
+    {
+     "t": 31,
+     "dur": 4,
+     "text": "In one line: new weights equal old weights, minus a step downhill.",
+     "audio": "audio/s12_outro_cap06.mp3"
+    },
+    {
+     "t": 35.5,
+     "dur": 4,
+     "text": "Change the hidden layer's size and see what breaks. That is how intuition grows.",
+     "audio": "audio/s12_outro_cap07.mp3"
+    }
+   ]
+  }
+ ]
+}

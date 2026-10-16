@@ -1,0 +1,82 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script src="/vendor/nn.js"></script>
+<script>
+MT.scene({duration:55});
+const C=MT.C;
+MT.heading('Chapter 10 · What did it learn?','Look inside the weights');
+
+const R=NN.trainNet({epochs:120,lr:0.5,seed:2039}),net=R.net;
+const mx=Math.max(...net.W1.flat().map(Math.abs));
+
+/* 12 weight heat-maps (1.0) */
+const hm=[];const labs=[];
+for(let j=0;j<12;j++){
+  const col=j%6,row=(j/6)|0;
+  const x=240+col*260,y=230+row*300;
+  const h=MT.grid(x,y,30,5,7,net.W1[j],{heat:true,max:mx,gap:2});
+  MT.pop(h.g,1.0+j*0.14,0.45);
+  hm.push(h.g);
+  labs.push(MT.T('n'+(j+1),x+78,y+7*32+30,{size:24,color:C.faint}));
+}
+MT.stag(labs,1.6,0.1,(el)=>MT.fade(el,0,0.35));
+/* legend (6.5) */
+const lg=MT.T('<tspan fill="#60a5fa">■</tspan> excites      <tspan fill="#f87171">■</tspan> inhibits',960,940,{size:34,color:C.dim,html:true});
+MT.fade(lg,6.5,0.5,{y:8});
+/* orange note (17.0) */
+const note=MT.T('not tidy loops and strokes — blurry, overlapping templates',960,940,{size:38,color:C.orange});
+MT.fade(note,17.0,0.6,{y:10});
+MT.exit(lg,16.8,0.3);
+MT.out([...hm,...labs,note],26.6,0.5,{y:-14});
+/* test 1: static (28.2) */
+const rr=MT.rng(31);
+const stat=Array.from({length:35},()=>rr());
+const sg=MT.grid(480,260,36,5,7,stat,{gap:3});
+MT.fade(sg.g,28.2,0.6);
+const st=MT.T('random static',600,560,{size:34,color:C.dim});
+MT.fade(st,28.6,0.4);
+const R2=NN.forward(net,stat);
+const vb=MT.vbars(1050,240,52,20,300,R2.p,{colorFn:i=>i===R2.p.indexOf(Math.max(...R2.p))?C.amber:C.sky});
+MT.fade(vb.g,29.0,0.5);
+const vt=MT.T('network output',1290,180,{size:30,color:C.dim});
+MT.fade(vt,29.4,0.4,{y:8});
+const best=R2.p.indexOf(Math.max(...R2.p));
+const sr=MT.T('static  →  "'+best+'", '+Math.round(R2.p[best]*100)+'% sure',1050,650,{size:44,color:C.amber,anchor:'start'});
+MT.fade(sr,33.8,0.6,{x:-14});
+const noTaught=MT.T('never taught to say "I do not know"',1050,730,{size:32,color:C.dim,anchor:'start'});
+MT.fade(noTaught,34.8,0.5,{x:-12});
+MT.out([sg.g,st,vb.g,vt,sr,noTaught],37.8,0.5,{y:-12});
+/* test 2: blend 4 + 9 (39.4) */
+const d4=NN.DIG[4].join('').split('').map(Number),d9=NN.DIG[9].join('').split('').map(Number);
+const bl=d4.map((v,i)=>(v+d9[i])/2);
+const g4=MT.grid(240,280,30,5,7,d4,{gap:2.5});
+const g9=MT.grid(560,280,30,5,7,d9,{gap:2.5});
+const gb=MT.grid(880,280,30,5,7,bl,{gap:2.5});
+[g4,g9,gb].forEach((gr,i)=>MT.fade(gr.g,39.4+i*0.4,0.5));
+const plus=MT.T('+',500,410,{size:60,color:C.dim});
+const eq=MT.T('=',780,410,{size:60,color:C.dim});
+MT.fade(plus,39.7,0.3);MT.fade(eq,40.2,0.3);
+const l4=MT.T('a four',345,240,{size:28,color:C.dim});
+const l9=MT.T('a nine',665,240,{size:28,color:C.dim});
+const lb=MT.T('the blend',985,240,{size:28,color:C.dim});
+[l4,l9,lb].forEach((l,i)=>MT.fade(l,39.6+i*0.4,0.4));
+const pb=NN.forward(net,bl).p;
+const ord=pb.map((p,i)=>[p,i]).sort((a,b)=>b[0]-a[0]);
+const vb2=MT.vbars(1250,280,52,20,280,pb,{colorFn:i=>i===ord[0][1]?C.amber:(i===ord[1][1]?C.sky:C.faint)});
+MT.fade(vb2.g,40.8,0.5);
+vb2.set(pb,40.8,0.8);
+const br=MT.T('belief splits: "'+ord[0][1]+'" '+Math.round(ord[0][0]*100)+'%  ·  "'+ord[1][1]+'" '+Math.round(ord[1][0]*100)+'%',1250,680,{size:40,color:C.ink});
+MT.fade(br,41.6,0.6,{x:-12});
+/* closing (44.8) */
+const all2=[g4.g,g9.g,gb.g,plus,eq,l4,l9,lb,vb2.g,br];
+MT.out(all2,44.6,0.5,{y:-12});
+const fin=MT.T('A network only knows the world it was trained on.',960,440,{size:58,w:600});
+MT.wipe(fin,44.8,0.9);
+const fin2=MT.T('and it does not know its limits',960,540,{size:40,color:C.dim});
+MT.fade(fin2,46.6,0.6,{y:10});
+const fin3=MT.T('understanding that gap matters as much as the math',960,680,{size:38,color:C.sky});
+MT.fade(fin3,50.2,0.6,{y:10});
+MT.ready();
+</script></body></html>

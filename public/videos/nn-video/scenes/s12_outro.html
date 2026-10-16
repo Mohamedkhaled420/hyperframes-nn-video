@@ -1,0 +1,45 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script>
+MT.scene({duration:40});
+const C=MT.C;
+MT.heading('Recap · Putting it together','Six ideas, one rule');
+
+const rows=[
+  ['A picture is a list of numbers','[ 0.0, 0.9, 0.8, … ]',C.sky],
+  ['A neuron: weighted sum, bias, squash','σ( Σ w·x + b )',C.blue],
+  ['Layers of neurons, joined by weights','35 → 12 → 10',C.teal],
+  ['A cost says how wrong we are','−ln p',C.yellow],
+  ['Gradient descent: step downhill','w ← w − η ∂C/∂w',C.orange],
+  ['Backpropagation: blame, backwards','chain rule',C.purple]
+];
+const times=[1.2,6.2,11.2,16.2,21.2,26.2];
+const rowsEls=[];
+rows.forEach((r,i)=>{
+  const y=230+i*100;
+  const g=MT.G();
+  MT.circ(330,y,30,{stroke:r[2],w:4,fill:C.panel2,parent:g});
+  MT.T(String(i+1),330,y,{size:32,color:r[2],w:600,parent:g});
+  const t=MT.T(r[0],410,y,{size:42,anchor:'start'});
+  const f=MT.T(r[1],1560,y,{size:36,color:r[2],mono:true});
+  MT.pop(g,times[i],0.4);
+  MT.fade(t,times[i]+0.15,0.5,{x:-16});
+  MT.fade(f,times[i]+0.35,0.5,{x:16});
+  rowsEls.push(g,t,f);
+});
+/* big rule (31.4) */
+const fm=MT.T('θ  ←  θ  −  η ∇C(θ)',960,700,{size:88,mono:true,w:600});
+MT.wipe(fm,31.4,1.0);
+/* dim rows while the rule lands */
+rowsEls.forEach((el)=>{ MT.frame(30.8,0.5,q=>el.setAttribute('opacity',(1-0.78*MT.EASE.inOut(q)).toFixed(2))); });
+MT.out(rowsEls,35.2,0.5,{y:-16});
+MT.move(fm,35.4,0.8,{x:0,y:-330,s:0.82,r:0},MT.EASE.inOut);
+/* challenge (36.0) */
+const a=MT.T('Change the size of the hidden layer.<br>See what breaks.',960,640,{size:58,w:600,align:'center',html:true});
+MT.wipe(a,36.2,0.8);
+const b=MT.T('that is how intuition is built',960,780,{size:38,color:C.dim});
+MT.fade(b,38.2,0.6,{y:10});
+MT.ready();
+</script></body></html>

@@ -1,0 +1,128 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script src="/vendor/nn.js"></script>
+<script>
+MT.scene({duration:70});
+const C=MT.C;
+MT.heading('Chapter 9 · Training','Watch it learn — for real');
+
+/* real training, computed here (deterministic) */
+const R=NN.trainNet({epochs:120,lr:0.5,seed:2039});
+const hist=R.hist,snaps=R.snaps;
+const EPS=120;
+
+/* plots */
+const axL=170,ayL=200,awL=760,ahL=470;
+const axR=1150,ayR=200,awR=620,ahR=470;
+const aL=MT.axes(axL,ayL,awL,ahL,{xlabel:'epochs (√ scale)',ylabel:'cost'});
+const aR=MT.axes(axR,ayR,awR,ahR,{xlabel:'epochs (√ scale)',ylabel:'accuracy'});
+MT.fade(aL,10.8,0.5);MT.fade(aR,10.9,0.5);
+const xAt=ep=>Math.sqrt(ep/EPS); /* sqrt scale */
+/* loss curves (left) */
+const maxL=4.0;
+function pathFor(get,scale,x0,ay0,aw0,ah0){
+  let d='';
+  for(let ep=1;ep<=EPS;ep+=2){
+    const v=Math.min(1,get(hist[ep])/(scale||1));
+    d+=(d?'L':'M')+(x0+aw0*xAt(ep)).toFixed(1)+' '+(ay0+ah0-ah0*v).toFixed(1);
+  }
+  return d;
+}
+const lossP=MT.pth(pathFor(h=>h.loss,maxL,axL,ayL,awL,ahL),{color:C.red,w:4.5});
+const tlossP=MT.pth(pathFor(h=>h.tloss,maxL,axL,ayL,awL,ahL),{color:C.orange,w:3.5,dash:'10 8'});
+const accP=MT.pth(pathFor(h=>h.acc,1,axR,ayR,awR,ahR),{color:C.blue,w:4.5});
+const taccP=MT.pth(pathFor(h=>h.tacc,1,axR,ayR,awR,ahR),{color:C.orange,w:3.5,dash:'10 8'});
+[lossP,tlossP,accP,taccP].forEach(p=>p.setAttribute('opacity',0.0));
+MT.fade(lossP,11.4,0.4);MT.fade(tlossP,11.6,0.4);
+/* reveal left→right over ~38 s via clip rect */
+function revealAt(pEl,x0,aw0,ay0,ah0,t,dur){
+  const id='rv'+(++revealAt.i);
+  const cp=MT.E('clipPath',{id},pEl.parentNode);
+  const rc=MT.E('rect',{x:x0-4,y:ay0-30,width:0,height:ah0+60},cp);
+  pEl.setAttribute('clip-path',`url(#${id})`);
+  MT.frame(t,dur,q=>{const e=MT.EASE.glide(q);rc.setAttribute('width',(aw0*e+8).toFixed(1));});
+}
+revealAt.i=0;
+revealAt(lossP,axL,awL,ayL,ahL,11.2,38);
+revealAt(tlossP,axL,awL,ayL,ahL,11.4,38);
+const lg1=MT.T('cost',axL+70,ayL-30,{size:30,color:C.red});
+const lg2=MT.T('held-out cost',axL+210,ayL-30,{size:30,color:C.orange});
+MT.fade(lg1,11.6,0.4);MT.fade(lg2,11.8,0.4);
+/* accuracy curves (right, 12.4) */
+MT.fade(accP,12.4,0.4);MT.fade(taccP,12.6,0.4);
+revealAt(accP,axR,awR,ayR,ahR,12.2,37);
+revealAt(taccP,axR,awR,ayR,ahR,12.4,37);
+const lg3=MT.T('train acc',axR+90,ayR-30,{size:30,color:C.blue});
+const lg4=MT.T('test acc',axR+250,ayR-30,{size:30,color:C.orange});
+MT.fade(lg3,12.8,0.4);MT.fade(lg4,13.0,0.4);
+/* test-digit strip (2.0) with live predictions */
+const stripY=790;const cells=[];const borders=[];const preds=[];
+const tests=[];
+for(let d=0;d<10;d++)tests.push({x:NN.noisy(d,900+d*13,0.18),y:d});
+tests.forEach((t,i)=>{
+  const cx=210+i*160;
+  const gc=MT.grid(cx-38,stripY,10.5,5,7,t.x,{gap:1.5});
+  const bd=MT.rect(cx-46,stripY-8,77,100,{rx:8,stroke:C.bad,w:4,fill:'none'});
+  MT.fade(gc.g,2.0+i*0.08,0.4);MT.fade(bd,2.1+i*0.08,0.4);
+  const pr=MT.T('?',cx,stripY+130,{size:30,color:C.dim});
+  MT.fade(pr,2.2+i*0.08,0.3);
+  cells.push(gc);borders.push(bd);preds.push(pr);
+});
+/* snapshot updates at 14 epochs */
+const snapEps=Object.keys(snaps).map(Number).sort((a,b)=>a-b);
+const times=snapEps.map((ep,i)=>13.0+i*(36.0/snapEps.length));
+snapEps.forEach((ep,i)=>{
+  MT.frame(times[i],0.01,()=>{
+    const sn=snaps[ep];
+    tests.forEach((t,k)=>{
+      const p=NN.forward(sn.net,t.x).p;
+      const pred=p.indexOf(Math.max(...p));
+      const ok=pred===t.y;
+      borders[k].setAttribute('stroke',ok?C.ok:C.bad);
+      preds[k].textContent=pred;
+      preds[k].setAttribute('fill',ok?C.ok:C.bad);
+    });
+  });
+});
+/* epoch counter (12.0) */
+const cnt=MT.T('',axL+awL-10,ayL+ahL+60,{size:30,mono:true,color:C.dim,anchor:'end'});
+MT.frame(11.2,38,p=>{
+  const ep=Math.max(1,Math.min(EPS,Math.round(p*p*EPS)));
+  const h=hist[ep];
+  cnt.textContent='epoch '+ep+'   ·   cost '+h.loss.toFixed(2)+'   ·   test '+Math.round(h.tacc*100)+'%';
+});
+/* final numbers (38.0) */
+const finT=MT.T('100% train  ·  98% never-seen',axR+awR/2,ayR+ahR+60,{size:34,mono:true,color:C.ok});
+MT.fade(finT,38.4,0.5,{y:10});
+const why=MT.T('the second number is the one that matters',1150+310,740,{size:34,color:C.dim});
+MT.fade(why,43.8,0.5,{y:8});
+/* clear (48.6) */
+const all=[aL,aR,lossP,tlossP,accP,taccP,lg1,lg2,lg3,lg4,finT,why,cnt,...cells.map(c=>c.g),...borders,...preds];
+MT.out(all,48.6,0.55,{y:-14});
+/* the loop (49.5) */
+const boxes=['Forward pass','Cost','Backward pass','Nudge weights'];
+const bx=[];const bw2=380,bh2=110,bgx=[240,800,1360,800],bgy=[240,240,240,470];
+boxes.forEach((s,i)=>{
+  const g=MT.G();
+  MT.rect(bgx[i],bgy[i],bw2,bh2,{rx:16,fill:C.panel,stroke:C.sky,w:2.5,parent:g});
+  MT.T(s,bgx[i]+bw2/2,bgy[i]+bh2/2,{size:38,w:550,parent:g});
+  MT.pop(g,49.5+i*0.5,0.45);bx.push(g);
+});
+const ra=MT.pth('M1330 470 L430 470 L430 372',{color:C.dim,w:3.5,dash:'12 9'});
+MT.draw(ra,51.8,0.9);
+const rep=MT.T('repeat',880,435,{size:34,color:C.amber});
+MT.fade(rep,52.4,0.4,{y:8});
+const mil=MT.T('real systems: millions of repeats',960,700,{size:36,color:C.dim});
+MT.fade(mil,54.8,0.5,{y:8});
+MT.out([...bx,ra,rep,mil],59.4,0.45);
+/* closing (60.0) */
+const cl1=MT.T('nothing in the loop knows what a seven is',960,430,{size:46,w:550});
+MT.fade(cl1,60.2,0.6,{y:12});
+const cl2=MT.T('the knowledge ends up in the weights',960,520,{size:46,w:550,color:C.sky});
+MT.fade(cl2,61.6,0.6,{y:12});
+const cl3=MT.T('so what did they learn? let us look inside.',960,650,{size:34,color:C.dim});
+MT.fade(cl3,65.5,0.5,{y:8});
+MT.ready();
+</script></body></html>

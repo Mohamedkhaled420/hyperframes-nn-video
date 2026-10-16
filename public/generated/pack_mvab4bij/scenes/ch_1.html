@@ -1,0 +1,126 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script>
+MT.scene({duration:45});
+const C = MT.C;
+MT.heading('Chapter 3 · Sunlight and Our Sky','What makes our sky blue?');
+const g = MT.G();
+
+// t=0s: Opening shot of child looking up at a bright blue sky
+const sky = MT.rect(120, 80, 1800, 880, { fill: C.sky });
+MT.fade(sky, 0, 0.5);
+const child = MT.circ(960, 700, 80, { fill: C.ink });
+MT.fade(child, 0, 0.5);
+const head = MT.circ(960, 620, 50, { fill: C.ink });
+MT.fade(head, 0, 0.5);
+const eye1 = MT.circ(940, 620, 8, { fill: C.white });
+MT.fade(eye1, 0, 0.5);
+const eye2 = MT.circ(980, 620, 8, { fill: C.white });
+MT.fade(eye2, 0, 0.5);
+const pupil1 = MT.circ(940, 620, 4, { fill: C.ink });
+MT.fade(pupil1, 0, 0.5);
+const pupil2 = MT.circ(980, 620, 4, { fill: C.ink });
+MT.fade(pupil2, 0, 0.5);
+const wonder = MT.T('What makes our sky blue?', 960, 450, { size: 44, color: C.white });
+MT.fade(wonder, 0, 0.5);
+
+// t=3s: Animation of sun rays shining down toward Earth
+MT.out([child, head, eye1, eye2, pupil1, pupil2, wonder], 2.5, 0.5, {y: -16});
+const sun = MT.circ(960, 200, 60, { fill: C.amber });
+MT.pop(sun, 3, 0.5);
+const ray1 = MT.line(960, 260, 960, 400, { color: C.amber, w: 4 });
+MT.fade(ray1, 3, 0.5);
+const ray2 = MT.line(920, 260, 920, 400, { color: C.amber, w: 4 });
+MT.fade(ray2, 3, 0.5);
+const ray3 = MT.line(1000, 260, 1000, 400, { color: C.amber, w: 4 });
+MT.fade(ray3, 3, 0.5);
+const ray4 = MT.line(900, 260, 900, 400, { color: C.amber, w: 4 });
+MT.fade(ray4, 3, 0.5);
+const ray5 = MT.line(1020, 260, 1020, 400, { color: C.amber, w: 4 });
+MT.fade(ray5, 3, 0.5);
+const earth = MT.circ(960, 800, 100, { fill: C.green });
+MT.fade(earth, 3, 0.5);
+
+// t=6s: Close-up view of sunlight showing it contains all colors of rainbow
+MT.out([sun, ray1, ray2, ray3, ray4, ray5, earth], 5.5, 0.5, {y: -16});
+const sunlight = MT.rect(400, 400, 1120, 60, { fill: C.white });
+MT.pop(sunlight, 6, 0.5);
+const red = MT.rect(400, 400, 160, 60, { fill: C.red });
+MT.fade(red, 6, 0.5);
+const orange = MT.rect(560, 400, 160, 60, { fill: C.orange });
+MT.fade(orange, 6, 0.5);
+const yellow = MT.rect(720, 400, 160, 60, { fill: C.yellow });
+MT.fade(yellow, 6, 0.5);
+const green = MT.rect(880, 400, 160, 60, { fill: C.green });
+MT.fade(green, 6, 0.5);
+const blue = MT.rect(1040, 400, 160, 60, { fill: C.blue });
+MT.fade(blue, 6, 0.5);
+const violet = MT.rect(1200, 400, 160, 60, { fill: C.purple });
+MT.fade(violet, 6, 0.5);
+const lightText = MT.T('Sunlight contains all colors of the rainbow', 960, 500, { size: 36, color: C.dim });
+MT.fade(lightText, 6, 0.5);
+
+// t=9s: Arrow pointing from sun to Earth with 'white light' label
+MT.out([sunlight, red, orange, yellow, green, blue, violet, lightText], 8.5, 0.5, {y: -16});
+const sun2 = MT.circ(400, 430, 40, { fill: C.amber });
+MT.pop(sun2, 9, 0.5);
+const arrow = MT.arrow(450, 430, 850, 430, { color: C.dim, w: 3 });
+MT.fade(arrow.g, 9, 0.5);
+const earth2 = MT.circ(900, 430, 60, { fill: C.green });
+MT.fade(earth2, 9, 0.5);
+const whiteLight = MT.T('White Light', 675, 380, { size: 36, color: C.dim });
+MT.fade(whiteLight, 9, 0.5);
+
+// t=12s: Show atmosphere around Earth
+const atmosphere = MT.circ(900, 430, 80, { fill: C.sky, opacity: 0.3 });
+MT.fade(atmosphere, 12, 0.5);
+const atmosphereText = MT.T('Earth\'s Atmosphere', 900, 350, { size: 36, color: C.dim });
+MT.fade(atmosphereText, 12, 0.5);
+
+// t=15s: Show blue light scattering
+const blueRay = MT.curve(900, 430, 200, 100, t => Math.sin(t * 2), -1, 1, { color: C.blue, w: 4 });
+MT.draw(blueRay, 15, 1.5);
+const scatterText = MT.T('Blue light scatters in all directions', 900, 550, { size: 36, color: C.blue });
+MT.fade(scatterText, 16, 0.5);
+
+// t=19s: Show why sky appears blue
+MT.out([sun2, arrow.g, earth2, whiteLight, atmosphere, atmosphereText, blueRay, scatterText], 18.5, 0.5, {y: -16});
+const skyBlue = MT.rect(120, 80, 1800, 880, { fill: C.sky });
+MT.fade(skyBlue, 19, 0.5);
+const sun3 = MT.circ(400, 430, 40, { fill: C.amber });
+MT.pop(sun3, 19, 0.5);
+const earth3 = MT.circ(900, 430, 60, { fill: C.green });
+MT.fade(earth3, 19, 0.5);
+const atmosphere2 = MT.circ(900, 430, 80, { fill: C.sky, opacity: 0.3 });
+MT.fade(atmosphere2, 19, 0.5);
+const blueScatter = MT.curve(900, 430, 200, 100, t => Math.sin(t * 2), -1, 1, { color: C.blue, w: 4 });
+MT.draw(blueScatter, 19, 1.5);
+const blueEye = MT.circ(1400, 300, 20, { fill: C.blue });
+MT.fade(blueEye, 21, 0.5);
+const blueToEye = MT.line(1100, 430, 1400, 300, { color: C.blue, w: 3 });
+MT.fade(blueToEye, 21, 0.5);
+const explanation = MT.T('We see blue because blue light scatters toward our eyes', 960, 600, { size: 36, color: C.dim });
+MT.fade(explanation, 22, 0.5);
+
+// t=26s: Final summary
+MT.out([skyBlue, sun3, earth3, atmosphere2, blueScatter, blueEye, blueToEye, explanation], 25.5, 0.5, {y: -16});
+const summary = MT.rect(400, 300, 1120, 400, { rx: 20, fill: C.panel });
+MT.pop(summary, 26, 0.5);
+const title = MT.T('Why is the sky blue?', 960, 380, { size: 44, color: C.ink });
+MT.fade(title, 26.5, 0.5);
+const point1 = MT.T('1. Sunlight contains all colors', 960, 480, { size: 36, color: C.dim });
+MT.fade(point1, 28, 0.5);
+const point2 = MT.T('2. Blue light scatters more than other colors', 960, 540, { size: 36, color: C.dim });
+MT.fade(point2, 30, 0.5);
+const point3 = MT.T('3. Scattered blue light reaches our eyes from all directions', 960, 600, { size: 36, color: C.dim });
+MT.fade(point3, 32, 0.5);
+const conclusion = MT.T('This is why our sky appears blue!', 960, 680, { size: 40, color: C.blue });
+MT.land(conclusion, 34, 0.5);
+
+// Hold final state
+MT.frame(40, 5, () => {});
+
+MT.ready();
+</script></body></html>

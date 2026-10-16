@@ -1,0 +1,16 @@
+[
+ {
+  "id": "pack_mvab4bij",
+  "title": "Why is the Sky Blue?",
+  "subtitle": "A colorful adventure for curious kids",
+  "chapters": 2,
+  "created": 1792116036218
+ },
+ {
+  "id": "nn-video",
+  "title": "How does a machine learn to read?",
+  "subtitle": "Pixels, neurons, layers, cost, descent, backprop — a neural net built from scratch",
+  "chapters": 12,
+  "created": 0
+ }
+]

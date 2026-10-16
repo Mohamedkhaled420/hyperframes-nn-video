@@ -1,0 +1,76 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0b0e14;overflow:hidden}svg{display:block}</style>
+</head><body>
+<script src="/vendor/motion.js"></script>
+<script>
+MT.scene({duration:55});
+const C=MT.C;
+MT.heading('Chapter 3 · Layers','Stack neurons, share weights');
+
+/* columns: 7, 6, 5, 4 nodes */
+const cols=[7,6,5,4],cx=[420,820,1220,1620],gap=120,r=26;
+const layers=cols.map((n,i)=>MT.layer(cx[i],330,n,gap,r,{parent:undefined}));
+const lgs=layers.map(L=>L.g);
+MT.stag(lgs,2.0,0.4,(g)=>MT.pop(g,0,0.5));
+/* connections (6.0) */
+const connAll=MT.G();const conns=[];
+for(let i=0;i<3;i++){
+  layers[i].ns.forEach(a=>layers[i+1].ns.forEach(b=>{
+    const ln=MT.line(cx[i]+r,parseFloat(a.getAttribute('cy')),cx[i+1]-r,parseFloat(b.getAttribute('cy')),{color:C.line,w:1.6,parent:connAll,opacity:0.85});
+    ln.setAttribute('opacity',0);conns.push(ln);
+  }));
+}
+MT.stag(conns,6.0,0.006,(el)=>MT.fade(el,0,0.3));
+/* column labels (10.0) */
+const labels=['pixels','small strokes','parts','digits'];
+const labs=labels.map((s,i)=>MT.T(s,cx[i],830,{size:32,color:C.dim}));
+MT.stag(labs,10.0,0.25,(el)=>MT.fade(el,0,0.4,{y:10}));
+/* part icons drawn inside "parts" neurons (23.2) */
+const iconG=MT.G();
+const icons=[
+  p=>MT.circ(0,0,15,{stroke:C.yellow,w:4,parent:p}),                    // loop
+  p=>MT.line(0,-18,0,18,{color:C.yellow,w:4,parent:p}),                 // stem
+  p=>MT.pth('M-14 12 A16 16 0 1 1 12 -6',{color:C.yellow,w:4,parent:p}),// hook
+  p=>MT.line(-13,13,13,-13,{color:C.yellow,w:4,parent:p})               // diagonal
+];
+layers[2].ns.forEach((n,i)=>{
+  const icx=parseFloat(n.getAttribute('cx')),icy=parseFloat(n.getAttribute('cy'));
+  const g=MT.G(iconG);g.setAttribute('transform',`translate(${icx} ${icy})`);
+  icons[i%4](g);
+  MT.fade(g,23.2+i*0.14,0.4);
+});
+/* output labels 4 7 8 9 (24.0) */
+const outs=['4','7','8','9'];
+const olabs=outs.map((s,i)=>MT.T(s,cx[3]+70,330+(1.5-i)*gap,{size:34,color:C.ink,anchor:'start',w:600}));
+MT.stag(olabs,24.0,0.12,(el)=>MT.fade(el,0,0.35,{x:-10}));
+/* golden reads: loop+stem → 9, loop+loop → 8 (29.6) */
+function hline(a,b,color,t){
+  const ln=MT.line(cx[2]+r,parseFloat(a.getAttribute('cy')),cx[3]-r,parseFloat(b.getAttribute('cy')),{color,w:5});
+  ln.setAttribute('opacity',0);MT.fade(ln,t,0.4);MT.draw(ln,t,0.4);return ln;
+}
+const gold=[hline(layers[2].ns[0],layers[3].ns[0],C.amber,29.6),
+            hline(layers[2].ns[1],layers[3].ns[1],C.amber,29.9)];
+const nine=MT.T('loop + stem  →  9',cx[3]-40,120,{size:34,color:C.amber});
+const eight=MT.T('loop + loop  →  8',cx[3]-40,170,{size:34,color:C.amber});
+MT.fade(nine,30.4,0.4,{x:12});MT.fade(eight,30.7,0.4,{x:12});
+/* hidden bracket (35.0) */
+const brG=MT.G();
+const b1=MT.line(cx[1]-60,900,cx[1]-60,910,{color:C.dim,w:2.5,parent:brG});
+const b2=MT.line(cx[1]-60,905,cx[2]+60,905,{color:C.dim,w:2.5,parent:brG});
+const b3=MT.line(cx[2]+60,900,cx[2]+60,910,{color:C.dim,w:2.5,parent:brG});
+const bL=MT.T('hidden layers',(cx[1]+cx[2])/2,950,{size:34,color:C.dim});
+MT.fade(brG,35.0,0.5,{y:8});
+/* orange note (41.4) */
+const note=MT.T('the real story is messier — we check it in Chapter 10',960,880,{size:36,color:C.orange});
+MT.fade(note,41.4,0.6,{y:10});
+const all1=[...lgs,connAll,...labs,iconG,...olabs];
+MT.out(all1,41.2,0.5,{y:-14});
+MT.out([...gold,nine,eight,brG,bL],41.2,0.5,{y:-14});
+/* summary (47.2) */
+const sum=MT.T('a network = neurons in layers, joined by weights',960,470,{size:56,w:600});
+MT.wipe(sum,47.2,0.8);
+const sum2=MT.T('nothing more',960,570,{size:38,color:C.dim});
+MT.fade(sum2,48.8,0.5,{y:8});
+
+MT.ready();
+</script></body></html>

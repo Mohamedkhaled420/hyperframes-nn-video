@@ -1,0 +1,787 @@
+     1→     1→<p align="center">
+     2→     2→  <picture>
+     3→     3→    <source media="(prefers-color-scheme: dark)" srcset="assets/monty-dark.svg">
+     4→     4→    <img src="assets/monty-light.svg" alt="Monty the Clapper — the official mascot of OpenMontage" width="200">
+     5→     5→  </picture>
+     6→     6→</p>
+     7→     7→
+     8→     8→<p align="center"><sub><em>Monty the Clapper — the official mascot of OpenMontage</em></sub></p>
+     9→     9→
+    10→    10→<h1 align="center">OpenMontage</h1>
+    11→    11→
+    12→    12→<p align="center"><strong>The first open-source, agentic video production system.</strong></p>
+    13→    13→
+    14→    14→<p align="center">
+    15→    15→  <a href="https://openmontage.video"><img src="https://img.shields.io/badge/Website-openmontage.video-d14a28?style=for-the-badge" alt="openmontage.video"></a>
+    16→    16→</p>
+    17→    17→
+    18→    18→<p align="center">
+    19→    19→  <a href="#start-from-a-video-you-already-love">Paste A Video</a> &nbsp;·&nbsp;
+    20→    20→  <a href="#quick-start">Quick Start</a> &nbsp;·&nbsp;
+    21→    21→  <a href="#try-these-prompts">Try These Prompts</a> &nbsp;·&nbsp;
+    22→    22→  <a href="#pipelines">Pipelines</a> &nbsp;·&nbsp;
+    23→    23→  <a href="#how-it-works">How It Works</a> &nbsp;·&nbsp;
+    24→    24→  <a href="#sponsors">Sponsors</a> &nbsp;·&nbsp;
+    25→    25→  <a href="docs/PROVIDERS.md">Providers</a> &nbsp;·&nbsp;
+    26→    26→  <a href="docs/PR_REVIEW_GUIDE.md">Review Guide</a> &nbsp;·&nbsp;
+    27→    27→  <a href="AGENT_GUIDE.md">Agent Guide</a>
+    28→    28→</p>
+    29→    29→
+    30→    30→<p align="center">
+    31→    31→  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3-blue.svg" alt="License"></a>
+    32→    32→</p>
+    33→    33→
+    34→    34→<p align="center">
+    35→    35→  <a href="https://github.com/trending">
+    36→    36→    <picture>
+    37→    37→      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/repo-of-the-day-dark.svg">
+    38→    38→      <img alt="🏆 #1 Repository of the Day on GitHub Trending" src=".github/assets/repo-of-the-day-light.svg" height="60">
+    39→    39→    </picture>
+    40→    40→  </a>
+    41→    41→</p>
+    42→    42→
+    43→    43→<p align="center"><strong>Follow The Build</strong></p>
+    44→    44→
+    45→    45→<p align="center">
+    46→    46→  <a href="https://www.youtube.com/@OpenMontage"><img src="https://img.shields.io/badge/YouTube-%40OpenMontage-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"></a>
+    47→    47→  <a href="https://x.com/calesthioailabs"><img src="https://img.shields.io/badge/X-%40calesthioailabs-111111?style=for-the-badge&logo=x&logoColor=white" alt="X"></a>
+    48→    48→  <a href="https://github.com/calesthio/OpenMontage/discussions"><img src="https://img.shields.io/badge/Community-GitHub%20Discussions-0b1220?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Discussions"></a>
+    49→    49→</p>
+    50→    50→
+    51→    51→## Sponsors
+    52→    52→
+    53→    53→> Want to support OpenMontage? [Sponsor the project](https://github.com/sponsors/calesthio).
+    54→    54→
+    55→    55→<details open>
+    56→    56→<summary>Click to collapse</summary>
+    57→    57→
+    58→    58→<table>
+    59→    59→<tr>
+    60→    60→<td width="180" align="center"><a href="https://bloome.im/app?ref=calesthio&utm_medium=github&utm_source=calesthio-OpenMontage-ivor-202607"><img src="assets/sponsors/bloome.png" alt="Bloome" width="150"></a></td>
+    61→    61→<td><strong>Bloome</strong> lets multiple AI agents (Claude, ChatGPT, DeepSeek, and more) collaborate in one conversation for agentic video pipelines. It has zero setup, runs in the cloud, works on web and mobile, and lets you share a configured agent with your whole team. <strong><a href="https://bloome.im/app?ref=calesthio&utm_medium=github&utm_source=calesthio-OpenMontage-ivor-202607">Try Bloome</a></strong>.</td>
+    62→    62→</tr>
+    63→    63→<tr>
+    64→    64→<td width="180" align="center"><a href="https://www.atlascloud.ai/coding-plan"><img src="assets/sponsors/atlas-cloud.png" alt="Atlas Cloud" width="150"></a></td>
+    65→    65→<td><strong>Atlas Cloud</strong> is a full-modal AI inference platform that gives developers a single AI API for video generation, image generation, and LLM APIs. Instead of managing multiple vendor integrations, you connect once and get unified access to 300+ curated models across all modalities. Check out Atlas Cloud's new <a href="https://www.atlascloud.ai/coding-plan">coding plan</a> promotion for more budget-friendly API access.</td>
+    66→    66→</tr>
+    67→    67→</table>
+    68→    68→
+    69→    69→</details>
+    70→    70→
+    71→    71→---
+    72→    72→
+    73→    73→Turn your AI coding assistant into a full video production studio. Describe what you want in plain language — your agent handles research, scripting, asset generation, editing, and final composition.
+    74→    74→
+    75→    75→**Important distinction:** OpenMontage can make image-based videos, but it can also make a real **video video** for free/open-source workflows: the agent builds a corpus from free stock footage and open archives, retrieves actual motion clips, edits them into a timeline, and renders a finished piece. That is not the usual "animate a handful of stills and call it video" trick.
+    76→    76→
+    77→    77→<div align="center">
+    78→    78→  <video src="https://github.com/user-attachments/assets/f77ce7a4-68b8-4f94-a287-e94bf50a32e1" width="100%" controls></video>
+    79→    79→</div>
+    80→    80→
+    81→    81→> **"SIGNAL FROM TOMORROW"** — a cinematic sci-fi trailer fully produced through OpenMontage: concept, script, scene plan, Veo-generated motion clips, soundtrack, and Remotion composition.
+    82→    82→
+    83→    83→<div align="center">
+    84→    84→  <video src="https://github.com/user-attachments/assets/8daca07f-cdf8-4bec-89c3-9dc2176363fa" width="100%" controls></video>
+    85→    85→</div>
+    86→    86→
+    87→    87→> **"THE LAST BANANA"** — a 60-second Pixar-style animated short about a lonely banana who finds friendship with a kiwi. 6 Kling v3-generated motion clips (via fal.ai), Google Chirp3-HD narration, royalty-free piano music, TikTok-style word-level captions, and Remotion composition. Total cost: **$1.33**.
+    88→    88→
+    89→    89→<div align="center">
+    90→    90→  <video src="https://github.com/user-attachments/assets/0a71333b-9b05-40b5-8800-a0a679e9b433" width="100%" controls></video>
+    91→    91→</div>
+    92→    92→
+    93→    93→> **"OBJECTS IN OVERDRIVE"** — a 54-second, music-driven 3D showcase featuring ten objects with distinct choreography: gravity-shifting furniture, frozen car drifts, cloth impacts, refractive lenses, moving gears, an acrobatic robot, and more. Custom Blender animation and physics, kinetic typography, and a phonk soundtrack. Rendered with Blender Eevee/Cycles and assembled with FFmpeg. No narration.
+    94→    94→
+    95→    95→<div align="center">
+    96→    96→  <video src="https://github.com/user-attachments/assets/88962725-97a0-4aac-a08e-34aaa9d8bb92" width="100%" controls></video>
+    97→    97→</div>
+    98→    98→
+    99→    99→> **"Reimagine Your Universe"** — a 50-second vertical transformation film in which one visual idea moves across objects, eras, materials, and scale. Five generated motion scenes, sparse Google Chirp narration, a Pixabay score, and a bespoke HyperFrames composition turn separate clips into one authored cinematic journey. Total cost: **about $4**.
+   100→   100→
+   101→   101→<div align="center">
+   102→   102→  <video src="https://github.com/user-attachments/assets/c947070c-95ee-4d73-8d76-0bd3dc4826eb" width="100%" controls></video>
+   103→   103→</div>
+   104→   104→
+   105→   105→> **"Products Come to Life"** — a 60-second product film built from approved hero stills. Five hard-surface products separate into their own engineering and reassemble, with each still pinned as the first and last frame so the model invents motion without losing product identity. Image-to-video generation, bespoke sound, narration, and a custom composition complete the film.
+   106→   106→
+   107→   107→<div align="center">
+   108→   108→  <video src="https://github.com/user-attachments/assets/6815c2d2-17a3-4057-b9a0-893fc9c05bef" width="100%" controls></video>
+   109→   109→</div>
+   110→   110→
+   111→   111→> **"Imagine the Possibilities with OpenMontage"** — seven generated worlds collected into one music-only showcase. Three image models supply campaign, fashion, and miniature-world artwork; four video models expand the journey through architecture, material transformation, a living greenhouse, and a creature encounter. OpenMontage animates the stills, edits the motion, unifies the soundtrack, and closes with Monty the Clapper. Source generation cost: **about $5**.
+   112→   112→
+   113→   113→<div align="center">
+   114→   114→  <video src="https://github.com/user-attachments/assets/a524f02a-2d18-42ca-a2c4-d3dc09503546" width="100%" controls></video>
+   115→   115→</div>
+   116→   116→
+   117→   117→> **"How Salt Made History"** — a 100-second cinematic documentary about the mineral that funded empires, shaped trade routes, sparked revolutions, and gave us the word “salary.” Real-world footage is woven together with original narration and hand-authored motion graphics for its etched title, etymology reveal, animated maps, historical timeline, and closing thesis.
+   118→   118→
+   119→   119→<div align="center">
+   120→   120→  <video src="https://github.com/user-attachments/assets/61919fb8-9dd1-446c-b833-dca82f6a3af8" width="100%" controls></video>
+   121→   121→</div>
+   122→   122→
+   123→   123→> **"One Prompt Built This Complete 3D World"** — a continuous 60-second journey through one coherent, editable fantasy world. Distinct terrain regions, an inhabited village, waterways, ruins, dense vegetation, and a late hero-landmark reveal are assembled from textured 3D assets, then brought together with cinematic lighting, atmospheric music, and a planned camera path.
+   124→   124→
+   125→   125→<p align="center">
+   126→   126→  <a href="https://www.youtube.com/@OpenMontage?sub_confirmation=1"><strong>Subscribe to @OpenMontage on YouTube</strong></a> to see new videos as they ship — every video includes the full prompt, pipeline, tools used, and cost so you can reproduce it yourself.
+   127→   127→</p>
+   128→   128→
+   129→   129→---
+   130→   130→
+   131→   131→## Start From A Video You Already Love
+   132→   132→
+   133→   133→Starting from a reference video is often faster than starting from a blank prompt.
+   134→   134→
+   135→   135→OpenMontage can start from a **YouTube video, Short, Reel, TikTok, or local clip** and turn it into a grounded production plan:
+   136→   136→
+   137→   137→1. **Paste a reference video**
+   138→   138→2. **The agent analyzes transcript, pacing, scenes, keyframes, and style**
+   139→   139→3. **You get 2-3 differentiated concepts, an honest tool path, cost estimates, and a sample before full production**
+   140→   140→
+   141→   141→```text
+   142→   142→"Here's a YouTube Short I love. Make me something like this, but about quantum computing."
+   143→   143→```
+   144→   144→
+   145→   145→What you get back is not "best guess prompt spaghetti." You get:
+   146→   146→
+   147→   147→- **What it keeps** from the reference: pacing, hook style, structure, tone
+   148→   148→- **What it changes**: topic, visual treatment, angle, narration approach
+   149→   149→- **What it will cost** at your target duration, before asset generation starts
+   150→   150→- **What it will actually look like** with your currently available tools
+   151→   151→
+   152→   152→Works with **Claude Code, Cursor, Copilot, Windsurf, Codex** — any AI coding assistant that can read files and run code.
+   153→   153→
+   154→   154→---
+   155→   155→
+   156→   156→## Watch It Happen — The Backlot Living Storyboard
+   157→   157→
+   158→   158→Chat tells you what the agent *said*. **Backlot shows you what the production is actually doing** — a local board that fills itself in as the pipeline runs. Stages light up, the script lands as a screenplay page, scene cards shimmer while assets generate, and every provider decision and dollar spent is on the wall.
+   159→   159→
+   160→   160→When a production starts, the agent opens it for you automatically. No setup, no reporting — the board derives everything from the project files the pipeline already writes.
+   161→   161→
+   162→   162→<p align="center"><img src="docs/images/backlot/board-live.png" alt="Backlot live board — assets generating" width="920"></p>
+   163→   163→
+   164→   164→**The storyboard is now a real approval gate.** Asset generation pauses on a scene-by-scene contact sheet — takes, prompts, per-asset cost, quality scores — so you approve the visuals *before* the render, not after it's too late:
+   165→   165→
+   166→   166→<p align="center"><img src="docs/images/backlot/storyboard.png" alt="Backlot storyboard — filmstrip with takes and renders" width="920"></p>
+   167→   167→
+   168→   168→Creative gates hold until you answer. The board shows what's waiting and why; you reply in chat:
+   169→   169→
+   170→   170→<p align="center"><img src="docs/images/backlot/script-gate.png" alt="Backlot script gate — awaiting approval" width="920"></p>
+   171→   171→
+   172→   172→Every production on your machine, live-first, in the library:
+   173→   173→
+   174→   174→<p align="center"><img src="docs/images/backlot/library.png" alt="Backlot library" width="920"></p>
+   175→   175→
+   176→   176→```bash
+   177→   177→python -m backlot open                  # the library — every project on disk
+   178→   178→python -m backlot open <project-id>     # one production's live board
+   179→   179→python scripts/backlot_simulate_run.py  # no production yet? watch a simulated one live
+   180→   180→```
+   181→   181→
+   182→   182→And when a run is done, hit **▶ REPLAY RUN** — the whole production replays from its timestamps, scrubbable end to end. See [`backlot/README.md`](backlot/README.md) for how it works.
+   183→   183→
+   184→   184→---
+   185→   185→
+   186→   186→## Quick Start
+   187→   187→
+   188→   188→### Prerequisites
+   189→   189→
+   190→   190→- **Python 3.10+** — [python.org](https://www.python.org/downloads/)
+   191→   191→- **FFmpeg** — `brew install ffmpeg` / `sudo apt install ffmpeg` / [ffmpeg.org](https://ffmpeg.org/download.html)
+   192→   192→- **Node.js 18+** — [nodejs.org](https://nodejs.org/)
+   193→   193→- **An AI coding assistant** — Claude Code, Cursor, Copilot, Windsurf, or Codex
+   194→   194→
+   195→   195→### Install & Run
+   196→   196→
+   197→   197→```bash
+   198→   198→git clone https://github.com/calesthio/OpenMontage.git
+   199→   199→cd OpenMontage
+   200→   200→make setup
+   201→   201→```
+   202→   202→
+   203→   203→Open the project in your AI coding assistant and tell it what you want:
+   204→   204→
+   205→   205→```
+   206→   206→"Make a 60-second animated explainer about how neural networks learn"
+   207→   207→```
+   208→   208→
+   209→   209→Or if you want the real-footage path:
+   210→   210→
+   211→   211→```text
+   212→   212→"Make a 75-second documentary montage about city life in the rain. Use real footage only, no narration, elegiac tone, with music."
+   213→   213→```
+   214→   214→
+   215→   215→That's it. The agent researches your topic with live web search, generates AI images, writes and narrates the script with voice direction, finds royalty-free background music automatically, burns in word-level subtitles, and renders the final video. Before you see anything, the system runs a multi-point self-review — ffprobe validation, frame sampling, audio level analysis, delivery promise verification, and subtitle checks. Every provider selection is scored across 7 dimensions with an auditable decision log. Every creative decision gets your approval.
+   216→   216→
+   217→   217→> **No `make`?** macOS/Linux: `python3 -m venv .venv && source .venv/bin/activate && python -m pip install -r requirements.txt && cd remotion-composer && npm install && cd .. && python -m pip install piper-tts && cp .env.example .env`
+   218→   218→>
+   219→   219→> Windows PowerShell: `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; python -m pip install -r requirements.txt; cd remotion-composer; npm install; cd ..; python -m pip install piper-tts; Copy-Item .env.example .env`
+   220→   220→>
+   221→   221→> **Windows:** If `npm install` fails with `ERR_INVALID_ARG_TYPE`, use `npx --yes npm install` instead.
+   222→   222→
+   223→   223→### If You're An OpenClaw Agent Reading This, Congratulations: You Probably Passed The Turing Test
+   224→   224→
+   225→   225→This repo is built for agentic operation. If you're an OpenClaw-style agent, here is the shortest path to becoming useful fast:
+   226→   226→
+   227→   227→1. **Read the contract first**
+   228→   228→   Start with [`AGENT_GUIDE.md`](AGENT_GUIDE.md), then [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md).
+   229→   229→2. **Do not improvise the production workflow**
+   230→   230→   OpenMontage is pipeline-driven. Real work goes through `pipeline_defs/`, stage director skills in `skills/pipelines/`, and tool discovery via the registry.
+   231→   231→3. **Check the actual capability envelope**
+   232→   232→   Run:
+   233→   233→   ```bash
+   234→   234→   python -c "from tools.tool_registry import registry; import json; registry.discover(); print(json.dumps(registry.support_envelope(), indent=2))"
+   235→   235→   python -c "from tools.tool_registry import registry; import json; registry.discover(); print(json.dumps(registry.provider_menu(), indent=2))"
+   236→   236→   ```
+   237→   237→4. **Treat every video request as a pipeline selection problem**
+   238→   238→   Pick the right pipeline first, then read the manifest, then read the stage skill, then use tools.
+   239→   239→
+   240→   240→### Add API Keys (optional — more keys = more tools)
+   241→   241→
+   242→   242→```bash
+   243→   243→# .env — every key is optional, add what you have
+   244→   244→
+   245→   245→# Image + video gateway:
+   246→   246→FAL_KEY=your-key               # FLUX images + Google Veo, Kling, MiniMax video + Recraft images
+   247→   247→ATLASCLOUD_API_KEY=your-key    # Atlas Cloud — Seedream/Nano Banana/GPT Image + Kling/Seedance/Hailuo video
+   248→   248→
+   249→   249→# Kling official direct API:
+   250→   250→KLING_API_KEY=your-key         # Official Kling video, image, TTS, avatar, lip sync
+   251→   251→KLING_API_BASE_URL=            # Optional; default Singapore API endpoint
+   252→   252→
+   253→   253→# Free stock media:
+   254→   254→PEXELS_API_KEY=your-key        # Free stock footage and images
+   255→   255→PIXABAY_API_KEY=your-key       # Free stock footage and images
+   256→   256→UNSPLASH_ACCESS_KEY=your-key   # Free stock images
+   257→   257→
+   258→   258→# Music:
+   259→   259→SUNO_API_KEY=your-key          # Full songs, instrumentals, any genre
+   260→   260→
+   261→   261→# Voice & images:
+   262→   262→ELEVENLABS_API_KEY=your-key    # Premium TTS, AI music, sound effects
+   263→   263→OPENAI_API_KEY=your-key        # OpenAI TTS, GPT Image 2 images
+   264→   264→XAI_API_KEY=your-key           # xAI Grok image edits/generation + Grok video generation
+   265→   265→GOOGLE_API_KEY=your-key        # Google Imagen images, Google TTS (700+ voices)
+   266→   266→
+   267→   267→# More video providers:
+   268→   268→ARK_API_KEY=your-key           # Volcengine Ark direct — Seedance 2.0 Standard/Fast/Mini
+   269→   269→HEYGEN_API_KEY=your-key        # HeyGen — VEO, Sora, Runway, Kling via single gateway
+   270→   270→RUNWAY_API_KEY=your-key        # Runway Gen-4 direct
+   271→   271→```
+   272→   272→
+   273→   273→<details>
+   274→   274→<summary><strong>Have a GPU? Unlock free local video generation</strong></summary>
+   275→   275→
+   276→   276→```bash
+   277→   277→make install-gpu
+   278→   278→
+   279→   279→# Then add to .env:
+   280→   280→VIDEO_GEN_LOCAL_ENABLED=true
+   281→   281→VIDEO_GEN_LOCAL_MODEL=wan2.2-ti2v-5b  # or wan2.1-1.3b, wan2.1-14b, hunyuan-1.5, ltx2-local, cogvideo-5b
+   282→   282→```
+   283→   283→
+   284→   284→</details>
+   285→   285→
+   286→   286→---
+   287→   287→
+   288→   288→## What You Get With Zero API Keys
+   289→   289→
+   290→   290→You don't need paid API keys to make real videos. Out of the box, `make setup` gives you:
+   291→   291→
+   292→   292→| Capability | Free Tool | What It Does |
+   293→   293→|-----------|-----------|-------------|
+   294→   294→| **Narration** | Piper TTS | Free offline text-to-speech — real human-sounding narration |
+   295→   295→| **Open footage** | Archive.org + NASA + Wikimedia Commons | Free/open archival footage, educational media, and documentary texture |
+   296→   296→| **Extra stock** | Pexels + Unsplash + Pixabay | Free stock footage/images (developer keys are free to get) |
+   297→   297→| **Composition (React)** | Remotion | React-based rendering — spring-animated image scenes, text cards, stat cards, charts, TikTok-style word-level captions, TalkingHead |
+   298→   298→| **Composition (HTML/GSAP)** | HyperFrames | HTML/CSS/GSAP rendering — kinetic typography, product promos, launch reels, registry blocks, website-to-video, rigged SVG character animation |
+   299→   299→| **Post-production** | FFmpeg | Encoding, subtitle burn-in, audio mixing, color grading |
+   300→   300→| **Subtitles** | Built-in | Auto-generated captions with word-level timing |
+   301→   301→
+   302→   302→OpenMontage picks between Remotion and HyperFrames at proposal time (locked as `render_runtime`). Remotion is the default for data-driven explainers and anything using the existing React scene stack; HyperFrames is the default for motion-graphics-heavy briefs that express naturally as HTML + GSAP, including the `character-animation` pipeline's SVG/GSAP rig output. See `skills/core/hyperframes.md` for the full decision matrix.
+   303→   303→
+   304→   304→**Two free-ish paths:**
+   305→   305→
+   306→   306→- **Image-based video:** Piper narrates your script, images provide the visuals, and Remotion animates them into a polished edit.
+   307→   307→- **Local character animation:** SVG rigs, pose libraries, GSAP timelines, and HyperFrames render cartoon character acting to `projects/<project-name>/renders/final.mp4`.
+   308→   308→- **Real-footage video:** the documentary montage pipeline builds a CLIP-searchable corpus from Archive.org, NASA, Wikimedia Commons, and optional free-key sources like Pexels and Unsplash, then cuts together actual motion footage into a finished video.
+   309→   309→
+   310→   310→If you want the second one, prompt for a **documentary montage**, **tone poem**, or **stock-footage collage**, and explicitly say **use real footage only**.
+   311→   311→
+   312→   312→---
+   313→   313→
+   314→   314→## Try These Prompts
+   315→   315→
+   316→   316→Copy any of these into your AI coding assistant after setup. Each one runs a full production pipeline.
+   317→   317→
+   318→   318→### Start from a reference video
+   319→   319→
+   320→   320→> "Here's a YouTube short I love. Make me something like this, but about CRISPR for high school students."
+   321→   321→
+   322→   322→> "Analyze this Reel and give me 3 original variants I could make for my own product launch."
+   323→   323→
+   324→   324→> "I like the pacing and hook in this video. Keep that energy, but turn it into a 45-second explainer about black holes."
+   325→   325→
+   326→   326→### Zero keys needed
+   327→   327→
+   328→   328→> "Make a 45-second animated explainer about why the sky is blue"
+   329→   329→
+   330→   330→> "Create a 60-second video about the history of the internet, with narration and captions"
+   331→   331→
+   332→   332→> "Make a data-driven explainer about coffee consumption around the world"
+   333→   333→
+   334→   334→### Free real-footage documentary path
+   335→   335→
+   336→   336→> "Make a 90-second documentary montage about what a city feels like at 4am. Use real footage only, no narration, elegiac tone."
+   337→   337→
+   338→   338→> "Create a 60-second Adam-Curtis-style archival collage about 1950s consumer optimism. Prefer Archive.org and Wikimedia footage."
+   339→   339→
+   340→   340→> "Cut together a dreamlike montage about coming home in the rain using real stock footage only. Music yes, narration no."
+   341→   341→
+   342→   342→### With an image/video provider configured (~$0.15–$1.50)
+   343→   343→
+   344→   344→> "Create a 30-second Ghibli-style animated video of a magical floating library in the clouds at golden hour"
+   345→   345→
+   346→   346→> "Make a 30-second anime-style animation of an underwater temple with bioluminescent coral and ancient ruins"
+   347→   347→
+   348→   348→> "Create an animated explainer about how CRISPR gene editing works, using AI-generated visuals"
+   349→   349→
+   350→   350→> "Make a product launch teaser for a fictional smart water bottle called AquaPulse"
+   351→   351→
+   352→   352→### Full setup (~$1–$3)
+   353→   353→
+   354→   354→> "Create a cinematic 30-second trailer for a sci-fi concept: humanity receives a warning from 1000 years in the future"
+   355→   355→
+   356→   356→> "Make a 90-second animated explainer about quantum computing for middle school students, with a fun narrator voice and custom soundtrack"
+   357→   357→
+   358→   358→Want more? See the full **[Prompt Gallery](PROMPT_GALLERY.md)** for tested prompts with expected costs and output examples, or run `make demo` to render zero-key demo videos instantly.
+   359→   359→
+   360→   360→---
+   361→   361→
+   362→   362→## Pipelines
+   363→   363→
+   364→   364→Each pipeline is a complete production workflow, from idea to finished video.
+   365→   365→
+   366→   366→| Pipeline | What It Produces | Best For |
+   367→   367→|----------|-----------------|----------|
+   368→   368→| **Animated Explainer** | AI-generated explainer with research, narration, visuals, music | Educational content, tutorials, topic breakdowns |
+   369→   369→| **Animation** | Motion graphics, kinetic typography, animated sequences | Social media, product demos, abstract concepts |
+   370→   370→| **Avatar Spokesperson** | Avatar-driven presenter videos | Corporate comms, training, announcements |
+   371→   371→| **Cinematic** | Trailer, teaser, and mood-driven edits | Brand films, teasers, promotional content |
+   372→   372→| **Clip Factory** | Batch of ranked short-form clips from one long source | Repurposing long content for social media |
+   373→   373→| **Documentary Montage** | Thematic montage cut from a CLIP-indexed corpus of free stock footage and open archives (Pexels, Archive.org, NASA, Wikimedia, Unsplash) | Video essays, mood pieces, retrieval-first B-roll edits, real-footage videos without paid generation APIs |
+   374→   374→| **Hybrid** | Source footage + AI-generated support visuals | Enhancing existing footage with graphics |
+   375→   375→| **Localization & Dub** | Subtitle, dub, and translate existing video | Multi-language distribution |
+   376→   376→| **Podcast Repurpose** | Podcast highlights to video | Podcast marketing, audiogram videos |
+   377→   377→| **Screen Demo** | Polished software screen recordings and walkthroughs | Product demos, tutorials, documentation |
+   378→   378→| **Talking Head** | Footage-led speaker videos | Presentations, vlogs, interviews |
+   379→   379→
+   380→   380→Every pipeline follows the same structured flow:
+   381→   381→
+   382→   382→```
+   383→   383→research -> proposal -> script -> scene_plan -> assets -> edit -> compose
+   384→   384→```
+   385→   385→
+   386→   386→Each stage has a dedicated **director skill** — a markdown instruction file that teaches the agent exactly how to execute that stage. The agent reads the skill, uses the tools, self-reviews, checkpoints state, and asks for human approval at creative decision points.
+   387→   387→
+   388→   388→> **Web research is a first-class stage.** Before writing a single word of script, the agent searches YouTube, Reddit, Hacker News, news sites, and academic sources. It gathers data points, audience questions, trending angles, and visual references — then cites everything in a structured research brief. Your videos are grounded in real, current information, not hallucinated facts.
+   389→   389→
+   390→   390→---
+   391→   391→
+   392→   392→## Why OpenMontage?
+   393→   393→
+   394→   394→Most AI video tools give you a single clip from a prompt. OpenMontage gives you an **end-to-end production pipeline** — the same structured process a real production team follows, automated by your AI agent.
+   395→   395→
+   396→   396→Most "free AI video" stacks quietly mean "animate still images." OpenMontage can do that too, but it can also build a finished video from **real footage** pulled from free/open sources, ranked semantically, edited intentionally, and rendered as a proper timeline.
+   397→   397→
+   398→   398→Edit your own talking-head footage. Generate a fully animated explainer from scratch. Cut a 2-hour podcast into a dozen social clips. Translate and dub your content into 10 languages. Build a cinematic brand teaser from stock footage and AI-generated scenes. **If a production team can make it, OpenMontage can orchestrate it.**
+   399→   399→
+   400→   400→- **10+ production pipelines** — explainers, talking heads, screen demos, cinematic trailers, animations, podcasts, localization, documentary montages, character animation, and more
+   401→   401→- **100+ production tools** — spanning video generation, image creation, text-to-speech, music, audio mixing, subtitles, enhancement, and analysis
+   402→   402→- **60+ provider integrations** — cloud APIs, local models, stock libraries, open archives, and production runtimes behind one scored selection layer
+   403→   403→- **700+ agent skill and production-knowledge files** — pipeline directors, creative techniques, quality checklists, and deep technology knowledge packs that teach the agent how to use every tool like an expert
+   404→   404→- **Reference-driven creation** — paste a video you like and the agent turns it into a grounded, differentiated production plan instead of forcing you to invent the perfect prompt from scratch
+   405→   405→- **Real-footage documentary creation without paid video models** — build actual edited videos from free/open motion footage and archival sources, not just Ken Burns over images
+   406→   406→- **Live web research built in** — before writing a single word of script, the agent runs 15-25+ web searches across YouTube, Reddit, news sites, and academic sources to ground your video in real, current data
+   407→   407→- **Both free/local AND cloud providers** — every capability supports open-source local alternatives alongside premium APIs. Use what you have.
+   408→   408→- **No vendor lock-in** — swap providers freely. The scored selector ranks every provider across 7 dimensions (task fit, output quality, control, reliability, cost efficiency, latency, continuity) and picks the best match automatically.
+   409→   409→- **Production-grade quality gates** — delivery promise enforcement blocks slideshow-looking renders, pre-compose validation catches broken plans before wasting GPU time, and mandatory post-render self-review (ffprobe + frame extraction + audio analysis) ensures the agent never presents garbage. Every provider choice, style decision, and fallback gets logged in an auditable decision trail.
+   410→   410→- **Budget governance built in** — cost estimation before execution, spend caps, per-action approval thresholds. No surprise bills.
+   411→   411→
+   412→   412→---
+   413→   413→
+   414→   414→## How It Works
+   415→   415→
+   416→   416→OpenMontage uses an **agent-first architecture**. There is no code orchestrator. Your AI coding assistant IS the orchestrator.
+   417→   417→
+   418→   418→```
+   419→   419→You: "Make an explainer video about how black holes form"
+   420→   420→ |
+   421→   421→ v
+   422→   422→Agent reads pipeline manifest (YAML) -- stages, tools, review criteria, success gates
+   423→   423→ |
+   424→   424→ v
+   425→   425→Agent reads stage director skill (Markdown) -- HOW to execute each stage
+   426→   426→ |
+   427→   427→ v
+   428→   428→Agent calls Python tools -- scored provider selection ranks every tool across 7 dimensions
+   429→   429→ |
+   430→   430→ v
+   431→   431→Agent self-reviews using reviewer skill -- schema validation, playbook compliance, quality checks
+   432→   432→ |
+   433→   433→ v
+   434→   434→Agent checkpoints state (JSON) -- resumable, with decision log and cost snapshot
+   435→   435→ |
+   436→   436→ v
+   437→   437→Agent presents for your approval -- you stay in control at every creative decision
+   438→   438→ |
+   439→   439→ v
+   440→   440→Pre-compose validation gate -- delivery promise, slideshow risk, renderer governance
+   441→   441→ |
+   442→   442→ v
+   443→   443→Render (Remotion or FFmpeg) -- composition engine matched to visual grammar
+   444→   444→ |
+   445→   445→ v
+   446→   446→Post-render self-review -- ffprobe, frame extraction, audio analysis, promise verification
+   447→   447→ |
+   448→   448→ v
+   449→   449→Final video output -- only if self-review passes
+   450→   450→```
+   451→   451→
+   452→   452→**Python provides tools and persistence.** All creative decisions, orchestration logic, review criteria, and quality standards live in readable instruction files (YAML manifests + Markdown skills) that you can inspect and customize. Every decision is logged with alternatives considered, confidence scores, and the reasoning behind each choice.
+   453→   453→
+   454→   454→---
+   455→   455→
+   456→   456→## Architecture
+   457→   457→
+   458→   458→```
+   459→   459→OpenMontage/
+   460→   460→├── tools/              # 100+ registered production tools (the agent's hands)
+   461→   461→│   ├── video/          # 20+ generation providers + compose, stitch, trim
+   462→   462→│   ├── audio/          # 10+ speech providers + music, mixing, enhancement
+   463→   463→│   ├── graphics/       # 15+ image providers + diagrams, code snippets, math
+   464→   464→│   ├── enhancement/    # Upscale, bg remove, face enhance, color grade
+   465→   465→│   ├── analysis/       # Transcription, scene detect, frame sampling
+   466→   466→│   ├── avatar/         # Talking head, lip sync
+   467→   467→│   └── subtitle/       # SRT/VTT generation
+   468→   468→│
+   469→   469→├── pipeline_defs/      # YAML pipeline manifests (the agent's playbook)
+   470→   470→├── skills/             # Markdown skill files (the agent's knowledge)
+   471→   471→│   ├── pipelines/      # Per-pipeline stage director skills
+   472→   472→│   ├── creative/       # Creative technique skills
+   473→   473→│   ├── core/           # Core tool skills
+   474→   474→│   └── meta/           # Reviewer, checkpoint protocol
+   475→   475→│
+   476→   476→├── schemas/            # 20+ JSON Schemas (contract validation)
+   477→   477→├── styles/             # Visual style playbooks (YAML)
+   478→   478→├── remotion-composer/  # React/Remotion video composition engine
+   479→   479→├── lib/                # Core infrastructure (config, checkpoints, pipeline loader)
+   480→   480→└── tests/              # Contract tests, QA integration tests, eval harness
+   481→   481→```
+   482→   482→
+   483→   483→### Three-Layer Knowledge Architecture
+   484→   484→
+   485→   485→```
+   486→   486→Layer 1: tools/ + pipeline_defs/     "What exists" — executable capabilities + orchestration
+   487→   487→Layer 2: skills/                     "How to use it" — OpenMontage conventions and quality bars
+   488→   488→Layer 3: .agents/skills/             "How it works" — external technology knowledge packs
+   489→   489→```
+   490→   490→
+   491→   491→Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to know what's available, Layer 2 to know how OpenMontage wants it used, and Layer 3 for deep technical knowledge when needed.
+   492→   492→
+   493→   493→---
+   494→   494→
+   495→   495→## Supported Providers
+   496→   496→
+   497→   497→> **Full setup guide with pricing and free tiers:** [`docs/PROVIDERS.md`](docs/PROVIDERS.md)
+   498→   498→
+   499→   499→<details>
+   500→   500→<summary><strong>Video Generation — 20+ providers</strong></summary>
+   501→   501→
+   502→   502→| Provider | Type | Notes |
+   503→   503→|----------|------|-------|
+   504→   504→| **Kling (fal.ai)** | Cloud API | High quality, fast via fal.ai gateway |
+   505→   505→| **Kling Official** | Cloud API | Official direct API with separate `kling_official` provider |
+   506→   506→| **Atlas Cloud** | Cloud API | Unified gateway for Seedance, MiniMax, Hunyuan, and other multimodal models |
+   507→   507→| **Seedance 2.0 (Volcengine Ark)** | Cloud API | Official direct API with separate `seedance_ark` provider |
+   508→   508→| **Seedance 2.5 / 2.0** | Cloud API | Text, image, and reference-driven video workflows through supported gateways |
+   509→   509→| **Gemini Omni Flash** | Cloud API | Conversational multimodal video generation and editing |
+   510→   510→| **Runway Gen-4** | Cloud API | Cinematic quality, Gen-3 Alpha Turbo / Gen-4 Turbo / Gen-4 Aleph |
+   511→   511→| **Google Veo 3.1** | Cloud API | Premium cinematic video via Google GenAI or fal.ai |
+   512→   512→| **Grok Imagine Video** | Cloud API | Strong reference-image video and xAI-native short-form generation |
+   513→   513→| **Higgsfield** | Cloud API | Multi-model orchestrator with Soul ID for character consistency |
+   514→   514→| **MiniMax / H3** | Cloud API | Cost-effective generation, including text, image, and reference-driven H3 workflows |
+   515→   515→| **HeyGen** | Cloud API | Multi-model gateway |
+   516→   516→| **WAN 2.1 / 2.2** | Local GPU | Free local variants plus accelerated ComfyUI workflows |
+   517→   517→| **Hunyuan** | Local GPU | Free, high quality |
+   518→   518→| **CogVideo** | Local GPU | Free, 2B and 5B variants |
+   519→   519→| **LTX-Video** | Local GPU / Modal | Free locally, or self-hosted cloud |
+   520→   520→| **Pexels** | Stock | Free stock footage |
+   521→   521→| **Pixabay** | Stock | Free stock footage |
+   522→   522→| **Wikimedia Commons** | Stock | Free/open stock footage and archival video |
+   523→   523→
+   524→   524→</details>
+   525→   525→
+   526→   526→<details>
+   527→   527→<summary><strong>Image Generation — 15+ providers</strong></summary>
+   528→   528→
+   529→   529→| Provider | Type | Notes |
+   530→   530→|----------|------|-------|
+   531→   531→| **FLUX** | Cloud API | State-of-the-art quality |
+   532→   532→| **Google Imagen** | Cloud API | Imagen 4 — high-quality, multiple aspect ratios |
+   533→   533→| **Grok Imagine Image** | Cloud API | Strong image edits, style transfer, and multi-image compositing |
+   534→   534→| **GPT Image 2** | Cloud API | OpenAI's image model |
+   535→   535→| **Seedream 5.0** | Cloud API | High-fidelity text-to-image and image editing through supported gateways |
+   536→   536→| **Nano Banana 2** | Cloud API | Multimodal image generation and editing |
+   537→   537→| **Atlas Cloud** | Cloud API | Unified access to multiple image-generation model families |
+   538→   538→| **Recraft** | Cloud API | Design-focused generation |
+   539→   539→| **Kling Official** | Cloud API | Official direct API for Kling image generation and reference workflows |
+   540→   540→| **Local Diffusion** | Local GPU | Stable Diffusion, free |
+   541→   541→| **Pexels** | Stock | Free stock images |
+   542→   542→| **Pixabay** | Stock | Free stock images |
+   543→   543→| **Unsplash** | Stock | Free stock images |
+   544→   544→| **ManimCE** | Local | Mathematical animations |
+   545→   545→
+   546→   546→</details>
+   547→   547→
+   548→   548→<details>
+   549→   549→<summary><strong>Text-to-Speech — 10+ providers</strong></summary>
+   550→   550→
+   551→   551→| Provider | Type | Notes |
+   552→   552→|----------|------|-------|
+   553→   553→| **ElevenLabs** | Cloud API | Premium voice quality |
+   554→   554→| **Google TTS** | Cloud API | 700+ voices, 50+ languages — best for localization |
+   555→   555→| **Kling Official TTS** | Cloud API | Official Kling narration when a `voice_id` is known |
+   556→   556→| **OpenAI TTS** | Cloud API | Fast, affordable |
+   557→   557→| **Piper** | Local | Completely free, offline |
+   558→   558→| **Azure Speech** | Cloud API | Fast multilingual speech services |
+   559→   559→| **DashScope / Doubao / Fish Audio** | Cloud API | Additional multilingual and expressive voice options |
+   560→   560→
+   561→   561→</details>
+   562→   562→
+   563→   563→<details>
+   564→   564→<summary><strong>Music, Sound & Post-Production</strong></summary>
+   565→   565→
+   566→   566→**Music & Sound:**
+   567→   567→
+   568→   568→| Provider | Type | Notes |
+   569→   569→|----------|------|-------|
+   570→   570→| **Suno AI** | Cloud API | Full song generation with vocals, lyrics, any genre. Up to 8 minutes. |
+   571→   571→| **ElevenLabs Music** | Cloud API | AI music generation |
+   572→   572→| **ElevenLabs SFX** | Cloud API | Sound effect generation |
+   573→   573→
+   574→   574→**Post-Production (always available, always free):**
+   575→   575→
+   576→   576→| Tool | What It Does |
+   577→   577→|------|-------------|
+   578→   578→| **FFmpeg** | Video composition, encoding, subtitle burn-in, audio muxing |
+   579→   579→| **Video Stitch** | Multi-clip assembly, crossfades, picture-in-picture, spatial layouts |
+   580→   580→| **Video Trimmer** | Precision cutting and extraction |
+   581→   581→| **Audio Mixer** | Multi-track mixing, ducking, fades |
+   582→   582→| **Audio Enhance** | Noise reduction, normalization |
+   583→   583→| **Color Grade** | LUT-based color grading |
+   584→   584→| **Subtitle Gen** | SRT/VTT generation from timestamps |
+   585→   585→
+   586→   586→**Enhancement:**
+   587→   587→
+   588→   588→| Tool | What It Does |
+   589→   589→|------|-------------|
+   590→   590→| **Upscale** | Real-ESRGAN image/video upscaling |
+   591→   591→| **Background Remove** | rembg / U2Net background removal |
+   592→   592→| **Face Enhance** | Face quality enhancement |
+   593→   593→| **Face Restore** | CodeFormer / GFPGAN face restoration |
+   594→   594→
+   595→   595→**Analysis:**
+   596→   596→
+   597→   597→| Tool | What It Does |
+   598→   598→|------|-------------|
+   599→   599→| **Transcriber** | WhisperX speech-to-text with word-level timestamps |
+   600→   600→| **Scene Detect** | Automatic scene boundary detection |
+   601→   601→| **Frame Sampler** | Intelligent frame extraction |
+   602→   602→| **Video Understand** | CLIP/BLIP-2 vision-language analysis |
+   603→   603→
+   604→   604→**Avatar & Lip Sync:**
+   605→   605→
+   606→   606→| Tool | What It Does |
+   607→   607→|------|-------------|
+   608→   608→| **Talking Head** | SadTalker / MuseTalk avatar animation |
+   609→   609→| **Lip Sync** | Wav2Lip audio-driven lip synchronization |
+   610→   610→| **Kling Avatar** | Official Kling cloud avatar presenter generation |
+   611→   611→| **Kling Lip Sync** | Official Kling cloud lip-sync with explicit face selection |
+   612→   612→
+   613→   613→**Composition & Rendering:**
+   614→   614→
+   615→   615→| Engine | Type | What It Does |
+   616→   616→|--------|------|-------------|
+   617→   617→| **Remotion** | Local (Node.js) | React-based programmatic video — spring-animated image scenes, stat reveals, section titles, hero cards, TikTok-style word-by-word captions, scene transitions (fade/slide/wipe/flip), Google Fonts, audio with fade curves, and the TalkingHead avatar composition. **When no video generation providers are configured, the agent generates still images and Remotion turns them into fully animated video.** |
+   618→   618→| **HyperFrames** | Local (Node.js ≥ 22) | HTML/CSS/GSAP programmatic video — kinetic typography, product promos, launch reels, custom motion graphics, registry blocks (data charts, grain overlays, shader transitions), website-to-video workflows, and rigged SVG character animation. Consumed via `npx hyperframes`; no monorepo checkout needed. |
+   619→   619→| **FFmpeg** | Local | Core video assembly, encoding, subtitle burn, audio muxing, color grading |
+   620→   620→
+   621→   621→Runtime is chosen at proposal (`render_runtime`) and locked through `edit_decisions`. Silent swaps between runtimes are a governance violation — see `skills/core/hyperframes.md`.
+   622→   622→
+   623→   623→</details>
+   624→   624→
+   625→   625→---
+   626→   626→
+   627→   627→## Style System
+   628→   628→
+   629→   629→Style playbooks define the visual language for your productions:
+   630→   630→
+   631→   631→| Playbook | Best For |
+   632→   632→|----------|----------|
+   633→   633→| **Clean Professional** | Corporate, educational, SaaS |
+   634→   634→| **Flat Motion Graphics** | Social media, TikTok, startups |
+   635→   635→| **Minimalist Diagram** | Technical deep-dives, architecture |
+   636→   636→
+   637→   637→Playbooks control typography, color palettes, motion styles, audio profiles, and quality rules. The agent reads the playbook and applies it consistently across all generated assets.
+   638→   638→
+   639→   639→---
+   640→   640→
+   641→   641→## Platform Output Profiles
+   642→   642→
+   643→   643→Built-in render profiles for every major platform:
+   644→   644→
+   645→   645→| Profile | Resolution | Aspect Ratio |
+   646→   646→|---------|-----------|--------------|
+   647→   647→| YouTube Landscape | 1920x1080 | 16:9 |
+   648→   648→| YouTube 4K | 3840x2160 | 16:9 |
+   649→   649→| YouTube Shorts | 1080x1920 | 9:16 |
+   650→   650→| Instagram Reels | 1080x1920 | 9:16 |
+   651→   651→| Instagram Feed | 1080x1080 | 1:1 |
+   652→   652→| TikTok | 1080x1920 | 9:16 |
+   653→   653→| LinkedIn | 1920x1080 | 16:9 |
+   654→   654→| Cinematic | 2560x1080 | 21:9 |
+   655→   655→
+   656→   656→---
+   657→   657→
+   658→   658→## Production Governance
+   659→   659→
+   660→   660→OpenMontage treats video production like real engineering — with quality gates, audit trails, and enforcement at every stage.
+   661→   661→
+   662→   662→### Quality Gates
+   663→   663→
+   664→   664→- **Human approval gates are enforced, not suggested** — proposal, script, scene plan, generated assets, and publish all pause for your sign-off. The checkpoint writer rejects a "completed" gated stage without recorded approval, and every superseded checkpoint is archived so the audit trail (including gate transitions) survives revisions. Review happens visually on the [Backlot board](#watch-it-happen--the-backlot-living-storyboard).
+   665→   665→- **Pre-compose validation** — blocks render if the delivery promise is violated (e.g. "motion-led" video with 80% still images), slideshow risk score is critical, or renderer family is missing. Catches broken plans before wasting GPU time.
+   666→   666→- **Post-render self-review** — after every render, the runtime runs ffprobe validation, extracts frames at 4 positions to check for black frames and broken overlays, analyzes audio levels for silence and clipping, verifies the delivery promise was honored, and checks subtitle presence. If the review fails, the video is not presented.
+   667→   667→- **Slideshow risk scoring** — 6-dimension analysis (repetition, decorative visuals, weak motion, shot intent, typography overreliance, unsupported cinematic claims) prevents "animated PowerPoint" outputs.
+   668→   668→- **Source media inspection** — when users supply their own footage, the system probes every file (resolution, codec, audio channels, duration) and builds planning implications before a single creative decision is made. No hallucinating content from filenames.
+   669→   669→
+   670→   670→### Scored Provider Selection
+   671→   671→
+   672→   672→Every tool selection (video generation, image generation, TTS, music) runs through a 7-dimension scoring engine: task fit (30%), output quality (20%), control features (15%), reliability (15%), cost efficiency (10%), latency (5%), continuity (5%). The winning provider and its score are logged in the decision trail with all alternatives considered.
+   673→   673→
+   674→   674→Selectors normalize loose brief context before scoring. If the agent only knows something like "Pixar-style animated short with character consistency," the selector expands that into scorer-friendly intent and style signals instead of requiring a perfectly pre-shaped `task_context`.
+   675→   675→
+   676→   676→Selector outputs also surface the chosen provider's `agent_skills`, so the agent can immediately read the right Layer 3 provider skill before writing prompts.
+   677→   677→
+   678→   678→### Decision Audit Trail
+   679→   679→
+   680→   680→Every major creative and technical choice — provider selection, style/playbook choice, music track, voice selection, renderer family, any fallback or downgrade — is logged with alternatives considered, confidence scores, and reasoning. The cumulative decision log persists across all stages so you can trace exactly why the output looks the way it does.
+   681→   681→
+   682→   682→### Budget Controls
+   683→   683→
+   684→   684→- **Estimate** before execution — see what it will cost
+   685→   685→- **Reserve** budget — lock funds before the call
+   686→   686→- **Reconcile** after — record actual spend
+   687→   687→- **Configurable modes** — `observe` (track only), `warn` (log overruns), `cap` (hard limit)
+   688→   688→- **Per-action approval** — pause for confirmation above a threshold (default: $0.50)
+   689→   689→- **Total budget cap** — default $10, fully configurable
+   690→   690→
+   691→   691→No surprise bills. The agent tells you what it will cost before it spends.
+   692→   692→
+   693→   693→---
+   694→   694→
+   695→   695→## Agent Compatibility
+   696→   696→
+   697→   697→OpenMontage works with any AI coding assistant that can read files and execute Python. Dedicated instruction files are included for:
+   698→   698→
+   699→   699→| Platform | Config File |
+   700→   700→|----------|------------|
+   701→   701→| **Claude Code** | `CLAUDE.md` |
+   702→   702→| **Cursor** | `CURSOR.md` + `.cursor/rules/` |
+   703→   703→| **GitHub Copilot** | `COPILOT.md` + `.github/copilot-instructions.md` |
+   704→   704→| **Codex** | `CODEX.md` |
+   705→   705→| **Windsurf** | `.windsurfrules` |
+   706→   706→
+   707→   707→All platform files point to the shared `AGENT_GUIDE.md` (operating guide and agent contract) and `PROJECT_CONTEXT.md` (architecture reference).
+   708→   708→
+   709→   709→> **Coming soon:** Local LLM support via **Ollama** and **LM Studio** — run the full production pipeline without any cloud LLM.
+   710→   710→
+   711→   711→---
+   712→   712→
+   713→   713→## Contributing
+   714→   714→
+   715→   715→OpenMontage is built to be extended. The two most common contributions:
+   716→   716→
+   717→   717→### Adding a New Tool
+   718→   718→
+   719→   719→1. Create a Python file in the appropriate `tools/` subdirectory
+   720→   720→2. Inherit from `BaseTool` and implement the tool contract
+   721→   721→3. The registry auto-discovers it — no manual registration needed
+   722→   722→4. Add a skill file if the tool needs usage guidance
+   723→   723→
+   724→   724→### Adding a New Pipeline
+   725→   725→
+   726→   726→1. Create a YAML manifest in `pipeline_defs/`
+   727→   727→2. Create stage director skills in `skills/pipelines/<your-pipeline>/`
+   728→   728→3. Reference existing tools — or add new ones if needed
+   729→   729→
+   730→   730→See `docs/ARCHITECTURE.md` for the full technical reference, `docs/PROVIDERS.md` for the complete provider guide (setup, pricing, free tiers), and `AGENT_GUIDE.md` for the agent contract.
+   731→   731→
+   732→   732→### Join the Community
+   733→   733→
+   734→   734→We use [GitHub Discussions](https://github.com/calesthio/OpenMontage/discussions) to share work and ideas:
+   735→   735→
+   736→   736→- **[Show and Tell](https://github.com/calesthio/OpenMontage/discussions/categories/show-and-tell)** — Share videos you've made, prompts that worked well, or creative workflows you've discovered
+   737→   737→- **[Ideas](https://github.com/calesthio/OpenMontage/discussions/categories/ideas)** — Suggest new pipelines, tools, style playbooks, or integrations
+   738→   738→- **[Q&A](https://github.com/calesthio/OpenMontage/discussions/categories/q-a)** — Ask questions about setup, pipelines, or troubleshooting
+   739→   739→
+   740→   740→Made something cool? Post it in Show and Tell — we'd love to see what you build.
+   741→   741→
+   742→   742→---
+   743→   743→
+   744→   744→## Contact
+   745→   745→
+   746→   746→For updates, releases, and behind-the-scenes build notes, follow [@calesthioailabs](https://x.com/calesthioailabs).
+   747→   747→
+   748→   748→For bugs, feature requests, and workflow discussions, use [GitHub Issues](https://github.com/calesthio/OpenMontage/issues) and [GitHub Discussions](https://github.com/calesthio/OpenMontage/discussions) so everything stays visible and actionable.
+   749→   749→
+   750→   750→---
+   751→   751→
+   752→   752→## Testing
+   753→   753→
+   754→   754→```bash
+   755→   755→# Run contract tests (no API keys needed)
+   756→   756→make test-contracts
+   757→   757→
+   758→   758→# Run all tests
+   759→   759→make test
+   760→   760→```
+   761→   761→
+   762→   762→---
+   763→   763→
+   764→   764→## Star History
+   765→   765→
+   766→   766→<a href="https://star-history.dera.page/#calesthio/OpenMontage&type=date&legend=top-left">
+   767→   767→  <picture>
+   768→   768→    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=calesthio/OpenMontage&type=date&theme=dark&legend=top-left" />
+   769→   769→    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=calesthio/OpenMontage&type=date&legend=top-left" />
+   770→   770→    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=calesthio/OpenMontage&type=date&legend=top-left" />
+   771→   771→  </picture>
+   772→   772→</a>
+   773→   773→
+   774→   774→---
+   775→   775→
+   776→   776→## License
+   777→   777→
+   778→   778→[GNU AGPLv3](LICENSE)
+   779→   779→
+   780→   780→---
+   781→   781→
+   782→   782→**OpenMontage** — Production-grade video with real quality enforcement, orchestrated by your AI assistant.
+   783→   783→
+   784→   784→If this project looks useful to you, a ⭐ would really mean a lot — it helps others discover it too.
+   785→   785→
+   786→   786→If you'd like to go further, [sponsor the project](https://github.com/sponsors/calesthio) — OpenMontage is built nights and weekends, and your support makes that sustainable.
+   787→   787→
