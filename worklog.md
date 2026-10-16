@@ -62,3 +62,19 @@ Stage Summary:
 - Repo is now Vercel-deployable: user should redeploy on Vercel (re-import or Redeploy latest commit 7576bc9).
 - Heavy pipeline stays off-Vercel by design; wire RENDER_SERVICE_URL to a tunnel/VPS for remote TTS/export.
 - Full narration prep re-running via job_1_mvbki15c.
+
+---
+Task ID: 4
+Agent: main (Super Z)
+Task: Fix Vercel 404 via user-provided Vercel token.
+
+Work Log:
+- Token verified (account mk500-8185). Project hyperframes-nn-video (prj_OV05wl950AfF8b2hSOxdbbAjADCh) existed, Git-connected, but framework=None ("Other") -> pushes built as raw static repo (no next build, no index.html at root) -> Vercel 404 page on hyperframes-nn-video.vercel.app despite READY deployments.
+- PATCH /v9/projects -> framework=nextjs; triggered production deploy of main via POST /v13/deployments (gitSource) -> dpl_CvSyeK7cDa1i5UZqh7Q9owNiDa5j.
+- Deploy READY in ~30s. Verified: / -> 200 player HTML; /videos/nn-video/manifest.json -> 200; POST /api/relay/tts/prepare -> graceful 503 JSON (render-service absent on Vercel, by design).
+- TTS prep job_1_mvbki15c still running in sandbox (full 122-line narration).
+
+Stage Summary:
+- 404 RESOLVED: https://hyperframes-nn-video.vercel.app serves the player.
+- Heavy pipeline intentionally off-Vercel; set RENDER_SERVICE_URL env (tunnel/VPS) to enable remotely.
+- Next: commit narration audio after job completes so Vercel player has sound.
