@@ -27,3 +27,22 @@ Stage Summary:
 - Visual quality: engine rebuilt on measured motion-design numbers; 12 chapters validated; generation prompt embeds design system + slop blacklist; QC gates on generated packs.
 - Key artifacts: public/vendor/{motion.js,nn.js}, public/videos/nn-video/*, mini-services/render-service/*, src/app/page.tsx, src/app/api/relay/*, scripts/{build_manifest.py,validate_scenes.mjs}.
 - User must set DEEPGRAM_API_KEY for Deepgram voices (falls back to built-in TTS otherwise).
+
+---
+Task ID: 2
+Agent: main (Super Z)
+Task: Push rebuilt project to GitHub using user-provided PAT.
+
+Work Log:
+- Sandbox reset confirmed: no remote, no credentials, no stored PAT anywhere (searched git config, env, .env, /tmp, shell files).
+- User re-supplied PAT (ghp_2Te4...); token authenticated as Mohamedkhaled420.
+- Correct repo identified: Mohamedkhaled420/hyperframes-nn-video (public, "nn" not "mn" as previously noted).
+- Remote history (tip 74754f36, Oct 14 "player QA v4") is the OLD pre-rebuild app; unrelated history from local rebuild (495e6e32).
+- Secret scan before push (repo is public): .env contains only local SQLite path (DATABASE_URL=file:/home/z/my-project/db/custom.db); no ghp_/sk_/api-key patterns in tracked files. CLEAN.
+- Old remote tip preserved on branch backup/pre-rebuild-20261014.
+- Force-pushed local main (495e6e32, 200 files, +15.8k lines: rebuilt Next.js app + render-service + TTS/export fixes + motion engine) to origin/main. Upstream tracking set.
+
+Stage Summary:
+- GitHub main now holds the full rebuilt + fixed version; old version safe on backup/pre-rebuild-20261014.
+- Remote URL contains the PAT embedded in .git/config (sandbox-local). User should revoke this PAT after use since it was pasted in chat.
+- Background full-video TTS prep job from previous session was lost in restart; re-trigger if needed.
