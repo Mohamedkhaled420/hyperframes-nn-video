@@ -46,3 +46,19 @@ Stage Summary:
 - GitHub main now holds the full rebuilt + fixed version; old version safe on backup/pre-rebuild-20261014.
 - Remote URL contains the PAT embedded in .git/config (sandbox-local). User should revoke this PAT after use since it was pasted in chat.
 - Background full-video TTS prep job from previous session was lost in restart; re-trigger if needed.
+
+---
+Task ID: 3
+Agent: main (Super Z)
+Task: Diagnose and fix Vercel deployment 404 (hyperframes-nn-video.vercel.app).
+
+Work Log:
+- Root causes found: (a) build script used standalone-output cp commands (Vercel-hostile); (b) next.config had output:"standalone" unconditionally; (c) REAL UI BUG: page.tsx called /api/_relay?path=... but route is /api/relay/[...path] — every TTS/export/generate call from the UI 404'd even locally; (d) relay route crashed (unhandled fetch reject) when render-service absent — Vercel case; (e) .env/logs/tool-results/upload/download/db tracked in a public repo.
+- Fixes: page.tsx relay URLs corrected to /api/relay/<path>; relay route wrapped in try/catch -> clean 503 JSON with hint + 10min AbortSignal timeout; next.config gates output:standalone behind STANDALONE=1; package.json build = "prisma generate && next build", standalone assembly moved to scripts/start-standalone.sh (npm start); db.ts DATABASE_URL fallback; README.md added with Vercel deploy guide + RENDER_SERVICE_URL tunnel instructions; untracked .env, logs, tool-results, upload, download, db, skills, examples.
+- Verified: npm run build passes (Next 16.1.3, static / + dynamic /api/relay); prod server smoke test: player 200, static pack manifest 200, relay works.
+- Bonus: relay smoke-test POST accidentally triggered full-video TTS prep job_1_mvbki15c (the exact pending task) — running, 27% (30/122 lines) at check time.
+
+Stage Summary:
+- Repo is now Vercel-deployable: user should redeploy on Vercel (re-import or Redeploy latest commit 7576bc9).
+- Heavy pipeline stays off-Vercel by design; wire RENDER_SERVICE_URL to a tunnel/VPS for remote TTS/export.
+- Full narration prep re-running via job_1_mvbki15c.
