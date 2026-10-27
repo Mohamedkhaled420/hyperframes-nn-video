@@ -1,9 +1,9 @@
 'use client';
-/* Hyperframes Studio — player + AI Studio.
+/* Hyperframes Studio — player + AI Studio, styled after the Lumen Studio design system.
    Audio model: per-caption mp3/wav files scheduled on a WebAudio clock.
    The AudioContext is UNLOCKED on the first user gesture (the silent-playback fix),
-   and the audio status is always visible (no silent packs, ever). */
-import { useEffect, useRef, useState, useCallback } from 'react';
+   and the narration status is always visible and honest (line counts, never a false green). */
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 
 /* ---------------- types ---------------- */
 type Caption = { t: number; dur: number; text: string; audio: string; audioDur?: number };
@@ -14,8 +14,18 @@ type Manifest = {
   chapters: Chapter[];
 };
 type PackMeta = { id: string; title: string; subtitle?: string; chapters: number; created: number };
+type Tab = 'ai' | 'ch' | 'vids' | 'help';
+type Job = { id: string; pct: number; status: string; steps: string[]; error: string | null; kind: string; result?: any };
 
 const fmt = (s: number) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.floor(Math.max(0, s) % 60)).padStart(2, '0')}`;
+const ago = (t: number) => {
+  const m = (Date.now() - t) / 6e4;
+  return m < 1 ? 'just now' : m < 60 ? `${Math.round(m)} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`;
+};
+const swatch = (id: string) => {
+  let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) % 360;
+  return `linear-gradient(135deg,hsl(${h} 70% 55%),hsl(${(h + 40) % 360} 70% 45%))`;
+};
 
 /* ---------------- audio engine ---------------- */
 class AudioEngine {
@@ -94,27 +104,45 @@ export default function Home() {
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [audioOk, setAudioOk] = useState<'unknown' | 'ready' | 'missing'>('unknown');
-  const [studioOpen, setStudioOpen] = useState(false);
+  const [panelTab, setPanelTab] = useState<Tab>('ai');
+  const [panelOpen, setPanelOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [nChapters, setNChapters] = useState(3);
-  const [job, setJob] = useState<{ id: string; pct: number; status: string; steps: string[]; error: string | null; kind: string; result?: any } | null>(null);
+  const [job, setJob] = useState<Job | null>(null);
   const [exportScope, setExportScope] = useState<'chapter' | 'full'>('chapter');
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   const stageRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { (window as any).__getAudio = getEngine; }, []);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-    const rafRef = useRef<number>(0);
+  const tracksRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
   const playRef = useRef<{ t0: number; start: number } | null>(null); // performance.now() at t=start
   const tRef = useRef(0);
   const chapRef = useRef(0);
   const playingRef = useRef(false);
   const preloadedRef = useRef<Set<string>>(new Set());
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => { (window as any).__getAudio = getEngine; }, []);
 
   const chap: Chapter | undefined = mf?.chapters[chapterIdx];
   const total = mf?.chapters.reduce((n, c) => n + c.duration, 0) || 0;
   const globalStart = mf?.chapters.slice(0, chapterIdx).reduce((n, c) => n + c.duration, 0) || 0;
+
+  const toast = useCallback((m: string) => {
+    setToastMsg(m);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMsg(null), 3400);
+  }, []);
+
+  /* ---- theme (Lumen ◐ toggle) ---- */
+  const toggleTheme = useCallback(() => {
+    const root = document.documentElement;
+    const dark = root.dataset.theme === 'dark' || (!root.dataset.theme && matchMedia('(prefers-color-scheme:dark)').matches);
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('hf:theme', dark ? 'light' : 'dark'); } catch {}
+  }, []);
 
   /* ---- data load ---- */
   const loadVideo = useCallback(async (id: string) => {
@@ -123,13 +151,15 @@ export default function Home() {
     try {
       const r = await fetch(`${base}/manifest.json`);
       const m: Manifest = await r.json();
+      getEngine().buffers.clear(); // never reuse another video's audio cache
       setMf(m);
       setChapterIdx(0);
+      chapRef.current = 0;
       tRef.current = 0; setT(0);
       playingRef.current = false; setPlaying(false);
       preloadedRef.current.clear();
-    } catch { setMf(null); }
-  }, []);
+    } catch { setMf(null); toast('Could not load that pack.'); }
+  }, [toast]);
 
   useEffect(() => {
     (async () => {
@@ -143,15 +173,27 @@ export default function Home() {
   }, []);
   useEffect(() => { const id = setTimeout(() => loadVideo('nn-video'), 0); return () => clearTimeout(id); }, [loadVideo]);
 
-  /* ---- audio presence check ---- */
+  /* ---- honest narration status: line counts from the manifest + one existence probe ---- */
+  const narration = useMemo(() => {
+    if (!mf) return null;
+    const perCh = mf.chapters.map(c => {
+      const caps = c.captions;
+      const withAudio = caps.filter(x => (x.audioDur || 0) > 0).length;
+      const covered = caps.reduce((a, x) => a + Math.min(x.audioDur || 0, x.dur), 0);
+      return { withAudio, total: caps.length, missing: withAudio < caps.length, fill: c.duration ? Math.min(100, (covered / c.duration) * 100) : 0 };
+    });
+    return { perCh, totalCaps: perCh.reduce((a, c) => a + c.total, 0), totalAudio: perCh.reduce((a, c) => a + c.withAudio, 0) };
+  }, [mf]);
+
   useEffect(() => {
     (async () => {
       if (!mf) return;
-      const first = mf.chapters[0]?.captions[0];
-      if (!first) return;
+      const caps = mf.chapters.flatMap(c => c.captions);
+      if (!caps.length) { setAudioOk('missing'); return; }
+      const complete = caps.every(c => (c.audioDur || 0) > 0) && mf.audio.prepared !== false;
       const base = mf.id === 'nn-video' ? '/videos/nn-video' : `/generated/${mf.id}`;
-      const ok = await fetch(`${base}/${first.audio}`, { method: 'HEAD' }).then(r => r.ok).catch(() => false);
-      setAudioOk(ok ? 'ready' : 'missing');
+      const exists = await fetch(`${base}/${caps[0].audio}`, { method: 'HEAD' }).then(r => r.ok).catch(() => false);
+      setAudioOk(complete && exists ? 'ready' : 'missing');
     })();
   }, [mf]);
 
@@ -164,9 +206,10 @@ export default function Home() {
       if (iframeRef.current) iframeRef.current.style.transform = `translate(-50%, -50%) scale(${scale})`;
     };
     fit();
+    const tm = setTimeout(fit, 300);
     window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
-  }, [mf, studioOpen]);
+    return () => { clearTimeout(tm); window.removeEventListener('resize', fit); };
+  }, [mf, panelTab]);
 
   const preloadChapter = useCallback(async (idx: number) => {
     if (!mf) return;
@@ -180,31 +223,32 @@ export default function Home() {
     }));
   }, [mf]);
 
-  const scheduleCaptionAudio = useCallback((fromT: number) => {
+  const scheduleCaptionAudio = useCallback((idx: number, fromT: number) => {
     if (!mf) return;
     const base = mf.id === 'nn-video' ? '/videos/nn-video' : `/generated/${mf.id}`;
-    const ch = mf.chapters[chapterIdx]; if (!ch) return;
+    const ch = mf.chapters[idx]; if (!ch) return;
     const caps = ch.captions.map(cap => ({ cap, globalT: 0 })); // chapter-local clock
     getEngine().schedule(caps, fromT, cap => getEngine().buffers.get(`${base}/${cap.audio}`));
-  }, [mf, chapterIdx]);
+  }, [mf]);
 
   /* ---- master clock + seek ---- */
   const seekTo = useCallback((nt: number, scheduleAudio = true) => {
-    if (!mf || !chap) return;
-    nt = Math.max(0, Math.min(chap.duration - 0.001, nt));
+    if (!mf) return;
+    const ch = mf.chapters[chapRef.current]; if (!ch) return;
+    nt = Math.max(0, Math.min(ch.duration - 0.001, nt));
     tRef.current = nt; setT(nt);
     const win = iframeRef.current?.contentWindow as any;
     if (win?.__seek) { try { win.__seek(nt); } catch {} }
-    if (scheduleAudio && playingRef.current) scheduleCaptionAudio(nt);
+    if (scheduleAudio && playingRef.current) scheduleCaptionAudio(chapRef.current, nt);
     if (playRef.current) playRef.current = { t0: performance.now(), start: nt };
-  }, [mf, chap, scheduleCaptionAudio]);
+  }, [mf, scheduleCaptionAudio]);
 
   const setIframeScene = useCallback((idx: number) => {
     if (!mf) return;
     const ch = mf.chapters[idx]; if (!ch) return;
     const base = mf.id === 'nn-video' ? '/videos/nn-video' : `/generated/${mf.id}`;
     if (iframeRef.current) iframeRef.current.src = `${base}/${ch.scene}`;
-    /* seek new scene to 0 once ready */
+    /* seek new scene to the current clock once ready */
     setTimeout(() => {
       const win = iframeRef.current?.contentWindow as any;
       if (win?.__ready) win.__ready.then(() => { try { win.__seek(tRef.current); } catch {} }).catch(() => {});
@@ -220,7 +264,7 @@ export default function Home() {
         const nt = pr.start + (performance.now() - pr.t0) / 1000;
         const ch = mf.chapters[chapRef.current];
         if (ch && nt >= ch.duration - 0.02) {
-          /* chapter end → advance */
+          /* chapter end → advance (and KEEP NARRATING the next chapter) */
           if (chapRef.current < mf.chapters.length - 1) {
             const next = chapRef.current + 1;
             chapRef.current = next; setChapterIdx(next);
@@ -229,6 +273,7 @@ export default function Home() {
             getEngine().stopAll();
             preloadChapter(next);
             setIframeScene(next);
+            preloadChapter(next).then(() => { if (playingRef.current && chapRef.current === next) scheduleCaptionAudio(next, 0); });
           } else {
             playingRef.current = false; setPlaying(false);
             getEngine().stopAll();
@@ -239,7 +284,7 @@ export default function Home() {
     };
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [mf, seekTo, preloadChapter]);
+  }, [mf, seekTo, preloadChapter, scheduleCaptionAudio, setIframeScene]);
 
   useEffect(() => { if (mf) setIframeScene(chapterIdx); }, [mf, chapterIdx, setIframeScene]);
 
@@ -252,7 +297,7 @@ export default function Home() {
     playingRef.current = true; setPlaying(true);
     playRef.current = { t0: performance.now(), start: tRef.current };
     await preloadChapter(chapRef.current);
-    scheduleCaptionAudio(tRef.current);
+    scheduleCaptionAudio(chapRef.current, tRef.current);
   }, [mf, muted, preloadChapter, scheduleCaptionAudio]);
 
   const pause = useCallback(() => {
@@ -270,14 +315,46 @@ export default function Home() {
     tRef.current = 0; setT(0);
     playRef.current = playingRef.current ? { t0: performance.now(), start: 0 } : null;
     getEngine().stopAll();
-    if (playingRef.current) { preloadChapter(clamped).then(() => scheduleCaptionAudio(0)); }
+    if (playingRef.current) {
+      preloadChapter(clamped).then(() => { if (playingRef.current && chapRef.current === clamped) scheduleCaptionAudio(clamped, 0); });
+    }
   }, [mf, preloadChapter, scheduleCaptionAudio]);
+
+  /* ---- global timeline seek (click/drag anywhere on the tracks) ---- */
+  const seekGlobal = useCallback((clientX: number) => {
+    const el = tracksRef.current; if (!el || !mf || !total) return;
+    const r = el.getBoundingClientRect();
+    const p = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+    let g = p * total, k = 0, acc = 0;
+    for (; k < mf.chapters.length; k++) { if (g < acc + mf.chapters[k].duration) break; acc += mf.chapters[k].duration; }
+    if (k >= mf.chapters.length) { k = mf.chapters.length - 1; acc = total - mf.chapters[k].duration; g = total - 0.01; }
+    const local = Math.max(0, Math.min(mf.chapters[k].duration - 0.001, g - acc));
+    if (k !== chapRef.current) {
+      chapRef.current = k; setChapterIdx(k);
+      tRef.current = local; setT(local);
+      playRef.current = playingRef.current ? { t0: performance.now(), start: local } : null;
+      getEngine().stopAll();
+      if (playingRef.current) preloadChapter(k).then(() => { if (playingRef.current && chapRef.current === k) scheduleCaptionAudio(k, local); });
+    } else {
+      seekTo(local);
+    }
+  }, [mf, total, preloadChapter, scheduleCaptionAudio, seekTo]);
+
+  const onTracksPointer = useCallback((e: React.PointerEvent) => {
+    if (e.buttons !== 1) return;
+    seekGlobal(e.clientX);
+    const mv = (ev: PointerEvent) => seekGlobal(ev.clientX);
+    const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', mv);
+    window.addEventListener('pointerup', up);
+  }, [seekGlobal]);
 
   /* ---- keyboard + first-gesture unlock ---- */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setExportOpen(false); setHelpOpen(false); return; }
       const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       getEngine().unlock();
       if (e.code === 'Space') { e.preventDefault(); toggle(); }
       else if (e.key === 'ArrowRight') seekTo(tRef.current + (e.shiftKey ? 5 : 1));
@@ -285,7 +362,7 @@ export default function Home() {
       else if (e.key === 'ArrowDown') { e.preventDefault(); gotoChapter(chapRef.current + 1); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); gotoChapter(chapRef.current - 1); }
       else if (e.key.toLowerCase() === 'f') document.documentElement.requestFullscreen?.().catch(() => {});
-      else if (e.key.toLowerCase() === 'g') setStudioOpen(v => !v);
+      else if (e.key.toLowerCase() === 'g') { setPanelTab('ai'); setPanelOpen(true); }
       else if (e.key.toLowerCase() === 'e') setExportOpen(true);
     };
     const onPointer = () => getEngine().unlock();
@@ -307,8 +384,8 @@ export default function Home() {
 
   const vidRef = useRef(vid); useEffect(() => { vidRef.current = vid; }, [vid]);
   const loadRef = useRef(loadVideo); useEffect(() => { loadRef.current = loadVideo; }, [loadVideo]);
-  const watchJob = useCallback((jobId: string) => {
-    setJob({ id: jobId, pct: 0, status: 'running', steps: [], error: null, kind: '' });
+  const watchJob = useCallback((jobId: string, kind: string) => {
+    setJob({ id: jobId, pct: 0, status: 'running', steps: [], error: null, kind });
     const es = new EventSource(`/api/relay/stream/${jobId}`);
     es.onmessage = ev => {
       const d = JSON.parse(ev.data);
@@ -319,225 +396,269 @@ export default function Home() {
       else if (d.type === 'done') {
         setJob(j => j && ({ ...j, status: 'done', pct: 100, result: d.result }));
         es.close();
+        if (d.result && !d.result.error) {
+          if (kind === 'generate' && d.result.title) toast(`“${d.result.title}” is ready — open it in Videos.`);
+          else if (kind === 'export') toast('Export finished — MP4 is in /exports.');
+          else if (kind === 'tts') toast('Narration recorded.');
+        } else if (kind === 'export') toast('Export finished — MP4 is in /exports.');
         /* refresh manifests after tts/export/generate */
         setTimeout(() => { loadRef.current(vidRef.current); fetch('/generated/registry.json').then(r => r.json()).then(g => setVideos(v => ({ ...v, generated: g }))).catch(() => {}); }, 600);
       }
     };
     es.onerror = () => { /* keep polling fallback */ };
-  }, []);
+  }, [toast]);
 
   const prepareNarration = useCallback(async () => {
     getEngine().unlock();
-    const r = await callService('/tts/prepare', { video: vid, chapter: chapterIdx === -1 ? undefined : chap?.id });
-    if (r.jobId) watchJob(r.jobId);
-  }, [callService, vid, chap, chapterIdx, watchJob]);
+    const r = await callService('/tts/prepare', { video: vid }); // full video — resumable by line
+    if (r.jobId) watchJob(r.jobId, 'tts');
+    else if (r.error) toast(String(r.error).slice(0, 90));
+  }, [callService, vid, watchJob, toast]);
 
   const startExport = useCallback(async () => {
     const r = await callService('/export', { video: vid, chapter: exportScope === 'chapter' ? chap?.id : null, fps: 30 });
-    if (r.jobId) { setExportOpen(false); watchJob(r.jobId); }
-  }, [callService, vid, chap, exportScope, watchJob]);
+    if (r.jobId) { setExportOpen(false); watchJob(r.jobId, 'export'); }
+    else if (r.error) toast(String(r.error).slice(0, 90));
+  }, [callService, vid, chap, exportScope, watchJob, toast]);
 
   const startGenerate = useCallback(async () => {
     if (!prompt.trim()) return;
     const r = await callService('/generate', { prompt, chapters: nChapters });
-    if (r.jobId) watchJob(r.jobId);
-  }, [callService, prompt, nChapters, watchJob]);
+    if (r.jobId) watchJob(r.jobId, 'generate');
+    else if (r.error) toast(String(r.error).slice(0, 90));
+  }, [callService, prompt, nChapters, watchJob, toast]);
 
-  /* ---- progress bar click/drag ---- */
-  const barRef = useRef<HTMLDivElement>(null);
-  const scrubTo = useCallback((clientX: number) => {
-    const el = barRef.current; if (!el || !chap) return;
-    const r = el.getBoundingClientRect();
-    const p = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
-    seekTo(p * chap.duration);
-  }, [chap, seekTo]);
-  const onBarPointer = useCallback((e: React.PointerEvent) => {
-    if (e.buttons !== 1) return;
-    scrubTo(e.clientX);
-    const mv = (ev: PointerEvent) => scrubTo(ev.clientX);
-    const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
-    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
-  }, [scrubTo]);
+  const selectTab = useCallback((tab: Tab) => { setPanelTab(tab); setPanelOpen(true); }, []);
 
-  const audioChip = audioOk === 'ready'
-    ? { cls: 'border-emerald-500/40 text-emerald-300', label: `🔊 narration (${mf?.audio.provider || 'tts'})` }
-    : { cls: 'border-amber-500/50 text-amber-300 animate-pulse', label: 'no narration audio yet' };
+  const jobHint = job?.status === 'running'
+    ? `${job.kind === 'generate' ? 'Generating' : job.kind === 'export' ? 'Rendering' : 'Recording narration'}… ${job.pct}%`
+    : job?.status === 'failed' ? 'Job failed — details in the Ask AI panel.'
+    : 'Preview is approximate. The exported MP4 is full quality.';
+  const running = job?.status === 'running';
+  const playheadFrac = total ? Math.min(1, (globalStart + t) / total) : 0;
 
   /* ---------------- UI ---------------- */
   return (
-    <div className="min-h-screen flex flex-col bg-[#07090d] text-zinc-200 font-sans" onPointerDown={() => getEngine().unlock()}>
-      {/* header */}
-      <header className="flex items-start justify-between gap-4 px-5 pt-4 pb-2">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight text-zinc-100">{mf?.title || 'Hyperframes Studio'}</h1>
-          <p className="text-xs text-zinc-500 mt-0.5">{mf?.subtitle || ''}</p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button onClick={() => setHelpOpen(true)} className="px-3 py-1.5 rounded-lg border border-zinc-700 text-xs hover:bg-zinc-800 transition">How it works</button>
-          <button onClick={() => setStudioOpen(v => !v)} className="px-3 py-1.5 rounded-lg bg-fuchsia-600/90 hover:bg-fuchsia-500 text-white text-xs font-medium transition">AI Studio</button>
-        </div>
-      </header>
-
-      {/* chapter pills */}
-      <nav className="flex items-center gap-1.5 px-5 pb-2 overflow-x-auto no-scrollbar" aria-label="chapters">
-        {mf?.chapters.map((c, i) => (
-          <button key={c.id} onClick={() => gotoChapter(i)}
-            className={`px-3 py-1.5 rounded-full text-xs whitespace-nowrap border transition ${i === chapterIdx ? 'bg-sky-400/15 border-sky-400/60 text-sky-200' : 'border-zinc-800 text-zinc-400 hover:border-zinc-600'}`}>
-            {i + 1} {c.id.replace(/^s\d+_/, '').replace(/^ch_?/, '') || c.title}
-          </button>
-        ))}
+    <div className="hf-root" onPointerDown={() => getEngine().unlock()}>
+      {/* top nav — Lumen studio chrome */}
+      <nav className="hf-nav">
+        <div className="hf-brand">hyperframes</div>
+        <button className="hf-th" onClick={toggleTheme} aria-label="Toggle theme">◐</button>
       </nav>
 
-      <div className="flex-1 flex min-h-0">
-        {/* stage */}
-        <main className="flex-1 flex flex-col min-w-0 px-5">
-          <div ref={stageRef} className="relative flex-1 min-h-[320px] rounded-2xl overflow-hidden bg-black border border-zinc-800/80">
-            <iframe ref={iframeRef} title="scene" className="absolute left-1/2 top-1/2 origin-center"
-              style={{ width: 1920, height: 1080, transform: 'translate(-50%,-50%)' }}
-              src={mf ? (vid === 'nn-video' ? `/videos/nn-video/${chap?.scene}` : `/generated/${vid}/${chap?.scene}`) : 'about:blank'} />
-            {/* caption */}
-            <div className="absolute bottom-3 inset-x-0 flex justify-center px-8 pointer-events-none">
-              {currentCaption && (
-                <div className="max-w-[80%] rounded-xl bg-black/70 backdrop-blur px-4 py-2 text-[15px] leading-snug text-zinc-100 text-center shadow-lg">
-                  {currentCaption.text}
-                </div>
-              )}
+      <div className="hf-main">
+        <div className="hf-studio">
+          {/* ------------- left column: title · stage · controls · tracks ------------- */}
+          <div>
+            <div className="hf-bar2">
+              <button className="hf-mini" onClick={() => selectTab('vids')}>‹ Videos</button>
+              <div className="hf-ptitle" title={mf?.title}>{mf?.title || 'Hyperframes Studio'}</div>
+              <span className="hf-hint">{mf?.subtitle || ''}</span>
             </div>
-          </div>
 
-          {/* control bar */}
-          <div className="py-3">
-            <div ref={barRef} onPointerDown={onBarPointer} className="relative h-2.5 rounded-full bg-zinc-800 cursor-pointer group">
-              <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-sky-500 to-teal-400" style={{ width: chap ? `${(t / chap.duration) * 100}%` : '0%' }} />
-              {/* chapter ticks */}
-              <div className="absolute inset-x-0 top-0 h-full">
+            <div className="hf-stage" ref={stageRef}>
+              <iframe
+                ref={iframeRef}
+                title="scene"
+                className=""
+                style={{ width: 1920, height: 1080, transform: 'translate(-50%,-50%)' }}
+                src={mf ? (vid === 'nn-video' ? `/videos/nn-video/${chap?.scene}` : `/generated/${vid}/${chap?.scene}`) : 'about:blank'}
+              />
+              <div className="hf-cap" aria-live="polite">
+                {currentCaption && <span>{currentCaption.text}</span>}
+              </div>
+            </div>
+
+            <div className="hf-ctl">
+              <button className="hf-play" onClick={toggle} aria-label={playing ? 'pause' : 'play'}>{playing ? '❚❚' : '▶'}</button>
+              <button className="hf-mini" onClick={() => { const m = !muted; setMuted(m); getEngine().setMuted(m); }}>{muted ? 'Sound off' : 'Sound on'}</button>
+              <span className="hf-hint">Space to play · ←/→ seek · ↑/↓ chapters</span>
+              <div className="hf-time">{fmt(t)} / {fmt(chap?.duration || 0)}</div>
+            </div>
+
+            {/* Lumen-style timeline tracks */}
+            <div className="hf-tracks" ref={tracksRef} onPointerDown={onTracksPointer} role="slider"
+              aria-label="Timeline — drag to scrub, click a chapter to jump" aria-valuemin={0} aria-valuemax={Math.round(total)} aria-valuenow={Math.round(globalStart + t)}>
+              <div className="hf-row" data-l="Chapters">
                 {mf?.chapters.map((c, i) => (
-                  <div key={c.id} className="absolute top-0 h-full w-px bg-black/60" style={{ left: `${(mf.chapters.slice(0, i).reduce((n, x) => n + x.duration, 0) / total) * 100}%` }} />
+                  <div key={c.id} className={`hf-seg${i === chapterIdx ? ' cur' : ''}`} style={{ flex: Math.max(0.6, c.duration) }} aria-label={`Chapter ${i + 1}: ${c.title}`} />
                 ))}
               </div>
-              <div className="absolute -top-1 h-4.5 w-4.5 h-[18px] w-[18px] rounded-full bg-white shadow group-hover:scale-110 transition-transform"
-                style={{ left: `calc(${chap ? (t / chap.duration) * 100 : 0}% - 9px)` }} />
-            </div>
-            <div className="flex items-center justify-between mt-2.5 gap-4">
-              <div className="flex items-center gap-2">
-                <button onClick={() => gotoChapter(chapterIdx - 1)} className="w-9 h-9 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-300" aria-label="previous chapter">⏮</button>
-                <button onClick={toggle} className="w-11 h-11 rounded-full bg-sky-400 hover:bg-sky-300 text-black flex items-center justify-center text-lg font-bold transition" aria-label={playing ? 'pause' : 'play'}>{playing ? '⏸' : '▶'}</button>
-                <button onClick={() => gotoChapter(chapterIdx + 1)} className="w-9 h-9 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-300" aria-label="next chapter">⏭</button>
-                <button onClick={() => { const m = !muted; setMuted(m); getEngine().setMuted(m); }} className="w-9 h-9 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-300 ml-1" aria-label="mute">{muted ? '🔇' : '🔊'}</button>
-                <span className="ml-2 text-sm text-zinc-400 tabular-nums">{fmt(t)} / {fmt(chap?.duration || 0)}</span>
-                <span className="text-sm text-zinc-500 hidden md:inline">· {chapterIdx + 1}/{mf?.chapters.length} · <span className="text-zinc-300">{chap?.kicker} — {chap?.title}</span></span>
+              <div className="hf-row" data-l="Voice">
+                {mf?.chapters.map((c, i) => {
+                  const n = narration?.perCh[i];
+                  return (
+                    <div key={c.id} className={`hf-vb${n?.missing ? ' over' : ''}`} style={{ flex: Math.max(0.6, c.duration) }}
+                      title={n ? `narration ${n.withAudio}/${n.total} lines` : undefined}>
+                      <i style={{ width: `${n ? n.fill : 0}%` }} />
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`px-2.5 py-1 rounded-full border text-[11px] ${audioChip.cls}`}>{audioChip.label}</span>
-                {audioOk === 'missing' && (
-                  <button onClick={prepareNarration} className="px-3 py-1.5 rounded-lg bg-amber-500/90 hover:bg-amber-400 text-black text-xs font-medium">
-                    {job?.status === 'running' && job.id.includes('job') ? 'recording…' : 'Record narration'}
-                  </button>
-                )}
-                <button onClick={() => setExportOpen(true)} className="px-3 py-1.5 rounded-lg border border-zinc-700 text-xs hover:bg-zinc-800">Export MP4</button>
-              </div>
+              <div className="hf-ph" style={{ left: `calc(52px + (100% - 52px) * ${playheadFrac})` }} />
             </div>
-            <p className="mt-1.5 text-[11px] text-zinc-600">Space play/pause · ←/→ ±1 s (Shift ±5 s) · ↑/↓ chapter · F fullscreen · E export · G AI Studio · click/drag bar to scrub</p>
-          </div>
-        </main>
 
-        {/* AI Studio drawer */}
-        {studioOpen && (
-          <aside className="w-[360px] shrink-0 border-l border-zinc-800 bg-[#0b0e14] flex flex-col max-lg:w-full max-lg:border-l-0 max-lg:border-t">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
-              <h2 className="font-semibold text-sm text-zinc-100">AI Studio</h2>
-              <button onClick={() => setStudioOpen(false)} className="text-zinc-500 hover:text-zinc-300 text-lg leading-none">×</button>
+            <div className="hf-pace">
+              <button className="hf-mini" onClick={() => gotoChapter(chapterIdx - 1)} aria-label="previous chapter">‹</button>
+              <button className="hf-mini" onClick={() => gotoChapter(chapterIdx + 1)} aria-label="next chapter">›</button>
+              <span><b>{chapterIdx + 1}/{mf?.chapters.length || 0}</b> · {chap?.kicker} — {chap?.title}</span>
+              <span className="hf-audiochip">
+                {audioOk === 'ready'
+                  ? <span className="ok" title={`provider ${mf?.audio.provider || 'tts'}`}>narration {narration ? `${narration.totalAudio}/${narration.totalCaps}` : 'ready'} · {mf?.audio.voice || mf?.audio.provider || 'tts'}</span>
+                  : audioOk === 'missing'
+                    ? <span className="bad">narration {narration ? `${narration.totalAudio}/${narration.totalCaps}` : 'missing'} lines</span>
+                    : 'checking narration…'}
+              </span>
+              <span style={{ marginLeft: 'auto' }} className="hf-time">{fmt(globalStart + t)} / {fmt(total)}</span>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <p className="text-xs text-zinc-500 leading-relaxed">Describe the video you want. The AI plans chapters, writes every scene (layout + motion), tests it headlessly, records the narration and muxes it into the pack.</p>
-              <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows={4} placeholder="generate a video on explaining antigravity in physics for dummies"
-                className="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-3 text-sm focus:outline-none focus:border-fuchsia-500/60" />
-              <div className="flex items-center gap-3">
-                <label className="text-xs text-zinc-400">Chapters</label>
-                <select value={nChapters} onChange={e => setNChapters(+e.target.value)} className="rounded-lg bg-zinc-900 border border-zinc-700 text-sm px-2 py-1.5">
-                  {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
-                </select>
-                <button onClick={startGenerate} disabled={job?.status === 'running'}
-                  className="flex-1 px-4 py-2 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-50 text-white text-sm font-medium transition">
-                  {job?.status === 'running' ? 'Generating…' : 'Generate video'}
+
+            {audioOk === 'missing' && (
+              <div className="hf-pace">
+                <button className="hf-mini" onClick={prepareNarration} disabled={running}>
+                  {running && job?.kind === 'tts' ? `recording… ${job.pct}%` : 'Record narration'}
                 </button>
               </div>
-              {job && (
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3">
-                  <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="text-zinc-400">{job.status === 'running' ? 'working…' : job.status === 'done' ? '✔ done' : '✗ failed'}</span>
-                    <span className="text-zinc-500 tabular-nums">{job.pct}%</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-                    <div className={`h-full transition-all ${job.status === 'failed' ? 'bg-red-500' : 'bg-fuchsia-500'}`} style={{ width: `${job.pct}%` }} />
-                  </div>
-                  <div className="mt-2 max-h-44 overflow-y-auto text-[11px] leading-relaxed text-zinc-500 font-mono space-y-0.5">
-                    {job.steps.slice(-14).map((s, i) => <div key={i}>{s}</div>)}
-                  </div>
-                  {job.error && <p className="mt-2 text-[11px] text-red-400 bg-red-950/40 rounded p-2">{job.error}</p>}
-                  {job.status === 'done' && job.result?.id && (
-                    <button onClick={() => loadVideo(job.result.id)} className="mt-2 w-full py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/40 text-sky-200 text-xs">Open “{job.result.title}”</button>
-                  )}
-                </div>
-              )}
-              <div>
-                <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide mb-2">Your packs</h3>
-                <div className="space-y-1.5">
-                  {[...videos.generated, ...videos.bundled].map(p => (
-                    <button key={p.id} onClick={() => loadVideo(p.id)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl border text-sm transition ${vid === p.id ? 'border-sky-400/50 bg-sky-400/10 text-sky-100' : 'border-zinc-800 hover:border-zinc-600 text-zinc-300'}`}>
-                      <span className="block truncate font-medium">{p.title}</span>
-                      <span className="block text-[11px] text-zinc-500 mt-0.5">{p.chapters} chapters{p.created ? ` · ${new Date(p.created).toLocaleString()}` : ''}</span>
-                    </button>
+            )}
+
+            <div className={`hf-rbar${running ? ' on' : ''}`}><i style={{ width: `${job?.pct || 0}%` }} /></div>
+
+            <div className="hf-ctl">
+              <span className="hf-hint" style={{ flex: 1, margin: 0 }}>{jobHint}</span>
+              <button className="hf-big sm" onClick={() => setExportOpen(true)} disabled={running}>Export MP4</button>
+            </div>
+          </div>
+
+          {/* ------------- right column: Lumen glass panel with tabs ------------- */}
+          <div className={`hf-panel hf-glass${panelOpen ? ' open' : ''}`}>
+            <button className="hf-grab" onClick={() => setPanelOpen(v => !v)} aria-label="Expand panel" />
+
+            <div className="hf-tabs">
+              <button className={panelTab === 'ai' ? 'on' : ''} onClick={() => selectTab('ai')}>Ask AI</button>
+              <button className={panelTab === 'ch' ? 'on' : ''} onClick={() => selectTab('ch')}>Chapters</button>
+              <button className={panelTab === 'vids' ? 'on' : ''} onClick={() => selectTab('vids')}>Videos</button>
+              <button className={panelTab === 'help' ? 'on' : ''} onClick={() => selectTab('help')}>Help</button>
+            </div>
+
+            {/* Ask AI */}
+            <div className={`hf-pane${panelTab === 'ai' ? ' on' : ''}`}>
+              <div className="hf-aibody">
+                <div className="hf-msg ai">Describe the video you want. The AI plans chapters, writes every scene (layout + motion), tests it headlessly, records narration and QC-checks the pack.</div>
+                <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows={4}
+                  placeholder="generate a video on explaining antigravity in physics for dummies" aria-label="Video prompt" />
+                <div className="hf-opts" role="group" aria-label="Chapters">
+                  {[1, 2, 3, 4, 5, 6].map(n => (
+                    <button key={n} className={`hf-chip${nChapters === n ? ' on' : ''}`} onClick={() => setNChapters(n)}>{n}</button>
                   ))}
                 </div>
+                <button className="hf-big sm" style={{ width: '100%', maxWidth: 'none', marginTop: 0 }} onClick={startGenerate} disabled={running || !prompt.trim()}>
+                  {running && job?.kind === 'generate' ? 'Generating…' : 'Generate video'}
+                </button>
+
+                {job && (
+                  <div>
+                    <ul className="hf-log">
+                      {job.steps.slice(-7).map((s, i, arr) => (
+                        <li key={i} className={job.status === 'running' && i === arr.length - 1 ? 'run' : 'ok'}>{s}</li>
+                      ))}
+                      {job.status === 'running' && !job.steps.length && <li className="run">Starting…</li>}
+                    </ul>
+                    <div className={`hf-rbar on`} style={{ width: '100%' }}><i style={{ width: `${job.pct}%` }} /></div>
+                    {job.error && <p className="hf-err">{job.error}</p>}
+                    {job.status === 'done' && job.result?.id && (
+                      <button className="hf-chip on" onClick={() => { loadVideo(job.result.id); selectTab('ch'); }}>Open “{job.result.title}”</button>
+                    )}
+                  </div>
+                )}
               </div>
-              <p className="text-[11px] text-zinc-600 border-t border-zinc-800 pt-3">Generation runs on the local render-service (GLM + headless Chromium + TTS). Exports land in <span className="text-zinc-500">/exports</span>.</p>
             </div>
-          </aside>
-        )}
+
+            {/* Chapters */}
+            <div className={`hf-pane${panelTab === 'ch' ? ' on' : ''}`}>
+              <div className="hf-list">
+                {mf?.chapters.map((c, i) => (
+                  <div key={c.id} className={`hf-scene${i === chapterIdx ? ' cur' : ''}`} onClick={() => gotoChapter(i)} role="button" tabIndex={0}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); gotoChapter(i); } }}>
+                    <b>{i + 1}. {c.title}</b>
+                    <small>{c.kicker}</small>
+                    <div className="m"><span>{c.captions.length} captions</span><span>{fmt(c.duration)}</span></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Videos */}
+            <div className={`hf-pane${panelTab === 'vids' ? ' on' : ''}`}>
+              <div className="hf-list">
+                {[...videos.generated, ...videos.bundled].map(p => (
+                  <div key={p.id} className={`hf-proj hf-glass${vid === p.id ? ' sel' : ''}`} onClick={() => loadVideo(p.id)} role="button" tabIndex={0}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); loadVideo(p.id); } }}>
+                    <div className="sw" style={{ background: swatch(p.id) }} />
+                    <div style={{ minWidth: 0 }}>
+                      <b>{p.title}</b>
+                      <small>{p.chapters} chapters{p.created ? ` · ${ago(p.created)}` : ' · bundled'}</small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Help */}
+            <div className={`hf-pane${panelTab === 'help' ? ' on' : ''}`}>
+              <div className="hf-list">
+                <ol style={{ margin: 0, paddingLeft: 20, fontSize: 15, lineHeight: 1.6, color: 'var(--mute)' }}>
+                  <li style={{ marginBottom: 10 }}>Every chapter is a <b style={{ color: 'var(--ink)' }}>deterministic HTML scene</b> (SVG + a seek-safe motion engine). Scrub anywhere — always identical.</li>
+                  <li style={{ marginBottom: 10 }}><b style={{ color: 'var(--ink)' }}>Narration is real audio</b> — per-line TTS auto-fitted to each caption slot, scheduled sample-accurately on the WebAudio clock.</li>
+                  <li style={{ marginBottom: 10 }}><b style={{ color: 'var(--ink)' }}>Ask AI</b> plans a new video, writes every scene, validates it headlessly, records narration and QC-checks the pack.</li>
+                  <li><b style={{ color: 'var(--ink)' }}>Export MP4</b> streams frames into ffmpeg (CRF 18, bt709, +faststart) with the narration muxed in.</li>
+                </ol>
+                <p className="hf-hint" style={{ marginTop: 14 }}>Shortcuts: Space play/pause · ←/→ ±1 s (Shift ±5 s) · ↑/↓ chapters · F fullscreen · G Ask AI · E export · drag the timeline to scrub.</p>
+                <p className="hf-hint" style={{ marginTop: 10 }}>Generation and rendering run on the local render-service. Exports land in /exports.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* export modal */}
       {exportOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setExportOpen(false)}>
-          <div className="w-full max-w-md rounded-2xl bg-[#0d1118] border border-zinc-800 p-5" onClick={e => e.stopPropagation()}>
-            <h3 className="font-semibold mb-1">Export MP4</h3>
-            <p className="text-xs text-zinc-500 mb-4">H.264 · CRF 18 · 1080p · narration audio muxed in · bt709 · +faststart</p>
-            <div className="space-y-2 mb-4">
-              <label className="flex items-center gap-3 rounded-xl border border-zinc-800 px-3 py-2.5 cursor-pointer has-[:checked]:border-sky-500/60">
-                <input type="radio" checked={exportScope === 'chapter'} onChange={() => setExportScope('chapter')} className="accent-sky-400" />
-                <span className="text-sm">Current chapter — <span className="text-zinc-400">{chap?.title} ({fmt(chap?.duration || 0)})</span></span>
+        <div className="hf-modal" onClick={() => setExportOpen(false)}>
+          <div className="box hf-glass" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Export MP4">
+            <h2>Export MP4</h2>
+            <p className="hf-hint">H.264 · CRF 18 · 1080p · narration muxed in · bt709 · +faststart</p>
+            <div style={{ marginTop: 14 }}>
+              <label className="hf-cl">
+                <input type="radio" name="scope" checked={exportScope === 'chapter'} onChange={() => setExportScope('chapter')} />
+                <span>Current chapter — <span className="hf-hint">{chap?.title} ({fmt(chap?.duration || 0)})</span></span>
               </label>
-              <label className="flex items-center gap-3 rounded-xl border border-zinc-800 px-3 py-2.5 cursor-pointer has-[:checked]:border-sky-500/60">
-                <input type="radio" checked={exportScope === 'full'} onChange={() => setExportScope('full')} className="accent-sky-400" />
-                <span className="text-sm">Full video — <span className="text-zinc-400">{fmt(total)} (long render)</span></span>
+              <label className="hf-cl">
+                <input type="radio" name="scope" checked={exportScope === 'full'} onChange={() => setExportScope('full')} />
+                <span>Full video — <span className="hf-hint">{fmt(total)} (long render)</span></span>
               </label>
             </div>
-            {audioOk === 'missing' && <p className="mb-3 text-xs text-amber-300 bg-amber-950/40 rounded-lg p-2.5">Narration audio is not recorded yet — exports require it (no silent videos). Click “Record narration” first.</p>}
-            <div className="flex gap-2 justify-end">
-              <button onClick={() => setExportOpen(false)} className="px-4 py-2 rounded-lg border border-zinc-700 text-sm">Cancel</button>
-              <button onClick={startExport} disabled={audioOk === 'missing'} className="px-4 py-2 rounded-lg bg-sky-400 text-black text-sm font-medium disabled:opacity-40">Start export</button>
+            {audioOk === 'missing' && (
+              <p className="hf-err" style={{ marginTop: 4 }}>Narration audio is incomplete — exports require it (no silent videos). Record narration first.</p>
+            )}
+            <div className="hf-mrow">
+              <button className="hf-chip" onClick={() => setExportOpen(false)}>Cancel</button>
+              <button className="hf-big sm" onClick={startExport} disabled={audioOk === 'missing' || running}>Start export</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* help modal */}
+      {/* help modal (keyboard hint) */}
       {helpOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setHelpOpen(false)}>
-          <div className="w-full max-w-lg rounded-2xl bg-[#0d1118] border border-zinc-800 p-6 text-sm leading-relaxed" onClick={e => e.stopPropagation()}>
-            <h3 className="font-semibold text-base mb-3">How this works</h3>
-            <ol className="list-decimal ml-4 space-y-2 text-zinc-400">
-              <li>Every chapter is a <b className="text-zinc-200">deterministic HTML scene</b> (SVG + a seek-safe motion engine). The player drives it frame-by-frame — scrub anywhere, always identical.</li>
-              <li><b className="text-zinc-200">Narration is real audio</b> — per-line TTS (Deepgram or built-in voice), auto-fitted to each caption slot and scheduled sample-accurately on the WebAudio clock.</li>
-              <li><b className="text-zinc-200">AI Studio</b> plans a new video, writes every scene, validates it headlessly, records narration and QC-checks the pack before it appears.</li>
-              <li><b className="text-zinc-200">Export MP4</b> streams frames into ffmpeg (CRF 18, bt709, +faststart) and muxes the narration track — QC-gated for audio presence.</li>
-            </ol>
-            <button onClick={() => setHelpOpen(false)} className="mt-5 px-4 py-2 rounded-lg bg-sky-400 text-black font-medium text-sm">Got it</button>
+        <div className="hf-modal" onClick={() => setHelpOpen(false)}>
+          <div className="box hf-glass" onClick={e => e.stopPropagation()}>
+            <h2>How this works</h2>
+            <p className="hf-hint">Open the Help tab in the side panel for the full guide.</p>
+            <div className="hf-mrow"><button className="hf-chip on" onClick={() => setHelpOpen(false)}>Got it</button></div>
           </div>
         </div>
       )}
+
+      {/* toast */}
+      <div className={`hf-toast${toastMsg ? ' on' : ''}`} role="status">{toastMsg || ''}</div>
     </div>
   );
 }
