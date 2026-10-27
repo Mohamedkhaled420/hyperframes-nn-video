@@ -171,6 +171,7 @@ export default function Home() {
       });
       const ct = r.headers.get('content-type') || '';
       if (!r.ok || ct.includes('json')) { const e = await r.json().catch(() => ({})); throw new Error(e.error || `tts ${r.status}`); }
+      const vp = r.headers.get('x-provider'); if (vp) setVoiceProvider(vp);
       const ab = await r.arrayBuffer();
       const ctx = eng.ensure(); if (!ctx) return null;
       const buf = await ctx.decodeAudioData(ab);
@@ -719,6 +720,25 @@ export default function Home() {
     if (r.jobId) { setExportOpen(false); watchJob(r.jobId, 'export'); }
     else if (r.error) toast(String(r.error).slice(0, 120));
   }, [callService, vid, mf, chapterIdx, exportScope, watchJob, toast]);
+
+  /* cloud render: dispatch the GitHub Actions render farm (free runners) */
+  const cloudRender = useCallback(async () => {
+    try {
+      const chapters = exportScope === 'chapter' ? String(mf?.chapters[chapterIdx]?.id || 'all') : 'all';
+      const r = await fetch('/api/render/dispatch', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ video: vid, chapters, fps: 30 }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.ok) {
+        setExportOpen(false);
+        toast('Cloud render dispatched — MP4s land on the GitHub Actions run page.');
+        if (typeof window !== 'undefined' && d.actionsUrl) window.open(d.actionsUrl, '_blank', 'noopener');
+      } else {
+        toast(String(d.error || d.hint || 'cloud render failed').slice(0, 140));
+      }
+    } catch { toast('Cloud render unreachable.'); }
+  }, [exportScope, mf, chapterIdx, vid, toast]);
   const startGenerate = useCallback(async () => {
     if (!prompt.trim()) return;
     const r = await callService('generate', { prompt, chapters: nChapters });
@@ -1028,8 +1048,8 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <input type="password" value={dgKey} onChange={e => { setDgKey(e.target.value); setTtsOffline(false); ttsOfflineRef.current = false; }} placeholder="Deepgram API key (optional, kept in this tab only)" autoComplete="off" style={{ marginTop: 6 }} />
-            <p className="hint">{voiceErr ? <span className="err" style={{ margin: 0 }}>{voiceErr}</span> : <>Without a key you get the built-in z.ai voice (English, accented). A free Deepgram key unlocks all six Aura-2 voices. {voiceProvider ? `Last preview served by: ${voiceProvider}.` : ''}</>}</p>
+            <input type="password" value={dgKey} onChange={e => { setDgKey(e.target.value); setTtsOffline(false); ttsOfflineRef.current = false; }} placeholder="Your own Deepgram key (optional — a server key is already configured)" autoComplete="off" style={{ marginTop: 6 }} />
+            <p className="hint">{voiceErr ? <span className="err" style={{ margin: 0 }}>{voiceErr}</span> : <>A server-side Deepgram key is already wired in — all six Aura-2 voices work out of the box. Paste your own key only to override it. {voiceProvider ? `Last voice served by: ${voiceProvider}.` : ''}</>}</p>
             <div className="sp" />
             <button className="big" onClick={runResearch}>Research my topic</button>
           </div>
@@ -1483,6 +1503,10 @@ export default function Home() {
               </label>
             </div>
             {audioOk === 'missing' ? <p className="err" style={{ marginTop: 4 }}>Narration audio is incomplete — exports require it (no silent videos). Record narration first.</p> : null}
+            <div style={{ borderTop: '1px solid var(--lumen-line)', margin: '14px 0 0', paddingTop: 12 }}>
+              <p className="hint" style={{ marginTop: 0 }}>No render-service running? Render on the GitHub Actions farm instead — free Ubuntu runners with Playwright + ffmpeg; MP4s come back as workflow artifacts.</p>
+              <button className="chip" style={{ marginTop: 8 }} onClick={cloudRender}>⚡ Cloud render (GitHub Actions)</button>
+            </div>
             <div className="mrow">
               <button className="chip" onClick={() => setExportOpen(false)}>Cancel</button>
               <button className="big" style={{ width: 'auto', padding: '0 24px', height: 44, margin: 0, fontSize: 15 }} onClick={startExport} disabled={audioOk === 'missing' || running}>Start export</button>

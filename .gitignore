@@ -58,3 +58,4 @@ server.log
 /download/
 /db/
 /examples/
+public/exports/

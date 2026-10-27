@@ -1,0 +1,67 @@
+name: render
+
+# Cloud render farm — free Ubuntu runners (public repo → free Actions minutes).
+# Renders the in-repo video packs to MP4 with the same pipeline as the local
+# render-service (Playwright frame-stepping + ffmpeg, narration muxed in) and
+# uploads the MP4s as workflow artifacts.
+#
+# Two ways to run:
+#   1. Manual:   Actions → render → Run workflow (pick chapters or "all")
+#   2. One-click: the app's Export → "Cloud render (GitHub Actions)" button
+#      POSTs a repository_dispatch event via /api/render/dispatch.
+
+on:
+  workflow_dispatch:
+    inputs:
+      video:
+        description: 'Video pack (folder under public/videos)'
+        default: 'nn-video'
+      chapters:
+        description: 'Chapter ids, comma-separated, or "all"'
+        default: 'all'
+      fps:
+        description: 'Frames per second'
+        default: '30'
+  repository_dispatch:
+    types: [render]
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install render deps (Playwright + Chromium)
+        run: |
+          cd mini-services/render-service
+          bun add playwright
+          bunx playwright install --with-deps chromium
+          ffmpeg -version | head -1
+
+      - name: Serve scene files
+        run: |
+          python3 -m http.server 8080 --directory public &
+          sleep 1
+          curl -sf http://127.0.0.1:8080/videos/nn-video/manifest.json -o /dev/null && echo "scenes served ✓"
+
+      - name: Render chapters
+        env:
+          BASE_URL: http://127.0.0.1:8080
+          PUBLIC_DIR: ${{ github.workspace }}/public
+          VIDEO: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.video || inputs.video }}
+          CHAPTERS: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.chapters || inputs.chapters }}
+          FPS: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.fps || inputs.fps }}
+        run: bun scripts/gh_render.mjs
+
+      - name: Upload MP4s
+        uses: actions/upload-artifact@v4
+        with:
+          name: mp4-${{ github.run_id }}
+          path: public/exports/*.mp4
+          retention-days: 30
+          if-no-files-found: error
