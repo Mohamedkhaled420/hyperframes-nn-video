@@ -36,12 +36,14 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Install render deps (Playwright + Chromium)
+      - name: Install render deps (ffmpeg + Playwright + Chromium)
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -1
           cd mini-services/render-service
           bun add playwright
           bunx playwright install --with-deps chromium
-          ffmpeg -version | head -1
 
       - name: Serve scene files
         run: |
