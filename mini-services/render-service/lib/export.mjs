@@ -24,7 +24,7 @@ export async function exportVideo({ videoDir, videoId, chapterId = null, fps = 3
 
   /* 1) narration track (throws if audio not prepared → explicit, never silent) */
   log('building narration track…');
-  const narr = await buildNarrationTrack(videoDir, { chapterId });
+  const narr = await buildNarrationTrack(videoDir, { chapterId, minDur: total + 1.0 });
   log(`narration: ${narr.duration?.toFixed(1)}s`);
 
   /* 2) ffmpeg encoder on stdin */
@@ -47,8 +47,8 @@ export async function exportVideo({ videoDir, videoId, chapterId = null, fps = 3
   const ffDone = new Promise((res, rej) => ff.on('close', code => code === 0 ? res() : rej(new Error('ffmpeg exited ' + code + ': ' + ffErr.slice(-500)))));
   let stdinClosed = false;
   const writeFrame = buf => new Promise((res, rej) => {
-    if (stdinClosed) return res();
-    ff.stdin.write(buf, err => { if (err && !stdinClosed) rej(err); else res(); });
+    if (stdinClosed || ff.exitCode !== null || !ff.stdin.writable) return res();
+    ff.stdin.write(buf, err => { if (err && !stdinClosed && ff.exitCode === null) rej(err); else res(); });
   });
 
   /* 3) capture frames */
@@ -57,8 +57,9 @@ export async function exportVideo({ videoDir, videoId, chapterId = null, fps = 3
   const urlBase = process.env.BASE_URL || 'http://localhost:3000';
   let frame = 0, tGlobal = 0;
   const t0 = Date.now();
+  let encoderEarly = false;
   try {
-    for (const ch of chapters) {
+    outer: for (const ch of chapters) {
       const url = `${urlBase}/videos/${videoId}/${ch.scene}`;
       await page.goto(url, { waitUntil: 'load', timeout: 30000 });
       await page.evaluate(async () => { await window.__ready; });
@@ -69,6 +70,7 @@ export async function exportVideo({ videoDir, videoId, chapterId = null, fps = 3
         await page.evaluate(tt => window.__seek(tt), t);
         const shot = await page.screenshot({ type: 'jpeg', quality: 92, clip: { x: 0, y: 0, width: 1920, height: 1080 } });
         await writeFrame(shot);
+        if (ff.exitCode !== null) { encoderEarly = true; log(`encoder finished early at frame ${frame}/${totalFrames} — stopping capture`); break outer; }
         frame++; tGlobal = t;
         if (frame % 30 === 0) {
           const el = (Date.now() - t0) / 1000;

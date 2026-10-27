@@ -156,7 +156,7 @@ async function _prepareOnce(videoDir, { chapterId, voice, key, log = () => {}, o
 }
 
 /* build one narration wav for a chapter (or whole video) at absolute caption offsets */
-export async function buildNarrationTrack(videoDir, { chapterId } = {}) {
+export async function buildNarrationTrack(videoDir, { chapterId, minDur } = {}) {
   const mf = JSON.parse(fs.readFileSync(path.join(videoDir, 'manifest.json'), 'utf8'));
   const tmp = '/tmp/narr_' + Math.random().toString(36).slice(2) + '.wav';
   /* global start offset of each chapter */
@@ -179,7 +179,7 @@ export async function buildNarrationTrack(videoDir, { chapterId } = {}) {
     }
   }
   if (idx === 0) throw new Error('no narration audio prepared — run "prepare narration" first');
-  const fc = `${filters.join(';')};${mixIns.join('')}amix=inputs=${idx}:normalize=0:dropout_transition=0[mx];[mx]loudnorm=I=-14:TP=-1.0:LRA=11,apad=pad_dur=1.5[out]`;
+  const fc = `${filters.join(';')};${mixIns.join('')}amix=inputs=${idx}:normalize=0:dropout_transition=0[mx];[mx]loudnorm=I=-14:TP=-1.0:LRA=11,apad=${typeof minDur === 'number' && minDur > 0 ? `whole_dur=${minDur}` : 'pad_dur=1.5'}[out]`;
   await exec('ffmpeg', ['-y', ...inputs.flat(), '-filter_complex', fc, '-map', '[out]', '-c:a', 'pcm_s16le', '-ar', '48000', tmp]);
   return { wav: tmp, duration: await probeDuration(tmp) };
 }
