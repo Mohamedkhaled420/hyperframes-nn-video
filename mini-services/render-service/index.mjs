@@ -1,7 +1,10 @@
 /* index.mjs — render-service: long-running pipeline companion.
    Endpoints (via gateway: /<path>?XTransformPort=3030):
    GET  /health
-   POST /tts/prepare   {video:'nn-video'|packId, chapter?}   → jobId
+   POST /ai/research    {topic, audience, length}              → LLM outline JSON
+   POST /ai/edit        {q, scenes, assets, style, voice, idx}   → LLM edit ops JSON
+   POST /ai/tts         {text, voice, key?}                      → audio (Deepgram|z-ai)
+   POST /tts/prepare   {video:'nn-video'|packId, chapter?, voice?, key?} → jobId
    POST /export        {video, chapter?, fps?}               → jobId  (MP4 with narration audio)
    POST /generate      {prompt, chapters?}                   → jobId
    GET  /job/:id       status JSON
@@ -12,6 +15,7 @@ import path from 'path';
 import { prepareVideoAudio } from './lib/tts.mjs';
 import { exportVideo } from './lib/export.mjs';
 import { generatePack } from './lib/generate.mjs';
+import { aiResearch, aiEdit, aiTts } from './lib/ai.mjs';
 
 const PORT = process.env.PORT || 3030;
 const PUBLIC_DIR = process.env.PUBLIC_DIR || '/home/z/my-project/public';
@@ -67,6 +71,32 @@ const server = http.createServer(async (req, res) => {
 
   if (p === '/health') { res.writeHead(200); return res.end(JSON.stringify({ ok: true, deepgram: !!process.env.DEEPGRAM_API_KEY })); }
 
+  /* ---- light AI endpoints for the Lumen flow ---- */
+  if (req.method === 'POST' && (p === '/ai/research' || p === '/ai/edit')) {
+    let body;
+    try { body = await readBody(req); } catch { res.writeHead(400); return res.end(JSON.stringify({ error: 'bad json' })); }
+    try {
+      const r = p === '/ai/research' ? await aiResearch(body) : await aiEdit(body);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(r));
+    } catch (e) {
+      res.writeHead(e.status || 503, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: String(e.message || e).slice(0, 300) }));
+    }
+  }
+  if (req.method === 'POST' && p === '/ai/tts') {
+    let body;
+    try { body = await readBody(req); } catch { res.writeHead(400); return res.end(JSON.stringify({ error: 'bad json' })); }
+    try {
+      const r = await aiTts(body);
+      res.writeHead(200, { 'Content-Type': r.mime, 'Content-Length': String(r.buf.length), 'X-Provider': r.provider, 'X-Voice': r.voice, 'Cache-Control': 'no-cache' });
+      return res.end(r.buf);
+    } catch (e) {
+      res.writeHead(e.status || 503, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: String(e.message || e).slice(0, 300) }));
+    }
+  }
+
   /* SSE stream */
   const sse = p.match(/^\/job\/([\w-]+)\/stream$/);
   if (sse) {
@@ -94,10 +124,12 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200); res.end(JSON.stringify({ jobId: job.id }));
     (async () => {
       try {
-        log(job, `preparing narration for ${body.video}${body.chapter ? ' · ' + body.chapter : ''} (provider: ${process.env.DEEPGRAM_API_KEY ? 'deepgram' : 'z-ai'})`);
+        const provider = (body.key || process.env.DEEPGRAM_API_KEY) ? 'deepgram' : 'z-ai';
+        log(job, `preparing narration for ${body.video}${body.chapter ? ' · ' + body.chapter : ''}${body.voice ? ' · voice ' + body.voice : ''} (provider: ${provider})`);
         const r = await prepareVideoAudio(dir, {
           chapterId: body.chapter,
           voice: body.voice,
+          key: body.key,
           log: m => log(job, m),
           onProgress: (d, t) => { progress(job, 5 + 90 * d / Math.max(1, t)); if (d % 10 === 0 || d === t) log(job, `narration ${d}/${t} lines`); }
         });

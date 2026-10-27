@@ -28,16 +28,20 @@ export function probeDuration(file) {
     .catch(() => 0);
 }
 
-/* low-level: one synthesis attempt, returns Buffer (mp3) */
-async function synthOnce(text, { voice, rate }) {
-  if (HAS_DEEPGRAM) {
+/* low-level: one synthesis attempt, returns Buffer (mp3 from Deepgram / wav from z-ai) */
+async function synthOnce(text, { voice, rate, key }) {
+  const dgKey = key || process.env.DEEPGRAM_API_KEY;
+  if (dgKey) {
+    /* voice passthrough: any Aura-2 id (aura-2-thalia-en, aura-2-asteria-en, …);
+       default to the manifest voice or Thalia. */
+    const model = voice && /^aura(-2)?-[a-z]+-en$/i.test(voice) ? voice : 'aura-2-thalia-en';
     const params = new URLSearchParams({
-      model: 'aura-2-thalia', encoding: 'mp3', bitrate: '128000'
+      model, encoding: 'mp3', bitrate: '128000'
     });
     if (rate && rate > 1.01) params.set('speaking_rate', String(Math.min(1.35, rate)));
     const res = await fetch(`https://api.deepgram.com/v1/speak?${params}`, {
       method: 'POST',
-      headers: { Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Token ${dgKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
     });
     if (!res.ok) throw new Error(`deepgram ${res.status}: ${(await res.text()).slice(0, 140)}`);
@@ -53,13 +57,13 @@ async function synthOnce(text, { voice, rate }) {
 }
 
 /* resilient synthesis with rate fitting. slot = seconds available. */
-export async function synthesizeFitted(text, slot, { voice, log = () => {} } = {}) {
+export async function synthesizeFitted(text, slot, { voice, key, log = () => {} } = {}) {
   const budget = slot + 0.35; // allow slight bleed into caption gap
   let rate = 1.0;
   let lastErr = null;
   for (let attempt = 1; attempt <= 5; attempt++) {
     try {
-      const buf = await synthOnce(text, { voice, rate });
+      const buf = await synthOnce(text, { voice, rate, key });
       const tmp = path.join('/tmp', `tts_${Date.now()}_${Math.floor(Math.random() * 1e6)}.wav`);
       fs.writeFileSync(tmp, buf);
       let dur = await probeDuration(tmp);
@@ -68,7 +72,7 @@ export async function synthesizeFitted(text, slot, { voice, log = () => {} } = {
         /* second pass at a faster speaking rate */
         rate = Math.min(1.3, Math.max(1.05, dur / budget));
         log(`line over slot (${dur.toFixed(1)}s > ${budget.toFixed(1)}s) → re-synth at rate ${rate.toFixed(2)}`);
-        const buf2 = await synthOnce(text, { voice, rate });
+        const buf2 = await synthOnce(text, { voice, rate, key });
         fs.writeFileSync(tmp, buf2);
         const dur2 = await probeDuration(tmp);
         if (dur2 && dur2 < dur) dur = dur2;
@@ -110,7 +114,7 @@ export async function prepareVideoAudio(videoDir, opts = {}) {
   throw last;
 }
 
-async function _prepareOnce(videoDir, { chapterId, voice, log = () => {}, onProgress = () => {} } = {}) {
+async function _prepareOnce(videoDir, { chapterId, voice, key, log = () => {}, onProgress = () => {} } = {}) {
   const mfPath = path.join(videoDir, 'manifest.json');
   const mf = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
   const audioDir = path.join(videoDir, 'audio');
@@ -125,7 +129,7 @@ async function _prepareOnce(videoDir, { chapterId, voice, log = () => {}, onProg
       const rel = `audio/${path.basename(cap.audio)}`;
       try {
         if (fs.existsSync(out) && (cap.audioDur || 0) > 0) { done++; onProgress(done, total, ch.id, i); continue; }
-        const { file, dur } = await synthesizeFitted(cap.text, cap.dur, { voice: voice || mf.audio?.voice, log });
+        const { file, dur } = await synthesizeFitted(cap.text, cap.dur, { voice: voice || mf.audio?.voice, key, log });
         fs.copyFileSync(file, out);
         fs.rmSync(file, { force: true });
         cap.audio = rel; cap.audioDur = +dur.toFixed(2);
@@ -140,7 +144,8 @@ async function _prepareOnce(videoDir, { chapterId, voice, log = () => {}, onProg
     }
   }
   mf.audio.prepared = failed.length === 0;
-  mf.audio.provider = HAS_DEEPGRAM ? 'deepgram' : 'z-ai';
+  mf.audio.provider = (key || process.env.DEEPGRAM_API_KEY) ? 'deepgram' : 'z-ai';
+  if (voice) mf.audio.voice = voice;
   fs.writeFileSync(mfPath, JSON.stringify(mf, null, 1));
   if (failed.length) {
     const err = new Error(`narration failed for ${failed.length}/${total} lines — first: ${failed[0].chapter} #${failed[0].index} "${failed[0].text}" → ${failed[0].error}`);
