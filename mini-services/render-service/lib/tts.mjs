@@ -170,7 +170,9 @@ export async function buildNarrationTrack(videoDir, { chapterId } = {}) {
       const f = path.join(videoDir, cap.audio);
       if (!fs.existsSync(f) || !(cap.audioDur > 0)) continue;
       inputs.push(['-i', f]);
-      const delayMs = Math.max(0, Math.round((offsets[ch.id] + cap.t) * 1000));
+      /* chapter export: delays are chapter-relative (offsets would push later
+         chapters' narration beyond the video end → silent audio). */
+      const delayMs = Math.max(0, Math.round((chapterId ? cap.t : offsets[ch.id] + cap.t) * 1000));
       filters.push(`[${idx}:a]aresample=48000,aformat=channel_layouts=stereo,adelay=${delayMs}|${delayMs}[d${idx}]`);
       mixIns.push(`[d${idx}]`);
       idx++;
